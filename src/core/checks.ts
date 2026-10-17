@@ -2,7 +2,8 @@
  * Catálogo de comprobaciones. El orden de este arreglo es el orden en que se evalúan,
  * se registran y se muestran. Regla de decisión:
  *   alguna FRENAR → FRENAR · si no, alguna ESCALAR → ESCALAR · si no → PAGAR.
- * "not_evaluable" cuenta como no cumplida.
+ * Una comprobación "fail" produce su outcomeIfFail. Una "not_evaluable" (faltan datos)
+ * produce SIEMPRE ESCALAR: nunca se paga sin evaluar, y una persona puede completar el dato.
  */
 import type { CheckCode, Outcome } from "./schemas";
 

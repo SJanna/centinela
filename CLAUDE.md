@@ -7,7 +7,7 @@ Prototipo para el reto Blinka del hackathon 30X. Lee facturas (PDF, imagen, corr
 ## Invariantes (no se negocian)
 
 1. **El modelo lee, la lógica decide.** Nada que salga de un modelo de lenguaje elige el resultado. El modelo solo produce `Extraction`; la decisión la toma `src/engine` (código puro).
-2. **Por defecto no se paga.** PAGAR solo si las 15 comprobaciones de `src/core/checks.ts` están en `pass`. `not_evaluable` cuenta como fallo.
+2. **Por defecto no se paga.** PAGAR solo si las 15 comprobaciones de `src/core/checks.ts` están en `pass`. Una comprobación en `fail` produce su `outcomeIfFail`; una en `not_evaluable` produce ESCALAR.
 3. **Doble control de pagos.** Toda decisión PAGAR del motor pasa por `src/guard`. Si la guardia no aprueba, la decisión final es ESCALAR con `guardOverride: true`.
 4. **Explicaciones con plantillas.** Los textos de `CheckResult.explanation`, `Decision.summary` y `humanAction` se generan con plantillas y valores concretos, nunca con un modelo.
 5. **Las etiquetas del dataset las fijan personas.** `dataset/casos.csv` y `dataset/company.json` no se editan para que una prueba pase. Si una etiqueta parece mal, se reporta.

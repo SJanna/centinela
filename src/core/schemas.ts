@@ -243,9 +243,9 @@ export type CheckCode =
 
 export interface CheckResult {
   code: CheckCode;
-  /** pass = cumple; fail = no cumple; not_evaluable = faltan datos para evaluarla (se trata como fail). */
+  /** pass = cumple; fail = no cumple (produce outcomeIfFail); not_evaluable = faltan datos (produce ESCALAR). */
   status: "pass" | "fail" | "not_evaluable";
-  /** Qué produce si no pasa (viene del catálogo). */
+  /** Qué produce si status = "fail" (viene del catálogo). Si status = "not_evaluable" produce ESCALAR. */
   outcomeIfFail: Exclude<Outcome, "PAGAR">;
   /** Explicación en español, con los valores concretos. Se muestra tal cual al usuario. */
   explanation: string;
