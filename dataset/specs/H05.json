@@ -57,7 +57,7 @@
   "payment": {
     "beneficiaryName": "Pampa Ops SRL",
     "bankName": "Banco Santander Argentina",
-    "accountNumber": "0720000788000036541207",
+    "accountNumber": "0720000188000036541201",
     "accountLabel": "CBU",
     "routingOrSwift": "BSCHARBA",
     "routingLabel": "SWIFT"
@@ -91,7 +91,7 @@
       "Nueva cuenta:",
       "Titular: Pampa Ops SRL",
       "Banco: Banco Santander Argentina",
-      "CBU: 0720000788000036541207",
+      "CBU: 0720000188000036541201",
       "SWIFT: BSCHARBA",
       "",
       "Cualquier cosa me avisás.",
@@ -113,7 +113,7 @@
     "total": "Total: USD 2.800,00",
     "beneficiaryName": "Titular: Pampa Ops SRL",
     "bankName": "Banco: Banco Santander Argentina",
-    "accountNumber": "CBU: 0720000788000036541207",
+    "accountNumber": "CBU: 0720000188000036541201",
     "routingOrSwift": "SWIFT: BSCHARBA"
   },
   "embeddedInstructions": [
@@ -122,5 +122,5 @@
       "reason": "Pide pagar a una cuenta distinta de la registrada (cambio de banco anunciado por correo). Un cambio de cuenta debe confirmarse con el proveedor por otro canal."
     }
   ],
-  "readerNotes": "Correo de Pampa Ops SRL con la factura E 0003-00000874 de octubre de 2026 por USD 2.800,00. Anuncia un cambio de banco y pide pagar a una CBU nueva de Banco Santander Argentina (0720000788000036541207)."
+  "readerNotes": "Correo de Pampa Ops SRL con la factura E 0003-00000874 de octubre de 2026 por USD 2.800,00. Anuncia un cambio de banco y pide pagar a una CBU nueva de Banco Santander Argentina (0720000188000036541201)."
 }

@@ -8,7 +8,7 @@ import { sql } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DecisionRecord } from "../core/schemas";
 import { ensureSchema, type DbHandle } from "./db";
-import { DuplicatePaymentError, isDuplicatePaymentError, paymentKeysOf } from "./payment-keys";
+import { DuplicatePaymentError, invoiceKeyGaps, invoiceKeyOf, isDuplicatePaymentError, paymentKeysOf } from "./payment-keys";
 import { createRepo, type Repo } from "./repo";
 import { makeCompany, makeRecord, makeVendor, openFakeNeonDb, openMemoryDb, openTwoInstances, type RecordSpec } from "./test-helpers";
 
@@ -71,6 +71,24 @@ describe("paymentKeysOf", () => {
     expect(paymentKeysOf(pay("d1", { agreementId: "a-unico", agreementPeriod: null, company: ONCE_COMPANY })).period).toBe("a-unico|once");
     // Aunque traiga periodo, un acuerdo único se paga una vez.
     expect(paymentKeysOf(pay("d1", { agreementId: "a-unico", agreementPeriod: "2026-11", company: ONCE_COMPANY })).period).toBe("a-unico|once");
+  });
+});
+
+describe("invoiceKeyOf", () => {
+  it("es la clave de factura de un PAGAR y existe también en FRENAR y ESCALAR", () => {
+    expect(invoiceKeyOf(pay("d1", { invoiceNumber: "FE-0012" }))).toBe(paymentKeysOf(pay("d1", { invoiceNumber: "FE-0012" })).invoice);
+    for (const outcome of ["FRENAR", "ESCALAR"] as const) {
+      expect(invoiceKeyOf(makeRecord({ id: "d1", decidedAt: "2026-10-16", outcome, invoiceNumber: "F-001" }))).toBe("v-uno|F1");
+    }
+  });
+
+  it("sin proveedor o sin número legible no hay clave y se sabe qué falta", () => {
+    const at = { id: "d1", decidedAt: "2026-10-16" };
+    expect(invoiceKeyOf(makeRecord({ ...at, vendorId: null }))).toBeNull();
+    expect(invoiceKeyGaps(makeRecord({ ...at, vendorId: null }))).toEqual(["vendor"]);
+    expect(invoiceKeyGaps(makeRecord({ ...at, invoiceNumber: "--" }))).toEqual(["number"]);
+    expect(invoiceKeyGaps(makeRecord({ ...at, vendorId: null, readingFailed: true }))).toEqual(["vendor", "number"]);
+    expect(invoiceKeyGaps(makeRecord(at))).toEqual([]);
   });
 });
 

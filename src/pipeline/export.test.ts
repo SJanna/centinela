@@ -1,7 +1,8 @@
 import { parse } from "csv-parse/sync";
 import { describe, expect, it } from "vitest";
 import { makeRecord } from "../store/test-helpers";
-import { CSV_COLUMNS, csvCell, decisionsToCsv } from "./export";
+import { CSV_COLUMNS, csvCell, decisionsToCsv, decisionsToJson } from "./export";
+import { IDEMPOTENCY_NAMESPACE, uuidv5 } from "./idempotency";
 
 describe("csvCell", () => {
   it("escapa comas, comillas y saltos de línea", () => {
@@ -65,5 +66,39 @@ describe("decisionsToCsv", () => {
 
   it("sin decisiones: solo la cabecera", () => {
     expect(decisionsToCsv([])).toBe(`﻿${CSV_COLUMNS.join(",")}\r\n`);
+  });
+
+  it("clave_idempotencia: la misma para la misma factura en cualquier decisión, vacía sin proveedor o sin número", () => {
+    const csv = decisionsToCsv([
+      makeRecord({ id: "dec_1", decidedAt: "2026-10-20T15:00:00Z", invoiceNumber: "F-001" }),
+      makeRecord({ id: "dec_2", decidedAt: "2026-10-20T15:01:00Z", invoiceNumber: "F-1", outcome: "FRENAR", checks: { "DUP-2": "fail" } }),
+      makeRecord({ id: "dec_3", decidedAt: "2026-10-20T15:02:00Z", vendorId: null, outcome: "ESCALAR" }),
+      makeRecord({ id: "dec_4", decidedAt: "2026-10-20T15:03:00Z", invoiceNumber: null, outcome: "ESCALAR" }),
+    ]);
+    const rows = parse(csv, { bom: true, columns: true }) as Record<string, string>[];
+    const expected = uuidv5("v-uno|F1", IDEMPOTENCY_NAMESPACE);
+    expect(rows.map((r) => r.clave_idempotencia)).toEqual([expected, expected, "", ""]);
+    expect(CSV_COLUMNS.indexOf("clave_idempotencia")).toBe(CSV_COLUMNS.indexOf("numero_factura") + 1);
+  });
+});
+
+describe("decisionsToJson", () => {
+  it("cada registro sale tal cual, con su clave de idempotencia al lado (calculada, no guardada)", () => {
+    const records = [
+      makeRecord({ id: "dec_1", decidedAt: "2026-10-20T15:00:00Z", invoiceNumber: "F-001" }),
+      makeRecord({ id: "dec_2", decidedAt: "2026-10-20T15:01:00Z", vendorId: null, outcome: "ESCALAR" }),
+    ];
+    const before = structuredClone(records);
+    const out = JSON.parse(decisionsToJson(records)) as Record<string, unknown>[];
+    expect(records).toEqual(before);
+    expect(out).toHaveLength(2);
+    const { idempotency: first, ...rest } = out[0];
+    expect(rest).toEqual(JSON.parse(JSON.stringify(records[0])));
+    expect(first).toEqual({ key: uuidv5("v-uno|F1", IDEMPOTENCY_NAMESPACE), invoiceKey: "v-uno|F1", reason: null });
+    expect(out[1].idempotency).toEqual({ key: null, invoiceKey: null, reason: "Sin clave: no se identificó al proveedor en la ficha." });
+  });
+
+  it("sin decisiones: lista vacía", () => {
+    expect(JSON.parse(decisionsToJson([]))).toEqual([]);
   });
 });

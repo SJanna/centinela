@@ -84,6 +84,37 @@ export function normalizePaymentPeriod(raw: unknown): string | null {
 
 const nonEmpty = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.trim().length > 0;
 
+/** Qué le falta a un registro para tener clave de factura (vacío si la tiene). */
+export type InvoiceKeyGap = "vendor" | "number";
+
+/** Partes de la clave de factura: proveedor emparejado (id tal cual) y número normalizado. */
+function invoiceKeyParts(record: DecisionRecord): { vendorId: string | null; number: string | null } {
+  const vendorId: unknown = record?.decision?.vendorId;
+  return {
+    vendorId: nonEmpty(vendorId) ? vendorId : null,
+    number: normalizePaymentInvoiceNumber(record?.reading?.data?.invoiceNumber),
+  };
+}
+
+/**
+ * Clave de factura de un registro, «proveedor|número normalizado», sea cual sea la decisión (DUP-2 y
+ * la clave de idempotencia de `src/pipeline/idempotency.ts` salen de aquí). null si no hay proveedor
+ * emparejado o número legible.
+ */
+export function invoiceKeyOf(record: DecisionRecord): string | null {
+  const { vendorId, number } = invoiceKeyParts(record);
+  return vendorId != null && number != null ? `${vendorId}|${number}` : null;
+}
+
+/** Qué partes faltan para la clave de factura, en orden: proveedor, número. */
+export function invoiceKeyGaps(record: DecisionRecord): InvoiceKeyGap[] {
+  const { vendorId, number } = invoiceKeyParts(record);
+  const gaps: InvoiceKeyGap[] = [];
+  if (vendorId == null) gaps.push("vendor");
+  if (number == null) gaps.push("number");
+  return gaps;
+}
+
 /** Frecuencia del acuerdo en la copia de la empresa guardada con la decisión, o null si no aparece. */
 function agreementFrequency(record: DecisionRecord, vendorId: string | null, agreementId: string): string | null {
   const vendors: unknown = record.companySnapshot?.vendors;
@@ -109,7 +140,6 @@ export function paymentKeysOf(record: DecisionRecord): PaymentKeys {
   if (d?.outcome !== "PAGAR") return { ...NO_KEYS };
   const vendorId = nonEmpty(d.vendorId) ? d.vendorId : null;
   const agreementId = nonEmpty(d.agreementId) ? d.agreementId : null;
-  const number = normalizePaymentInvoiceNumber(record.reading?.data?.invoiceNumber);
 
   let period: string | null = null;
   if (agreementId != null) {
@@ -121,7 +151,7 @@ export function paymentKeysOf(record: DecisionRecord): PaymentKeys {
 
   return {
     file: paymentFileKey(record.fileHash),
-    invoice: vendorId != null && number != null ? `${vendorId}|${number}` : null,
+    invoice: invoiceKeyOf(record),
     period,
   };
 }

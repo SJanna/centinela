@@ -34,7 +34,7 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 
 1. **Contarlo como agente (1–2 h, sin riesgo).**
    - README y [DEMO.md](DEMO.md) con el ciclo **percibe → decide → se revisa → registra → pide permiso**.
-   - Una sola cifra de autonomía: «24 de 41 resueltas solas, todas correctas; las demás escaladas a propósito». Hoy conviven 100 % (reporte), 58,5 % (set) y 52 % (pantalla).
+   - Una sola cifra de autonomía: «decidió sola 23 de 41 (todas correctas) y escaló 18: 17 a propósito y 1 de más» (con Claude real). Hecho en README, DEMO y PITCH el 17 de octubre.
    - Corregir en el README que las etiquetas «las fijan personas»: las redactó Claude y falta revisarlas.
    - Cambiar bancos y códigos SWIFT/ABA de `dataset/company.json` por ficticios.
 2. **Cerrar el ciclo de permiso (3–5 h).**
@@ -89,7 +89,7 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 | 1 | Ficha del proveedor + cuenta registrada (PRV-2) | Ya está | — | — |
 | 2 | Destino por riel (ABA+cuenta, CLABE, llave Pix, CBU/CVU/alias+CUIT, CCI, IBAN, cadena+wallet USDC) en vez de un número genérico | Falta | 4–6 h | Cambia |
 | 3 | Duplicados con índices únicos | Ya está | — | — |
-| 4 | Clave de idempotencia derivada del duplicado, en el registro y el CSV (para quien ejecute el pago) | Falta | ~1 h | No |
+| 4 | Clave de idempotencia derivada del duplicado, en el detalle, el CSV y el JSON exportado (para quien ejecute el pago) | **Hecho** (17 oct) | — | No |
 | 5 | Acuerdo, monto, umbral, límite y fondo | Ya está | — | — |
 | 6 | Límite de 30 días móviles (Mural retiene por volumen de 30 días) | Falta | 1–2 h | No |
 | 7 | Dos lecturas, citas, aritmética, instrucciones escondidas | Ya está | — | — |

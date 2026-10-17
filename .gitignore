@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Facturas de prueba manual (generadas aparte del dataset)
 /facturas-prueba
+
+# Lecturas reales guardadas por eval:live (locales; no se publican)
+/dataset/reading-cache

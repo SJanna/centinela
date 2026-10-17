@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Avatar, Badge, CountryChip, Eyebrow, Mono, Money, Sheet } from "@/components/ui";
 import type { CheckResult, DecisionRecord } from "@/core/schemas";
+import { idempotencyKeyOf } from "@/pipeline/idempotency";
 import { matchedAgreement, matchedVendor } from "./decision-utils";
 import { AGREEMENT_KIND_LABEL, formatDateLong, formatNumber, formatPeriod } from "./format";
 import { MaskedAccount } from "./reading-table";
@@ -40,6 +41,8 @@ export function ContextPanel({ record }: { record: DecisionRecord }) {
   const spentUsd = num(lim2, "spentUsd");
   const availableUsd = num(fon1, "availableUsd");
   const basis = typeof prv1?.params?.basis === "string" ? MATCH_BASIS[prv1.params.basis] : undefined;
+  // Servidor: usa node:crypto. Se calcula al mostrar; no está en el registro.
+  const idempotency = idempotencyKeyOf(record);
 
   return (
     <Sheet padding="none" aria-labelledby="contexto-titulo" className="@container">
@@ -178,6 +181,26 @@ export function ContextPanel({ record }: { record: DecisionRecord }) {
           </dl>
         </section>
       ) : null}
+
+      {/* Clave de idempotencia */}
+      <section aria-labelledby="clave-idempotencia-titulo" className="border-t border-seam px-6 pt-4 pb-6">
+        <Eyebrow id="clave-idempotencia-titulo" className="mb-2">
+          Clave de idempotencia
+        </Eyebrow>
+        {idempotency.key ? (
+          <>
+            <Mono className="block text-small break-all text-ink select-all">{idempotency.key}</Mono>
+            <p className="mt-1 text-caption text-muted">
+              Sale del proveedor y el número de factura normalizado: <Mono>{idempotency.invoiceKey}</Mono>.
+            </p>
+          </>
+        ) : (
+          <p className="text-small text-ink-2">{idempotency.reason}</p>
+        )}
+        <p className="mt-2 text-small text-ink-2">
+          La misma factura produce siempre la misma clave. Quien ejecute el pago puede usarla para no pagarla dos veces.
+        </p>
+      </section>
     </Sheet>
   );
 }

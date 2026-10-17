@@ -1,9 +1,13 @@
 /**
  * Exportación del registro de decisiones a CSV (separador coma, UTF-8 con BOM para que Excel
- * reconozca las tildes, fin de línea CRLF, columnas en español).
+ * reconozca las tildes, fin de línea CRLF, columnas en español) y a JSON.
+ *
+ * Las dos llevan la clave de idempotencia de cada decisión (`./idempotency`), calculada al exportar:
+ * no está guardada en la base ni cambia `DecisionRecord`.
  */
 import type { DecisionRecord } from "../core/schemas";
 import { toDecisionSummary } from "../store/mappers";
+import { idempotencyKeyOf, type IdempotencyKey } from "./idempotency";
 
 export const CSV_COLUMNS = [
   "id_decision",
@@ -13,6 +17,7 @@ export const CSV_COLUMNS = [
   "decision",
   "proveedor",
   "numero_factura",
+  "clave_idempotencia",
   "moneda",
   "total",
   "monto_usd",
@@ -58,6 +63,7 @@ export function decisionsToCsv(records: readonly DecisionRecord[]): string {
       s.outcome,
       s.vendorName,
       s.invoiceNumber,
+      idempotencyKeyOf(record).key,
       s.currency,
       s.total,
       s.amountUsd,
@@ -71,4 +77,16 @@ export function decisionsToCsv(records: readonly DecisionRecord[]): string {
     lines.push(row.map(csvCell).join(","));
   }
   return `﻿${lines.join("\r\n")}\r\n`;
+}
+
+/** Un registro exportado a JSON: el `DecisionRecord` tal cual, más su clave de idempotencia. */
+export type ExportedDecision = DecisionRecord & { idempotency: IdempotencyKey };
+
+export function withIdempotency(record: DecisionRecord): ExportedDecision {
+  return { ...record, idempotency: idempotencyKeyOf(record) };
+}
+
+/** JSON del registro (del más antiguo al más reciente, como llega), con sangría de 2 espacios. */
+export function decisionsToJson(records: readonly DecisionRecord[]): string {
+  return JSON.stringify(records.map(withIdempotency), null, 2);
 }

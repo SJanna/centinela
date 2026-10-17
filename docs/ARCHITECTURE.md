@@ -1,11 +1,13 @@
 # Arquitectura
 
+Centinela es un agente con un ciclo fijo por factura: **percibe** (dos lecturas con dos modelos de Claude, cada dato con su cita), **decide** (la política de la empresa: 15 comprobaciones en código, `src/engine`), **se revisa** (guardia independiente, `src/guard`), **registra** (registro inmutable con el porqué, `src/store`) y **pide permiso** (ESCALAR con la acción sugerida para una persona). El modelo solo produce `Extraction`; ninguna salida de un modelo elige el resultado. Las dos lecturas vienen de modelos de Anthropic y pueden fallar igual: por eso monto, cuenta y acuerdo se comparan después, en código, con la ficha del proveedor. El agente entrega una decisión, no un pago. La tabla siguiente recorre ese ciclo paso a paso.
+
 ## Recorrido de una factura
 
 | Paso | Qué hace | Módulo |
 |---|---|---|
 | 1. Entrada | Normaliza el archivo (PDF y foto van al modelo tal cual; correo → cuerpo + adjuntos; chat → texto). Calcula la huella sha256. Extrae texto plano sin modelo cuando se puede. | `src/ingest` |
-| 2. Doble lectura | Dos lectores independientes en paralelo (Sonnet 5.5 y Haiku 5.5) con salida estructurada `Extraction`: cada campo trae valor, cita textual y si fue legible; más la lista de instrucciones detectadas. | `src/extract` |
+| 2. Doble lectura | Dos lectores en paralelo con modelos distintos de Anthropic (Sonnet 5.5 y Haiku 5.5; sus errores pueden coincidir) con salida estructurada `Extraction`: cada campo trae valor, cita textual y si fue legible; más la lista de instrucciones detectadas. | `src/extract` |
 | 3. Verificación | Compara las dos lecturas en campos críticos, revisa la aritmética, verifica que las citas existan en el texto, y corre un detector de instrucciones por patrones (sin modelo). Produce `ReadingSignals`. | `src/extract` |
 | 4. Motor | Evalúa las 15 comprobaciones (todas, sin cortocircuito) y decide. | `src/engine` |
 | 5. Guardia | Si el motor dice PAGAR, una implementación independiente revisa los límites duros. Si discrepa → ESCALAR. | `src/guard` |
@@ -50,7 +52,7 @@ Cada proveedor de la ficha tiene acuerdos: tipo (`fixed_recurring`, `hourly`, `o
 1. Arquitectura: el modelo no decide.
 2. Prompt: el documento es dato no confiable; el lector debe reportar instrucciones.
 3. Detector por patrones sobre el texto plano (incluye texto oculto en PDF).
-4. Doble lectura con modelos distintos.
+4. Doble lectura con dos modelos distintos (ambos de Anthropic).
 5. PRV-2 compara la cuenta leída con la registrada.
 
 ## Stack

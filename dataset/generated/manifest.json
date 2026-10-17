@@ -2919,7 +2919,7 @@
   {
     "caseId": "H05",
     "file": "H05.eml",
-    "sha256": "40b7e482c4a434ac3fdff47606addbe326fa038c5dcce1b8ad789139226503a3",
+    "sha256": "eceae73ba2c7674f2f71ac89a443206e9304bf58839274f7a9d77a541d66255b",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -2993,8 +2993,8 @@
           "legible": true
         },
         "accountNumber": {
-          "value": "0720000788000036541207",
-          "evidence": "CBU: 0720000788000036541207",
+          "value": "0720000188000036541201",
+          "evidence": "CBU: 0720000188000036541201",
           "legible": true
         },
         "routingOrSwift": {
@@ -3009,7 +3009,7 @@
           "reason": "Pide pagar a una cuenta distinta de la registrada (cambio de banco anunciado por correo). Un cambio de cuenta debe confirmarse con el proveedor por otro canal."
         }
       ],
-      "readerNotes": "Correo de Pampa Ops SRL con la factura E 0003-00000874 de octubre de 2026 por USD 2.800,00. Anuncia un cambio de banco y pide pagar a una CBU nueva de Banco Santander Argentina (0720000788000036541207)."
+      "readerNotes": "Correo de Pampa Ops SRL con la factura E 0003-00000874 de octubre de 2026 por USD 2.800,00. Anuncia un cambio de banco y pide pagar a una CBU nueva de Banco Santander Argentina (0720000188000036541201)."
     }
   },
   {

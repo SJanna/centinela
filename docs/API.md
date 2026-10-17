@@ -20,7 +20,7 @@ Tipos: `DecisionSummary`, `Stats` vienen de `src/store/repo.ts`; `DecisionRecord
 | `POST /api/demo/reset` | — | Borra facturas y decisiones y carga `dataset/company.json`. `{ company: Company }` |
 | `GET /api/samples` | — | `{ samples: { caseId, filename, formato, descripcion, split, escenario, decision_esperada }[] }` desde `dataset/casos.csv` + `dataset/generated/manifest.json` |
 | `GET /api/samples/[caseId]` | — | Bytes del archivo de ejemplo |
-| `GET /api/export?format=json\|csv` | — | Descarga del registro completo (`DecisionRecord[]` en JSON, o resumen en CSV) |
+| `GET /api/export?format=json\|csv` | — | Descarga del registro completo (`DecisionRecord[]` en JSON, cada uno con el campo extra `idempotency`; o resumen en CSV con la columna `clave_idempotencia`) |
 | `GET /api/status` | — | `{ readingMode: "live" \| "simulated", models: string[], promptVersion: string, accessProtected: boolean, companyName: string }` |
 | `POST /api/access` | `{ code: string }` | Si coincide con `DEMO_ACCESS_CODE`, pone la cookie de acceso. `{ ok: true }` o 401. |
 
