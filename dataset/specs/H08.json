@@ -1,0 +1,103 @@
+{
+  "id": "H08",
+  "about": "PEN 6.040: 0,67 % por encima, dentro de la tolerancia del 1 %",
+  "vendorId": "v-inca",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA",
+  "brand": {
+    "color": "#B45309",
+    "accent": "#FCD34D",
+    "logo": "sun",
+    "initials": null,
+    "wordmark": "Inca Contenidos",
+    "tagline": "Marketing de contenidos"
+  },
+  "vendor": {
+    "name": "Inca Contenidos S.A.C.",
+    "taxIdLabel": "RUC",
+    "taxId": "20601234567",
+    "address": [
+      "Av. José Larco 1232, Oficina 504",
+      "Miraflores, Lima 15074",
+      "Perú"
+    ],
+    "email": "facturacion@incacontenidos.pe",
+    "phone": "+51 1 715 3320"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "F001-000252",
+  "issueDate": "2026-10-09",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-24",
+  "servicePeriod": "2026-10",
+  "currency": "PEN",
+  "paymentTerms": "Crédito 15 días",
+  "lines": [
+    {
+      "description": "Marketing de contenidos – plan mensual",
+      "detail": "Octubre 2026 · 8 artículos, 12 piezas para redes y 1 boletín",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 6000,
+      "amount": 6000
+    },
+    {
+      "description": "Traducción adicional al inglés – artículos",
+      "detail": "2 artículos del plan de octubre",
+      "quantity": 2,
+      "unit": null,
+      "unitPrice": 20,
+      "amount": 40
+    }
+  ],
+  "subtotal": 6040,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 6040,
+  "payment": {
+    "beneficiaryName": "Inca Contenidos S.A.C.",
+    "bankName": "BCP",
+    "accountNumber": "191-2345678-0-12",
+    "accountLabel": "Cta. cte. soles N°",
+    "routingOrSwift": "BCPLPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios no gravada con el IGV (art. 33 del TUO de la Ley del IGV)."
+  ],
+  "legal": [
+    "Representación impresa de la Factura Electrónica. Consulte su validez en el portal de la SUNAT con el RUC del emisor, la serie y el número.",
+    "Resumen: MPvAA5pJeDMd6PIymuVFHkobc7k="
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura electrónica F001-000252 de Inca Contenidos S.A.C.: plan mensual S/ 6,000.00 más 2 traducciones de S/ 20.00; total S/ 6,040.00. Cuenta BCP 191-2345678-0-12."
+}

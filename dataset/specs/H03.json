@@ -1,0 +1,16 @@
+{
+  "id": "H03",
+  "about": "Foto impresa de la misma cuenta de cobro de H01 (mismo número)",
+  "vendorId": "v-camila",
+  "format": "jpg",
+  "photoOf": "H01",
+  "photo": {
+    "angle": -2.3,
+    "surface": "fabric",
+    "blur": 0.8,
+    "quality": 72,
+    "seed": 3003,
+    "folded": true
+  },
+  "readerNotes": "Foto de la cuenta de cobro CC-2026-031 de Camila Restrepo Dev S.A.S., impresa y doblada: COP 12.000.000 por octubre de 2026. Pago a la cuenta corriente Bancolombia 4512-0098-7731."
+}

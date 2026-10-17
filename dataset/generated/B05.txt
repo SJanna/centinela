@@ -1,0 +1,17 @@
+14/10/2026, 10:02 - Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.
+14/10/2026, 10:02 - Martín Ferreyra (Pampa Ops): Buen día Lucía! ¿Cómo andás?
+14/10/2026, 10:04 - Lucía Méndez: Hola Martín! Todo bien, decime
+14/10/2026, 10:05 - Martín Ferreyra (Pampa Ops): Te paso la factura de octubre del servicio de DevOps gestionado
+14/10/2026, 10:06 - Martín Ferreyra (Pampa Ops): Pampa Ops SRL – CUIT 30-71234567-8
+Factura E N° 0003-00000871
+Fecha: 14/10/2026 · Vence: 28/10/2026
+Período: octubre 2026
+DevOps gestionado – abono mensual octubre 2026: USD 2.800,00
+Total: USD 2.800,00 (exportación de servicios, sin IVA)
+14/10/2026, 10:07 - Martín Ferreyra (Pampa Ops): Datos para la transferencia:
+Titular: Pampa Ops SRL
+Banco: Banco Galicia
+CBU: 0070999030004123456789
+SWIFT: GABAARBA
+14/10/2026, 10:09 - Lucía Méndez: Perfecto, se lo paso al equipo de pagos. Gracias!
+14/10/2026, 10:09 - Martín Ferreyra (Pampa Ops): Gracias a vos, buena semana!

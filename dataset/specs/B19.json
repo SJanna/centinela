@@ -1,0 +1,141 @@
+{
+  "id": "B19",
+  "about": "35 h × USD 60 = USD 2.100 por chat",
+  "vendorId": "v-datossur",
+  "format": "txt",
+  "template": null,
+  "language": "es",
+  "locale": "es-CL",
+  "documentType": "invoice",
+  "title": "Factura de exportación electrónica",
+  "brand": {
+    "color": "#BE185D",
+    "accent": "#F9A8D4",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Datos del Sur",
+    "tagline": "Analítica de datos"
+  },
+  "vendor": {
+    "name": "Datos del Sur SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "76.543.210-K",
+    "address": [
+      "Av. Providencia 1208, Oficina 1503",
+      "Providencia, Santiago",
+      "Chile"
+    ],
+    "email": "facturacion@datosdelsur.cl",
+    "phone": "+56 2 2946 7710"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "1296",
+  "issueDate": "2026-10-15",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-30",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Analítica de datos",
+      "detail": null,
+      "quantity": 35,
+      "unit": "h",
+      "unitPrice": 60,
+      "amount": 2100
+    }
+  ],
+  "subtotal": null,
+  "tax": null,
+  "total": 2100,
+  "payment": {
+    "beneficiaryName": "Datos del Sur SpA",
+    "bankName": "Banco de Chile",
+    "accountNumber": "00-123-45678-09",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "BCHICLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": [
+    {
+      "date": "15/10/2026",
+      "time": "18:40",
+      "sender": null,
+      "text": "Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos."
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:41",
+      "sender": "Ignacio Fuentes (Datos del Sur)",
+      "text": "Hola Lucía, buenas tardes"
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:41",
+      "sender": "Ignacio Fuentes (Datos del Sur)",
+      "text": "Te dejo el cobro de las horas de analítica de octubre"
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:43",
+      "sender": "Ignacio Fuentes (Datos del Sur)",
+      "text": "Datos del Sur SpA – RUT 76.543.210-K\nFactura de exportación electrónica N° 1296\nEmisión: 15/10/2026 · Vencimiento: 30/10/2026\nPeríodo: octubre 2026\nAnalítica de datos: 35 h × USD 60 = USD 2.100\nTotal a pagar: USD 2.100 (exento de IVA)"
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:44",
+      "sender": "Ignacio Fuentes (Datos del Sur)",
+      "text": "Transferencia a:\nDatos del Sur SpA\nBanco de Chile – Cuenta corriente 00-123-45678-09\nSWIFT BCHICLRM"
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:52",
+      "sender": "Lucía Méndez",
+      "text": "Recibido, gracias Ignacio. Lo cargo hoy en el sistema."
+    },
+    {
+      "date": "15/10/2026",
+      "time": "18:53",
+      "sender": "Ignacio Fuentes (Datos del Sur)",
+      "text": "Gracias! Saludos"
+    }
+  ],
+  "evidence": {
+    "vendorName": "Datos del Sur SpA – RUT 76.543.210-K",
+    "vendorTaxId": "RUT 76.543.210-K",
+    "invoiceNumber": "Factura de exportación electrónica N° 1296",
+    "issueDate": "Emisión: 15/10/2026",
+    "dueDate": "Vencimiento: 30/10/2026",
+    "servicePeriod": "Período: octubre 2026",
+    "currency": "Total a pagar: USD 2.100",
+    "total": "Total a pagar: USD 2.100",
+    "beneficiaryName": "Datos del Sur SpA",
+    "bankName": "Banco de Chile",
+    "accountNumber": "Cuenta corriente 00-123-45678-09",
+    "routingOrSwift": "SWIFT BCHICLRM"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Chat de WhatsApp con Datos del Sur SpA: factura de exportación N° 1296 de octubre de 2026, 35 h × USD 60 = USD 2.100 (exento de IVA), a la cuenta corriente Banco de Chile 00-123-45678-09."
+}

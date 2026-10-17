@@ -1,0 +1,95 @@
+{
+  "id": "B12",
+  "about": "170 h × COP 80.000: supera el máximo de 160 h",
+  "vendorId": "v-caribe",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#0891B2",
+    "accent": "#FDE68A",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Soporte Caribe",
+    "tagline": "Atención al cliente"
+  },
+  "vendor": {
+    "name": "Soporte Caribe S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.777.888-2",
+    "address": [
+      "Calle 77 # 59-35, Local 12",
+      "Barranquilla, Atlántico",
+      "Colombia"
+    ],
+    "email": "facturacion@soportecaribe.co",
+    "phone": "+57 605 385 9020"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "SC-2210",
+  "issueDate": "2026-10-10",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-25",
+  "servicePeriod": "2026-10",
+  "currency": "COP",
+  "paymentTerms": "Crédito 15 días",
+  "lines": [
+    {
+      "description": "Soporte al cliente – horas atendidas",
+      "detail": "Octubre 2026 · turnos de lunes a sábado",
+      "quantity": 170,
+      "unit": "h",
+      "unitPrice": 80000,
+      "amount": 13600000
+    }
+  ],
+  "subtotal": 13600000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 13600000,
+  "payment": {
+    "beneficiaryName": "Soporte Caribe S.A.S.",
+    "bankName": "Davivienda",
+    "accountNumber": "0550 4881 2233",
+    "accountLabel": "Cuenta de ahorros N°",
+    "routingOrSwift": "CAFECOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Forma de pago: transferencia bancaria. Detalle de horas por agente disponible en el informe mensual."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764059876543 del 15/01/2026, prefijo SC, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 7620112599aae7d7403a056b21089844b0cfe01e5fceea866ce128ae652a90007d386421cd4cca3e7c923a4b2d3b6583"
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura electrónica SC-2210 de Soporte Caribe S.A.S.: 170 h × COP 80.000 = COP 13.600.000 de soporte en octubre de 2026. Cuenta de ahorros Davivienda 0550 4881 2233."
+}

@@ -1,0 +1,99 @@
+{
+  "id": "H11",
+  "about": "Captura de la factura de octubre USD 1.200",
+  "vendorId": "v-cloudmetrics",
+  "format": "png",
+  "template": "portal",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#4F46E5",
+    "accent": null,
+    "logo": "bars",
+    "initials": null,
+    "wordmark": "CloudMetrics",
+    "tagline": "Infrastructure monitoring"
+  },
+  "vendor": {
+    "name": "CloudMetrics Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "88-1234567",
+    "address": [
+      "2150 Folsom Street, Floor 3",
+      "San Francisco, CA 94110",
+      "United States"
+    ],
+    "email": "billing@cloudmetrics.io",
+    "phone": "+1 (415) 555-0137"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "United States"
+    ],
+    "email": "ap@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CM-INV-2026-10-0802",
+  "issueDate": "2026-10-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 14",
+  "lines": [
+    {
+      "description": "Team plan – Infrastructure monitoring",
+      "detail": "Oct 1 – Oct 31, 2026 · 10 seats",
+      "quantity": 10,
+      "unit": null,
+      "unitPrice": 120,
+      "amount": 1200
+    }
+  ],
+  "subtotal": 1200,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 1200,
+  "payment": {
+    "beneficiaryName": "CloudMetrics Inc.",
+    "bankName": "Silicon Valley Bank",
+    "accountNumber": "3300198822",
+    "accountLabel": "Account number",
+    "routingOrSwift": "121140399",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Questions about this invoice? Contact billing@cloudmetrics.io or visit your billing dashboard."
+  ],
+  "legal": [
+    "CloudMetrics Inc. · EIN 88-1234567 · 2150 Folsom Street, Floor 3, San Francisco, CA 94110"
+  ],
+  "templateData": {
+    "url": "billing.cloudmetrics.io/invoices/CM-INV-2026-10-0802",
+    "plan": "Team plan · 10 seats",
+    "status": "Open",
+    "paymentTitle": "Pay by bank transfer",
+    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "helpText": "Questions about this invoice?"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura del portal de facturación de CloudMetrics Inc. con la factura CM-INV-2026-10-0802 de octubre de 2026: USD 1,200.00, a Silicon Valley Bank, cuenta 3300198822, ABA 121140399."
+}

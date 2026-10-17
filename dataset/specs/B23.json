@@ -1,0 +1,90 @@
+{
+  "id": "B23",
+  "about": "Factura sin datos bancarios",
+  "vendorId": "v-northwind",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#0F766E",
+    "accent": null,
+    "logo": "peak",
+    "initials": null,
+    "wordmark": "Northwind Hosting",
+    "tagline": "Dedicated infrastructure"
+  },
+  "vendor": {
+    "name": "Northwind Hosting LLC",
+    "taxIdLabel": "EIN",
+    "taxId": "47-9988776",
+    "address": [
+      "4410 Cedar Springs Road, Suite 800",
+      "Dallas, TX 75219",
+      "United States"
+    ],
+    "email": "ar@northwindhosting.com",
+    "phone": "+1 (214) 555-0164"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "United States"
+    ],
+    "email": "ap@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "NWH-2026-10-131",
+  "issueDate": "2026-10-12",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-27",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Dedicated infrastructure – bare-metal node (monthly)",
+      "detail": "4 × NW-Metal XL · Oct 1 – Oct 31, 2026",
+      "quantity": 4,
+      "unit": null,
+      "unitPrice": 1800,
+      "amount": 7200
+    }
+  ],
+  "subtotal": 7200,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 7200,
+  "payment": null,
+  "notes": [
+    "Service credits, if any, are applied on the following invoice.",
+    "Remittance details are available in your Northwind customer portal."
+  ],
+  "legal": [
+    "Northwind Hosting LLC · EIN 47-9988776 · 4410 Cedar Springs Road, Suite 800, Dallas, TX 75219"
+  ],
+  "templateData": {
+    "customerId": "NW-ANDES-07",
+    "plan": "Dedicated · 4 nodes",
+    "heroNote": "Thank you for your business."
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura en inglés NWH-2026-10-131 de Northwind Hosting LLC por USD 7,200.00 (octubre de 2026). No trae beneficiario, banco ni número de cuenta."
+}

@@ -1,0 +1,97 @@
+{
+  "id": "H01",
+  "about": "Formato 'cuenta de cobro' colombiano, COP 12.000.000",
+  "vendorId": "v-camila",
+  "format": "pdf",
+  "template": "cuenta_cobro",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "cuenta_de_cobro",
+  "title": "CUENTA DE COBRO",
+  "brand": {
+    "color": "#1D4ED8",
+    "accent": "#60A5FA",
+    "logo": "monogram",
+    "initials": "CR",
+    "wordmark": "CR Dev",
+    "tagline": "Ingeniería de software"
+  },
+  "vendor": {
+    "name": "Camila Restrepo Dev S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.456.789-1",
+    "address": [
+      "Carrera 43A # 7-50, Oficina 1204",
+      "El Poblado, Medellín, Antioquia",
+      "Colombia"
+    ],
+    "email": "facturacion@crdev.co",
+    "phone": "+57 604 444 1290"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CC-2026-031",
+  "issueDate": "2026-10-06",
+  "issuePlace": "Medellín",
+  "issueTime": null,
+  "dueDate": "2026-10-20",
+  "servicePeriod": "2026-10",
+  "currency": "COP",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Desarrollo backend – tarifa fija mensual",
+      "detail": null,
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 12000000,
+      "amount": 12000000
+    }
+  ],
+  "subtotal": 12000000,
+  "tax": {
+    "label": "IVA (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 12000000,
+  "payment": {
+    "beneficiaryName": "Camila Restrepo Dev S.A.S.",
+    "bankName": "Bancolombia",
+    "accountNumber": "4512-0098-7731",
+    "accountLabel": "Cuenta corriente N°:",
+    "routingOrSwift": "COLOCOBM",
+    "routingLabel": "Código SWIFT:"
+  },
+  "notes": [
+    "Servicio exportado: exento de IVA conforme al artículo 481 del Estatuto Tributario."
+  ],
+  "legal": [],
+  "templateData": {
+    "concept": "Servicios profesionales de desarrollo backend prestados a ANDES LABS INC. durante el mes de octubre de 2026, conforme al acuerdo de tarifa fija mensual.",
+    "currencyText": "pesos colombianos (COP)",
+    "signerName": "Camila Restrepo Gómez",
+    "signerRole": "Representante legal – Camila Restrepo Dev S.A.S.",
+    "signerId": "C.C. 1.037.645.218 de Medellín",
+    "salutation": "Señores"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Cuenta de cobro CC-2026-031 de Camila Restrepo Dev S.A.S. (Medellín, 6 de octubre de 2026) por la tarifa fija de octubre de 2026: COP 12.000.000. Pago a la cuenta corriente Bancolombia 4512-0098-7731."
+}

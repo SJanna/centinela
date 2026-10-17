@@ -1,0 +1,97 @@
+{
+  "id": "B13",
+  "about": "55 h a USD 75/h cuando la tarifa pactada es USD 60/h",
+  "vendorId": "v-datossur",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CL",
+  "documentType": "invoice",
+  "title": "FACTURA DE EXPORTACIÓN ELECTRÓNICA",
+  "brand": {
+    "color": "#BE185D",
+    "accent": "#F9A8D4",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Datos del Sur",
+    "tagline": "Analítica de datos"
+  },
+  "vendor": {
+    "name": "Datos del Sur SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "76.543.210-K",
+    "address": [
+      "Av. Providencia 1208, Oficina 1503",
+      "Providencia, Santiago",
+      "Chile"
+    ],
+    "email": "facturacion@datosdelsur.cl",
+    "phone": "+56 2 2946 7710"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "1287",
+  "issueDate": "2026-10-05",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-20",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Analítica de datos – horas de consultoría",
+      "detail": "Octubre 2026 · tableros y modelos de retención",
+      "quantity": 55,
+      "unit": "h",
+      "unitPrice": 75,
+      "amount": 4125
+    }
+  ],
+  "subtotal": 4125,
+  "tax": {
+    "label": "IVA exento (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 4125,
+  "payment": {
+    "beneficiaryName": "Datos del Sur SpA",
+    "bankName": "Banco de Chile",
+    "accountNumber": "00-123-45678-09",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "BCHICLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Servicio exportado según art. 12, letra E, N° 16 del D.L. 825 (exento de IVA)."
+  ],
+  "legal": [
+    "Timbre Electrónico SII · Res. 80 de 2014 · Documento tributario electrónico.",
+    "Datos del Sur SpA · Giro: servicios de análisis de datos y consultoría informática."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Timbre Electrónico SII",
+    "subtitle": "S.I.I. – SANTIAGO ORIENTE"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura de exportación N° 1287 de Datos del Sur SpA: 55 h × USD 75 = USD 4125. Cuenta corriente Banco de Chile 00-123-45678-09."
+}

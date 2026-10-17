@@ -1,0 +1,128 @@
+{
+  "id": "H06",
+  "about": "Chat de un proveedor nuevo (Pixel Pro) enviando su cuenta de cobro",
+  "vendorId": null,
+  "format": "txt",
+  "template": null,
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "cuenta_de_cobro",
+  "title": "Cuenta de cobro",
+  "brand": null,
+  "vendor": {
+    "name": "Pixel Pro Estudio Creativo S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.888.231-6",
+    "address": [
+      "Calle 10 # 40-21, Oficina 302",
+      "Medellín, Antioquia",
+      "Colombia"
+    ],
+    "email": "hola@pixelpro.studio",
+    "phone": "+57 300 418 2290"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "PP-2026-017",
+  "issueDate": "2026-10-16",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-30",
+  "servicePeriod": "2026-10",
+  "currency": "COP",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Diseño de piezas gráficas para el lanzamiento",
+      "detail": null,
+      "quantity": 12,
+      "unit": "piezas",
+      "unitPrice": 250000,
+      "amount": 3000000
+    }
+  ],
+  "subtotal": null,
+  "tax": null,
+  "total": 3000000,
+  "payment": {
+    "beneficiaryName": "Pixel Pro Estudio Creativo S.A.S.",
+    "bankName": "Bancolombia",
+    "accountNumber": "2318-4410-9902",
+    "accountLabel": "Cuenta de ahorros",
+    "routingOrSwift": "COLOCOBM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": [
+    {
+      "date": "16/10/2026",
+      "time": "11:20",
+      "sender": null,
+      "text": "Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos."
+    },
+    {
+      "date": "16/10/2026",
+      "time": "11:20",
+      "sender": "Valentina Ríos (Pixel Pro)",
+      "text": "Hola Lucía, ¿cómo estás? Soy Valentina, de Pixel Pro."
+    },
+    {
+      "date": "16/10/2026",
+      "time": "11:21",
+      "sender": "Valentina Ríos (Pixel Pro)",
+      "text": "Trabajamos con Andrés en las piezas gráficas del lanzamiento de octubre. Te comparto la cuenta de cobro para que la tengan en cuenta."
+    },
+    {
+      "date": "16/10/2026",
+      "time": "11:22",
+      "sender": "Valentina Ríos (Pixel Pro)",
+      "text": "CUENTA DE COBRO N° PP-2026-017\nPixel Pro Estudio Creativo S.A.S. – NIT 901.888.231-6\nFecha: 16/10/2026 · Vence: 30/10/2026\nConcepto: diseño de piezas gráficas para el lanzamiento (octubre 2026)\n12 piezas × COP 250.000 = COP 3.000.000\nTotal: COP 3.000.000"
+    },
+    {
+      "date": "16/10/2026",
+      "time": "11:23",
+      "sender": "Valentina Ríos (Pixel Pro)",
+      "text": "Datos bancarios:\nTitular: Pixel Pro Estudio Creativo S.A.S.\nBancolombia – Cuenta de ahorros 2318-4410-9902\nSWIFT COLOCOBM"
+    },
+    {
+      "date": "16/10/2026",
+      "time": "11:40",
+      "sender": "Lucía Méndez",
+      "text": "Hola Valentina, gracias. Lo reviso con el equipo y te confirmo."
+    }
+  ],
+  "evidence": {
+    "vendorName": "Pixel Pro Estudio Creativo S.A.S. – NIT 901.888.231-6",
+    "vendorTaxId": "NIT 901.888.231-6",
+    "invoiceNumber": "CUENTA DE COBRO N° PP-2026-017",
+    "issueDate": "Fecha: 16/10/2026",
+    "dueDate": "Vence: 30/10/2026",
+    "servicePeriod": "lanzamiento (octubre 2026)",
+    "currency": "Total: COP 3.000.000",
+    "total": "Total: COP 3.000.000",
+    "beneficiaryName": "Titular: Pixel Pro Estudio Creativo S.A.S.",
+    "bankName": "Bancolombia – Cuenta de ahorros",
+    "accountNumber": "Cuenta de ahorros 2318-4410-9902",
+    "routingOrSwift": "SWIFT COLOCOBM"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Chat de WhatsApp de Pixel Pro Estudio Creativo S.A.S. con la cuenta de cobro PP-2026-017: 12 piezas × COP 250.000 = COP 3.000.000, a una cuenta de ahorros Bancolombia 2318-4410-9902."
+}

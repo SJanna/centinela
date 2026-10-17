@@ -1,0 +1,97 @@
+{
+  "id": "B14",
+  "about": "Cotización en COP 18.000.000 cuando el acuerdo es en USD",
+  "vendorId": "v-bufete",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#1E293B",
+    "accent": "#B7791F",
+    "logo": "pillar",
+    "initials": null,
+    "wordmark": "Bufete Andino",
+    "tagline": "Abogados"
+  },
+  "vendor": {
+    "name": "Bufete Andino Abogados S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "900.222.333-4",
+    "address": [
+      "Carrera 7 # 71-21, Torre B, Piso 9",
+      "Bogotá D.C.",
+      "Colombia"
+    ],
+    "email": "cartera@bufeteandino.co",
+    "phone": "+57 601 742 3300"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "BA-0877",
+  "issueDate": "2026-10-07",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-22",
+  "servicePeriod": "2026-10",
+  "currency": "COP",
+  "paymentTerms": "Pago único",
+  "lines": [
+    {
+      "description": "Constitución de subsidiaria en Colombia – honorarios",
+      "detail": "Según cotización COT-2026-114 (pago único)",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 18000000,
+      "amount": 18000000
+    }
+  ],
+  "subtotal": 18000000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 18000000,
+  "payment": {
+    "beneficiaryName": "Bufete Andino Abogados S.A.S.",
+    "bankName": "Banco de Bogotá",
+    "accountNumber": "0098-7766-5544",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "BBOGCOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Servicios jurídicos prestados a sociedad del exterior: exportación de servicios exenta de IVA."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764062223334 del 15/01/2026, prefijo BA, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 5f34b7a6aaaa6f5f490d8eef2fa098f0b0c51e909e437dfd46dd9c7af2edc8dcb66d633262e56d92824e474a5a93775a"
+  ],
+  "templateData": {
+    "code": "qr",
+    "reference": "COT-2026-114",
+    "referenceLabel": "COTIZACIÓN"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura electrónica BA-0877 de Bufete Andino Abogados S.A.S. por la constitución de la subsidiaria (cotización COT-2026-114), facturada en pesos: COP 18.000.000."
+}

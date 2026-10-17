@@ -1,0 +1,7 @@
+{
+  "id": "B07",
+  "about": "El mismo archivo de B02 enviado otra vez (bytes idénticos)",
+  "vendorId": "v-cloudmetrics",
+  "format": "pdf",
+  "copyOf": "B02"
+}

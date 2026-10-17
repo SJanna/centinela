@@ -1,0 +1,96 @@
+{
+  "id": "B09",
+  "about": "Proveedor no registrado: Quantum Freelance LLC, USD 2.000",
+  "vendorId": null,
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#7C3AED",
+    "accent": null,
+    "logo": "orbit",
+    "initials": null,
+    "wordmark": "Quantum Freelance",
+    "tagline": "Product engineering on demand"
+  },
+  "vendor": {
+    "name": "Quantum Freelance LLC",
+    "taxIdLabel": "EIN",
+    "taxId": "85-3319042",
+    "address": [
+      "77 Coral Way, Suite 410",
+      "Miami, FL 33145",
+      "United States"
+    ],
+    "email": "billing@quantumfreelance.co",
+    "phone": "+1 (305) 555-0188"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "United States"
+    ],
+    "email": "ap@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "QF-0193",
+  "issueDate": "2026-10-09",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-23",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 14",
+  "lines": [
+    {
+      "description": "Frontend development – React",
+      "detail": "October 2026 · landing page and onboarding flow",
+      "quantity": 25,
+      "unit": "h",
+      "unitPrice": 80,
+      "amount": 2000
+    }
+  ],
+  "subtotal": 2000,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 2000,
+  "payment": {
+    "beneficiaryName": "Quantum Freelance LLC",
+    "bankName": "Bank of America",
+    "accountNumber": "898043215567",
+    "accountLabel": "Account number",
+    "routingOrSwift": "063100277",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Hours are tracked in the shared project board. Thank you for working with us."
+  ],
+  "legal": [
+    "Quantum Freelance LLC · EIN 85-3319042 · 77 Coral Way, Suite 410, Miami, FL 33145"
+  ],
+  "templateData": {
+    "customerId": "AND-118",
+    "heroNote": "Thanks for working with Quantum Freelance.",
+    "paymentSubtitle": "ACH or domestic wire"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura en inglés de Quantum Freelance LLC por 25 h × USD 80.00 = USD 2,000.00 de desarrollo frontend en octubre de 2026. Pago a Bank of America, cuenta 898043215567, ABA 063100277."
+}

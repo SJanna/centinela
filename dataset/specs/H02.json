@@ -1,0 +1,101 @@
+{
+  "id": "H02",
+  "about": "Nota de serviço en portugués, BRL 9.500",
+  "vendorId": "v-testa",
+  "format": "pdf",
+  "template": "nota_servico",
+  "language": "pt",
+  "locale": "pt-BR",
+  "documentType": "invoice",
+  "title": "NOTA FISCAL DE SERVIÇOS ELETRÔNICA – NFS-e",
+  "brand": {
+    "color": "#B91C1C",
+    "accent": "#FCA5A5",
+    "logo": "check",
+    "initials": null,
+    "wordmark": "Testa Qualidade",
+    "tagline": "QA & testes"
+  },
+  "vendor": {
+    "name": "Testa Qualidade Ltda",
+    "taxIdLabel": "CNPJ",
+    "taxId": "12.345.678/0001-90",
+    "address": [
+      "Rua Fradique Coutinho, 1450 – Conj. 82",
+      "Pinheiros, São Paulo – SP, 05416-001",
+      "Brasil"
+    ],
+    "email": "financeiro@testaqualidade.com.br",
+    "phone": "+55 11 3061 4420"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00004127",
+  "issueDate": "2026-10-08",
+  "issuePlace": null,
+  "issueTime": "10:41:07",
+  "dueDate": "2026-10-22",
+  "servicePeriod": "2026-10",
+  "currency": "BRL",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "QA manual e automatizado – mensalidade",
+      "detail": null,
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 9500,
+      "amount": 9500
+    }
+  ],
+  "subtotal": 9500,
+  "tax": {
+    "label": "Valor do ISS (R$)",
+    "amount": 0
+  },
+  "total": 9500,
+  "payment": {
+    "beneficiaryName": "Testa Qualidade Ltda",
+    "bankName": "Itaú Unibanco",
+    "accountNumber": "0341-45678-9",
+    "accountLabel": "Agência/Conta:",
+    "routingOrSwift": "ITAUBRSP",
+    "routingLabel": "SWIFT:"
+  },
+  "notes": [
+    "Exportação de serviços para tomador domiciliado no exterior – não incidência do ISS (art. 2º, I, da LC 116/2003) e do PIS/COFINS.",
+    "Serviços de QA manual e automatizado prestados à Andes Labs Inc. referentes à competência de outubro/2026, conforme contrato mensal."
+  ],
+  "legal": [],
+  "templateData": {
+    "verificationCode": "QX7K-29PA",
+    "municipalRegistration": "5.123.456-7",
+    "rps": "RPS N° 4127 · Série A · emitido em 08/10/2026",
+    "serviceCode": "01.01 – Análise e desenvolvimento de sistemas",
+    "city": "São Paulo",
+    "state": "SP",
+    "currencyText": "BRL (Real brasileiro)",
+    "customerCountry": "Estados Unidos",
+    "issuerHeader": "PRESTAÇÃO DE SERVIÇOS – DOCUMENTO AUXILIAR",
+    "aliquota": "0,00"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "NFS-e N° 00004127 de Testa Qualidade Ltda (São Paulo), competência outubro/2026: R$ 9.500,00, ISS R$ 0,00 por exportação. Dados bancários: Itaú Unibanco, Agência/Conta 0341-45678-9."
+}

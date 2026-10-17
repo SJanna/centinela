@@ -1,0 +1,95 @@
+{
+  "id": "B22",
+  "about": "USD 900 de octubre, pero el contrato terminó en junio",
+  "vendorId": "v-roble",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#7C2D12",
+    "accent": "#FDBA74",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Viejo Roble",
+    "tagline": "Imprenta"
+  },
+  "vendor": {
+    "name": "Imprenta Viejo Roble S.A.",
+    "taxIdLabel": "NIT",
+    "taxId": "900.111.000-5",
+    "address": [
+      "Calle 13 # 68-45, Zona Industrial Montevideo",
+      "Bogotá D.C.",
+      "Colombia"
+    ],
+    "email": "cartera@viejoroble.com.co",
+    "phone": "+57 601 411 2780"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "IVR-5521",
+  "issueDate": "2026-10-05",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-20",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Crédito 15 días",
+  "lines": [
+    {
+      "description": "Material impreso – paquete mensual",
+      "detail": "Octubre 2026 · catálogos, tarjetas de presentación y volantes",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 900,
+      "amount": 900
+    }
+  ],
+  "subtotal": 900,
+  "tax": {
+    "label": "IVA 0 % (venta a cliente del exterior)",
+    "amount": 0
+  },
+  "total": 900,
+  "payment": {
+    "beneficiaryName": "Imprenta Viejo Roble S.A.",
+    "bankName": "Banco de Occidente",
+    "accountNumber": "0231-0099-8811",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "OCCICOBC",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Material entregado en la oficina de Bogotá del cliente. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764055511100 del 15/01/2026, prefijo IVR, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: a3feb9a5ac57d7b3953bc3f07bcfb48c5c5fc5ba11f5416d4639159dabac55b00fa435d10ce896d17233c35254588b2b"
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura electrónica IVR-5521 de Imprenta Viejo Roble S.A. por el paquete mensual de material impreso de octubre de 2026: USD 900,00."
+}

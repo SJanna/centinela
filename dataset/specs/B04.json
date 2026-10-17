@@ -1,0 +1,96 @@
+{
+  "id": "B04",
+  "about": "40 h × MXN 900 = MXN 36.000 (captura limpia)",
+  "vendorId": "v-nopal",
+  "format": "png",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-MX",
+  "documentType": "invoice",
+  "title": "FACTURA · CFDI 4.0",
+  "brand": {
+    "color": "#15803D",
+    "accent": "#BBF7D0",
+    "logo": "cactus",
+    "initials": null,
+    "wordmark": "Estudio Nopal",
+    "tagline": "Diseño de producto"
+  },
+  "vendor": {
+    "name": "Estudio Nopal S. de R.L.",
+    "taxIdLabel": "RFC",
+    "taxId": "ENO210415AB3",
+    "address": [
+      "Calle Colima 220, Int. 3, Col. Roma Norte",
+      "Cuauhtémoc, 06700 Ciudad de México",
+      "México"
+    ],
+    "email": "facturas@estudionopal.mx",
+    "phone": "+52 55 5584 2190"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "A-318",
+  "issueDate": "2026-10-08",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-23",
+  "servicePeriod": "2026-10",
+  "currency": "MXN",
+  "paymentTerms": "03 Transferencia · PPD",
+  "lines": [
+    {
+      "description": "Diseño de producto (UX/UI) – horas",
+      "detail": "Octubre 2026 · Clave SAT 80101500",
+      "quantity": 40,
+      "unit": "h",
+      "unitPrice": 900,
+      "amount": 36000
+    }
+  ],
+  "subtotal": 36000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 36000,
+  "payment": {
+    "beneficiaryName": "Estudio Nopal S. de R.L.",
+    "bankName": "BBVA México",
+    "accountNumber": "012 180 00123456789 1",
+    "accountLabel": "CLABE",
+    "routingOrSwift": "BCMRMXMM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Exportación definitiva de servicios (clave 02). Tasa de IVA 0 % conforme al art. 29 de la Ley del IVA."
+  ],
+  "legal": [
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): 67B94D68-E346-495D-ADAB-DCDFB86703F7 · Certificado del emisor: 00001000000712345678"
+  ],
+  "templateData": {
+    "code": "qr",
+    "subtitle": "Serie A · Folio 318"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura de la factura CFDI A-318 de Estudio Nopal S. de R.L.: 40 h × $900.00 = $36,000.00 MXN, IVA 0 % por exportación. CLABE BBVA 012 180 00123456789 1."
+}

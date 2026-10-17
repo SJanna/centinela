@@ -1,0 +1,95 @@
+{
+  "id": "M01",
+  "about": "Octubre COP 12.000.000 (≈ USD 3.000)",
+  "vendorId": "v-camila",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#1D4ED8",
+    "accent": "#60A5FA",
+    "logo": "monogram",
+    "initials": "CR",
+    "wordmark": "CR Dev",
+    "tagline": "Ingeniería de software"
+  },
+  "vendor": {
+    "name": "Camila Restrepo Dev S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.456.789-1",
+    "address": [
+      "Carrera 43A # 7-50, Oficina 1204",
+      "El Poblado, Medellín, Antioquia",
+      "Colombia"
+    ],
+    "email": "facturacion@crdev.co",
+    "phone": "+57 604 444 1290"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CRD-1047",
+  "issueDate": "2026-10-02",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-17",
+  "servicePeriod": "2026-10",
+  "currency": "COP",
+  "paymentTerms": "Crédito 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo backend – tarifa fija mensual",
+      "detail": "Servicio de octubre de 2026 · Contrato de servicios profesionales",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 12000000,
+      "amount": 12000000
+    }
+  ],
+  "subtotal": 12000000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 12000000,
+  "payment": {
+    "beneficiaryName": "Camila Restrepo Dev S.A.S.",
+    "bankName": "Bancolombia",
+    "accountNumber": "4512-0098-7731",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "COLOCOBM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios exenta de IVA (art. 481, literal c, del Estatuto Tributario). Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764061234567 del 15/01/2026, prefijo CRD, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: ae76773953b66ab4f814041adb0be7eca8b31ef3480636c71c7b07ae7217954bd87449fddee62562ff1da7715de56794"
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura electrónica de venta CRD-1047 de Camila Restrepo Dev S.A.S. por la tarifa fija de octubre de 2026: COP 12.000.000. Cuenta corriente Bancolombia 4512-0098-7731."
+}

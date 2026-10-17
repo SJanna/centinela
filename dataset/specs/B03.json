@@ -1,0 +1,138 @@
+{
+  "id": "B03",
+  "about": "Factura de octubre BRL 9.500 en el cuerpo del correo",
+  "vendorId": "v-testa",
+  "format": "eml",
+  "template": null,
+  "language": "es",
+  "locale": "pt-BR",
+  "documentType": "invoice",
+  "title": "Factura",
+  "brand": {
+    "color": "#B91C1C",
+    "accent": "#FCA5A5",
+    "logo": "check",
+    "initials": null,
+    "wordmark": "Testa Qualidade",
+    "tagline": "QA & testes"
+  },
+  "vendor": {
+    "name": "Testa Qualidade Ltda",
+    "taxIdLabel": "CNPJ",
+    "taxId": "12.345.678/0001-90",
+    "address": [
+      "Rua Fradique Coutinho, 1450 – Conj. 82",
+      "Pinheiros, São Paulo – SP, 05416-001",
+      "Brasil"
+    ],
+    "email": "financeiro@testaqualidade.com.br",
+    "phone": "+55 11 3061 4420"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "TQ-2026-0198",
+  "issueDate": "2026-10-07",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-21",
+  "servicePeriod": "2026-10",
+  "currency": "BRL",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "QA manual y automatizado – mensualidad de octubre de 2026",
+      "detail": null,
+      "quantity": null,
+      "unit": null,
+      "unitPrice": null,
+      "amount": 9500
+    }
+  ],
+  "subtotal": 9500,
+  "tax": {
+    "label": "Impuestos",
+    "amount": 0
+  },
+  "total": 9500,
+  "payment": {
+    "beneficiaryName": "Testa Qualidade Ltda",
+    "bankName": "Itaú Unibanco",
+    "accountNumber": "0341-45678-9",
+    "accountLabel": "Agencia/Cuenta",
+    "routingOrSwift": "ITAUBRSP",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Testa Qualidade – Financeiro <financeiro@testaqualidade.com.br>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Factura TQ-2026-0198 – servicios de QA de octubre 2026",
+    "date": "Wed, 07 Oct 2026 09:14:22 -0300",
+    "messageId": "<tq-2026-0198.20261007091422@testaqualidade.com.br>",
+    "body": [
+      "Hola, equipo de Andes Labs:",
+      "",
+      "Les enviamos la factura de los servicios de QA de octubre de 2026, según el contrato mensual vigente.",
+      "",
+      "Factura N°: TQ-2026-0198",
+      "Fecha de emisión: 07/10/2026",
+      "Vencimiento: 21/10/2026",
+      "Periodo: octubre de 2026",
+      "Proveedor: Testa Qualidade Ltda – CNPJ 12.345.678/0001-90",
+      "",
+      "Concepto: QA manual y automatizado – mensualidad de octubre de 2026: R$ 9.500,00",
+      "Subtotal: R$ 9.500,00",
+      "Impuestos: R$ 0,00 (exportación de servicios)",
+      "Total: R$ 9.500,00 (BRL)",
+      "",
+      "Datos bancarios:",
+      "Beneficiario: Testa Qualidade Ltda",
+      "Banco: Itaú Unibanco",
+      "Agencia/Cuenta: 0341-45678-9",
+      "SWIFT: ITAUBRSP",
+      "",
+      "Cualquier duda, quedamos atentos.",
+      "",
+      "Mariana Souza",
+      "Financeiro – Testa Qualidade Ltda",
+      "Rua Fradique Coutinho, 1450 – Conj. 82 – São Paulo – SP"
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "vendorName": "Proveedor: Testa Qualidade Ltda",
+    "vendorTaxId": "CNPJ 12.345.678/0001-90",
+    "invoiceNumber": "Factura N°: TQ-2026-0198",
+    "issueDate": "Fecha de emisión: 07/10/2026",
+    "dueDate": "Vencimiento: 21/10/2026",
+    "servicePeriod": "Periodo: octubre de 2026",
+    "currency": "Total: R$ 9.500,00 (BRL)",
+    "subtotal": "Subtotal: R$ 9.500,00",
+    "tax": "Impuestos: R$ 0,00",
+    "total": "Total: R$ 9.500,00",
+    "beneficiaryName": "Beneficiario: Testa Qualidade Ltda",
+    "bankName": "Banco: Itaú Unibanco",
+    "accountNumber": "Agencia/Cuenta: 0341-45678-9",
+    "routingOrSwift": "SWIFT: ITAUBRSP"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo de Testa Qualidade Ltda con la factura TQ-2026-0198 de octubre de 2026 en el cuerpo: R$ 9.500,00 (BRL), sin impuestos. Cuenta Itaú 0341-45678-9."
+}

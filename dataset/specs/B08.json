@@ -1,0 +1,137 @@
+{
+  "id": "B08",
+  "about": "Misma factura de B02 (mismo número) reenviada en el cuerpo de un correo",
+  "vendorId": "v-cloudmetrics",
+  "format": "eml",
+  "template": null,
+  "language": "es",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Factura",
+  "brand": {
+    "color": "#4F46E5",
+    "accent": null,
+    "logo": "bars",
+    "initials": null,
+    "wordmark": "CloudMetrics",
+    "tagline": "Infrastructure monitoring"
+  },
+  "vendor": {
+    "name": "CloudMetrics Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "88-1234567",
+    "address": [
+      "2150 Folsom Street, Floor 3",
+      "San Francisco, CA 94110",
+      "United States"
+    ],
+    "email": "billing@cloudmetrics.io",
+    "phone": "+1 (415) 555-0137"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CM-INV-2026-10-0412",
+  "issueDate": "2026-10-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Plan Team – monitoreo de infraestructura",
+      "detail": null,
+      "quantity": 10,
+      "unit": null,
+      "unitPrice": 120,
+      "amount": 1200
+    }
+  ],
+  "subtotal": 1200,
+  "tax": {
+    "label": "Impuestos (0 %)",
+    "amount": 0
+  },
+  "total": 1200,
+  "payment": {
+    "beneficiaryName": "CloudMetrics Inc.",
+    "bankName": "Silicon Valley Bank",
+    "accountNumber": "3300198822",
+    "accountLabel": "Account number",
+    "routingOrSwift": "121140399",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "CloudMetrics Billing <billing@cloudmetrics.io>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Factura CM-INV-2026-10-0412 – CloudMetrics – octubre 2026",
+    "date": "Wed, 14 Oct 2026 16:05:41 +0000",
+    "messageId": "<20261014160541.0412@cloudmetrics.io>",
+    "body": [
+      "Hola, equipo de Andes Labs:",
+      "",
+      "Les reenviamos la factura de su suscripción de octubre. Abajo encuentran el detalle completo.",
+      "",
+      "Factura N°: CM-INV-2026-10-0412",
+      "Fecha de emisión: 1 de octubre de 2026",
+      "Vencimiento: 15 de octubre de 2026",
+      "Periodo: 1 al 31 de octubre de 2026",
+      "Moneda: USD",
+      "",
+      "Plan Team – monitoreo de infraestructura (10 puestos × USD 120.00): USD 1,200.00",
+      "Subtotal: USD 1,200.00",
+      "Impuestos (0 %): USD 0.00",
+      "Total a pagar: USD 1,200.00",
+      "",
+      "Datos para transferencia (ACH o wire):",
+      "Beneficiario: CloudMetrics Inc.",
+      "Banco: Silicon Valley Bank",
+      "Número de cuenta: 3300198822",
+      "ABA routing: 121140399",
+      "",
+      "Gracias,",
+      "Equipo de facturación",
+      "CloudMetrics Inc. · EIN 88-1234567",
+      "2150 Folsom Street, Floor 3, San Francisco, CA 94110"
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "vendorName": "CloudMetrics Inc. · EIN 88-1234567",
+    "vendorTaxId": "EIN 88-1234567",
+    "invoiceNumber": "Factura N°: CM-INV-2026-10-0412",
+    "issueDate": "Fecha de emisión: 1 de octubre de 2026",
+    "dueDate": "Vencimiento: 15 de octubre de 2026",
+    "servicePeriod": "Periodo: 1 al 31 de octubre de 2026",
+    "currency": "Moneda: USD",
+    "subtotal": "Subtotal: USD 1,200.00",
+    "tax": "Impuestos (0 %): USD 0.00",
+    "total": "Total a pagar: USD 1,200.00",
+    "beneficiaryName": "Beneficiario: CloudMetrics Inc.",
+    "bankName": "Banco: Silicon Valley Bank",
+    "accountNumber": "Número de cuenta: 3300198822",
+    "routingOrSwift": "ABA routing: 121140399"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo de CloudMetrics Inc. que reenvía en el cuerpo la factura CM-INV-2026-10-0412 de octubre de 2026 por USD 1,200.00, con los mismos datos bancarios (Silicon Valley Bank, cuenta 3300198822)."
+}

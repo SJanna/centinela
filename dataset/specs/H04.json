@@ -1,0 +1,137 @@
+{
+  "id": "H04",
+  "about": "Correo en inglés: 20 h × USD 60 = USD 1.200",
+  "vendorId": "v-datossur",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#BE185D",
+    "accent": "#F9A8D4",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Datos del Sur",
+    "tagline": "Analítica de datos"
+  },
+  "vendor": {
+    "name": "Datos del Sur SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "76.543.210-K",
+    "address": [
+      "Av. Providencia 1208, Oficina 1503",
+      "Providencia, Santiago",
+      "Chile"
+    ],
+    "email": "facturacion@datosdelsur.cl",
+    "phone": "+56 2 2946 7710"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "1302",
+  "issueDate": "2026-10-15",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-30",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Data analytics services",
+      "detail": null,
+      "quantity": 20,
+      "unit": "hours",
+      "unitPrice": 60,
+      "amount": 1200
+    }
+  ],
+  "subtotal": 1200,
+  "tax": {
+    "label": "VAT (exempt – export of services)",
+    "amount": 0
+  },
+  "total": 1200,
+  "payment": {
+    "beneficiaryName": "Datos del Sur SpA",
+    "bankName": "Banco de Chile",
+    "accountNumber": "00-123-45678-09",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "BCHICLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Datos del Sur – Billing <facturacion@datosdelsur.cl>",
+    "to": "Lucía Méndez <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice 1302 – Data analytics services – October 2026",
+    "date": "Thu, 15 Oct 2026 12:31:08 -0300",
+    "messageId": "<1302.20261015123108@datosdelsur.cl>",
+    "body": [
+      "Hi Lucía,",
+      "",
+      "Please find below our invoice for the data analytics services provided in October 2026.",
+      "",
+      "Invoice no.: 1302",
+      "Issue date: October 15, 2026",
+      "Due date: October 30, 2026",
+      "Service period: October 2026",
+      "Currency: USD",
+      "",
+      "Data analytics services – 20 hours × USD 60.00 = USD 1,200.00",
+      "Subtotal: USD 1,200.00",
+      "VAT (exempt – export of services): USD 0.00",
+      "Total due: USD 1,200.00",
+      "",
+      "Wire transfer details",
+      "Beneficiary: Datos del Sur SpA",
+      "Bank: Banco de Chile",
+      "Account number: 00-123-45678-09",
+      "SWIFT: BCHICLRM",
+      "",
+      "Best regards,",
+      "Ignacio Fuentes",
+      "Billing – Datos del Sur SpA",
+      "RUT 76.543.210-K · Av. Providencia 1208, Oficina 1503, Santiago, Chile"
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "vendorName": "Billing – Datos del Sur SpA",
+    "vendorTaxId": "RUT 76.543.210-K",
+    "invoiceNumber": "Invoice no.: 1302",
+    "issueDate": "Issue date: October 15, 2026",
+    "dueDate": "Due date: October 30, 2026",
+    "servicePeriod": "Service period: October 2026",
+    "currency": "Currency: USD",
+    "subtotal": "Subtotal: USD 1,200.00",
+    "tax": "VAT (exempt – export of services): USD 0.00",
+    "total": "Total due: USD 1,200.00",
+    "beneficiaryName": "Beneficiary: Datos del Sur SpA",
+    "bankName": "Bank: Banco de Chile",
+    "accountNumber": "Account number: 00-123-45678-09",
+    "routingOrSwift": "SWIFT: BCHICLRM"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo en inglés de Datos del Sur SpA con la factura 1302 en el cuerpo: 20 h × USD 60.00 = USD 1,200.00 (octubre de 2026), IVA exento. Cuenta Banco de Chile 00-123-45678-09."
+}

@@ -1,0 +1,92 @@
+{
+  "id": "M03",
+  "about": "Octubre BRL 9.500 (≈ USD 1.805): el mes quedaría en USD 6.005 > 6.000",
+  "vendorId": "v-testa",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "pt-BR",
+  "documentType": "invoice",
+  "title": "FACTURA COMERCIAL (INVOICE)",
+  "brand": {
+    "color": "#B91C1C",
+    "accent": "#FCA5A5",
+    "logo": "check",
+    "initials": null,
+    "wordmark": "Testa Qualidade",
+    "tagline": "QA & testes"
+  },
+  "vendor": {
+    "name": "Testa Qualidade Ltda",
+    "taxIdLabel": "CNPJ",
+    "taxId": "12.345.678/0001-90",
+    "address": [
+      "Rua Fradique Coutinho, 1450 – Conj. 82",
+      "Pinheiros, São Paulo – SP, 05416-001",
+      "Brasil"
+    ],
+    "email": "financeiro@testaqualidade.com.br",
+    "phone": "+55 11 3061 4420"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "TQ-2026-0201",
+  "issueDate": "2026-10-07",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-21",
+  "servicePeriod": "2026-10",
+  "currency": "BRL",
+  "paymentTerms": "Transferencia internacional",
+  "lines": [
+    {
+      "description": "QA manual y automatizado – mensualidad",
+      "detail": "Outubro/2026 · pruebas de regresión y automatización",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 9500,
+      "amount": 9500
+    }
+  ],
+  "subtotal": 9500,
+  "tax": {
+    "label": "Impuestos 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 9500,
+  "payment": {
+    "beneficiaryName": "Testa Qualidade Ltda",
+    "bankName": "Itaú Unibanco",
+    "accountNumber": "0341-45678-9",
+    "accountLabel": "Agência/Conta",
+    "routingOrSwift": "ITAUBRSP",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Exportación de servicios: no incidencia de ISS, PIS y COFINS."
+  ],
+  "legal": [
+    "Testa Qualidade Ltda · CNPJ 12.345.678/0001-90 · Inscrição Municipal 5.123.456-7 · São Paulo – SP, Brasil"
+  ],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Factura comercial TQ-2026-0201 de Testa Qualidade Ltda por el QA de octubre de 2026: R$ 9.500,00 (BRL), sin impuestos. Cuenta Itaú 0341-45678-9."
+}
