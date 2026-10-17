@@ -73,6 +73,37 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 
 **Esfuerzo estimado:** tope por pago solo, ~1 h · catálogo de 4–5 tipos con pantalla y pruebas, 3–5 h · lenguaje natural encima, +2 h.
 
+## 7. Capas de confiabilidad ajustadas a Blinka (investigación del 17 de octubre)
+
+**Qué hace Blinka y qué no** (fuentes: blinka.co, su OpenAPI v2.0.0, docs.blinka.co y la documentación de Mural Pay, su socio de pagos):
+- Ya cubre: identidad del cliente (Persona), formato del destino por riel, aprobación humana de beneficiarios nuevos (un método de pago creado por API queda `pending` hasta que una persona lo aprueba; no se puede editar, se archiva y se crea otro).
+- Tiene un servidor MCP en acceso anticipado que **redacta borradores de transferencias, no las ejecuta** (alcances `blinka:read`, `blinka:transfers:draft`).
+- La API solo muestra los últimos 4 dígitos de las cuentas.
+- No tiene cuentas por pagar ni lectura de facturas de proveedores. **Nadie en su stack verifica que una factura corresponda a una obligación real**: esa es la capa de Centinela.
+- ACH, wire y USDC no se revierten, y Mural deja al cliente como responsable de las «instrucciones incorrectas».
+
+**Orden ajustado por importancia para Blinka:**
+
+| # | Capa | Estado | Esfuerzo | Dataset |
+|---|---|---|---|---|
+| 1 | Ficha del proveedor + cuenta registrada (PRV-2) | Ya está | — | — |
+| 2 | Destino por riel (ABA+cuenta, CLABE, llave Pix, CBU/CVU/alias+CUIT, CCI, IBAN, cadena+wallet USDC) en vez de un número genérico | Falta | 4–6 h | Cambia |
+| 3 | Duplicados con índices únicos | Ya está | — | — |
+| 4 | Clave de idempotencia derivada del duplicado, en el registro y el CSV (para quien ejecute el pago) | Falta | ~1 h | No |
+| 5 | Acuerdo, monto, umbral, límite y fondo | Ya está | — | — |
+| 6 | Límite de 30 días móviles (Mural retiene por volumen de 30 días) | Falta | 1–2 h | No |
+| 7 | Dos lecturas, citas, aritmética, instrucciones escondidas | Ya está | — | — |
+| 8 | Dígitos de control por riel (ABA, CLABE, IBAN, CPF/CNPJ, NIT, RUT, CBU/CVU, CUIT, EIP-55) | Falta | 2–3 h | **Cambia: hoy fallan 9 de 11 proveedores** |
+| 9 | Ruta disponible por moneda y país (no hay ruta local en USD a CO, AR ni CL) | Falta | ~1 h | No |
+| 10 | Entidad pagadora (clientes con muchas entidades) | Falta | 2–3 h + `eval:live` | Cambia |
+| 11 | Paquete de soporte para pagos retenidos (factura con nombre, monto y descripción) | Parcial | 1–2 h | No |
+| 12 | Coincidencia del titular cuando el riel la ofrece (p. ej. Pix con CNPJ) | Falta; la consulta la hace el riel, fuera del reto | ~1 h simulado | No |
+| 13 | Factura electrónica XML/QR y consulta al SAT | Falta; baja de prioridad (ningún XML/QR trae la cuenta) | Medio | Cambia |
+
+**Fuera del reto:** ejecutar pagos, crear métodos de pago, verificar identidad (KYB), calificar algo como fraude.
+
+**Para el pitch:** «Una cuenta en dólares resuelve cómo pagarle a un proveedor en Latinoamérica; Centinela responde si esa factura se debe pagar. La compara con lo acordado, con lo ya pagado y con la cuenta registrada, y deja escrito el porqué.» No prometer integración con Blinka: no existe.
+
 ## Riesgos conocidos (decisiones conscientes, documentadas)
 
 - **Límite mensual y fondo entre instancias de Vercel.** Los duplicados están protegidos en la base con índices únicos. El límite del mes y el fondo dependen de un candado por proceso: dos personas subiendo a la vez en dos instancias distintas podrían, en teoría, pasarse del límite. La interfaz sube de a una factura. Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
