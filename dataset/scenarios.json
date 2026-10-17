@@ -1,0 +1,9 @@
+{
+  "_doc": "Cada escenario arranca con historial vacío y procesa sus casos en el orden de casos.csv. 'rulesOverride' reemplaza campos de company.rules solo en ese escenario.",
+  "scenarios": [
+    { "id": "base", "now": "2026-10-20T15:00:00Z", "rulesOverride": {} },
+    { "id": "cierre_mes", "now": "2026-10-20T15:00:00Z", "rulesOverride": { "periodLimitUsd": 6000 } },
+    { "id": "fondo_bajo", "now": "2026-10-20T15:00:00Z", "rulesOverride": { "initialFundUsd": 4000 } },
+    { "id": "reservado", "now": "2026-10-20T15:00:00Z", "rulesOverride": {} }
+  ]
+}
