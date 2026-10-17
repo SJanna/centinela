@@ -52,6 +52,32 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 
 **Frase para el pitch:** «Centinela lee cada factura como una persona, pero paga como un contador: un modelo entiende el documento y la política de la empresa decide. Ninguna factura, por convincente que sea, puede convencerlo de pagar algo que las reglas no permiten. Cuando algo se sale de ellas, le pide permiso a una persona y explica por qué.»
 
+## 6. Reglas dinámicas (descrito, para después de la entrega)
+
+**Por qué:** el reto pide «reglas configurables, **como** límites por pago y por periodo, beneficiarios permitidos y aprobación humana por encima de cierto monto». Hoy la empresa edita valores, pero no puede crear reglas. Además:
+- El enunciado separa «límite por pago» de «aprobación humana sobre cierto monto», y hoy solo existe el umbral que escala (LIM-1). Falta un **tope duro por pago** que frene siempre.
+- Los equipos pueden compartir facturas «junto con las reglas de pago de una empresa ficticia»: el jurado podría traer reglas que hoy no se pueden expresar.
+
+**Diseño propuesto:** un catálogo de tipos de regla que la empresa activa y parametriza desde `/reglas`. No son reglas libres ni código: todo sigue siendo determinista y explicable.
+
+| Tipo | Ejemplo | Efecto |
+|---|---|---|
+| Tope por pago | Nunca pagar más de USD 20.000 en una factura | Frena |
+| Límite por proveedor | No más de USD 6.000 al mes a Estudio Nopal | Escala |
+| Aprobación por país o moneda | Todo pago en BRL pasa por una persona | Escala |
+| Proveedor bloqueado | No pagar a Imprenta Viejo Roble | Frena |
+| Factura vencida o adelantada | Escalar si venció hace más de 60 días | Escala |
+
+**Reglas de seguridad del diseño:**
+- Las reglas nuevas **solo restringen** (frenan o escalan); nunca autorizan un pago.
+- Las 15 comprobaciones base siguen siempre activas.
+- Cada regla aparece en el detalle de la factura con su explicación, igual que las actuales, y queda copiada en el registro de cada decisión.
+- La guardia revisa al menos las que frenan.
+
+**Opcional encima:** la empresa escribe la regla en lenguaje natural; Claude la traduce a un tipo del catálogo, la muestra estructurada y una persona la aprueba antes de activarla. El modelo propone la regla; no decide pagos.
+
+**Esfuerzo estimado:** tope por pago solo, ~1 h · catálogo de 4–5 tipos con pantalla y pruebas, 3–5 h · lenguaje natural encima, +2 h.
+
 ## Riesgos conocidos (decisiones conscientes, documentadas)
 
 - **Límite mensual y fondo entre instancias de Vercel.** Los duplicados están protegidos en la base con índices únicos. El límite del mes y el fondo dependen de un candado por proceso: dos personas subiendo a la vez en dos instancias distintas podrían, en teoría, pasarse del límite. La interfaz sube de a una factura. Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
