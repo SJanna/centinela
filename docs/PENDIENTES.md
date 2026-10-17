@@ -2,6 +2,56 @@
 
 En orden de prioridad.
 
+## Perfil económico y estrés (17 oct)
+
+**Hay que decidir antes de entregar.** Con Haiku en las dos lecturas (perfil `economico`, hoy por defecto) el set de 41 sale perfecto y cuesta 9 veces menos. Pero el set de estrés encontró **pagos indebidos de recibos**, y la mitad también pasan con el perfil `calidad`.
+
+| Corrida (lectura real) | Aciertos | Pagos indebidos | Escaladas de más | Costo |
+|---|---:|---:|---:|---:|
+| 41 casos · `calidad` (Sonnet + Haiku, corrida anterior) | 40/41 | 0 | 1 (B05) | USD 0,84 |
+| 41 casos · `economico` | 41/41 | 0 | 0 | USD 0,09 |
+| Estrés, muestra estratificada de 100 · `economico` | 95/100 | 2 | 3 de 46 | USD 0,26 |
+| Estrés, los 61 recibos y totales borrosos · `economico` | 44/61 | 6 | 0 | USD 0,18 |
+| Estrés, esos 6 pagos indebidos · `calidad` | 3/6 | 3 | 0 | USD 0,13 |
+
+**Qué pagó de más**
+- **Recibos** (27 en el set): las dos lecturas con Haiku dijeron «invoice» en 16 de 27 y se pagaron 5. Las otras 11 escalaron o frenaron por otros motivos (instrucciones, umbral, duplicado).
+  - Fallan los recibos de la plantilla saas (0 de 11 detectados) y los del cuerpo del correo (1 de 5). Los de las plantillas latam, cuenta de cobro y nota de servicio se detectan en 10 de 11.
+  - S0916 y S1086 dicen «Payment received on … Thank you». Con `calidad` escalan; con `economico` se pagan.
+  - S0030, S0488 y S0768 son correos que se titulan «Payment receipt» o «Recibo de pago» pero traen vencimiento y datos bancarios. **Se pagan con los dos perfiles.** La etiqueta es discutible: en Colombia un «recibo de pago» a veces se paga. Aun así, ningún perfil los escala.
+- **Total borroso** (34): se pagó 1, S0922. Las dos lecturas pusieron como total el subtotal visible (MXN 86.400) y lo marcaron legible. Con `calidad` escala.
+- **Escaladas de más** en la muestra (S0784, S1029 y S1831): en dos casos el lector «b» (prompt v3b) marca la cuenta como ilegible; en S1831 además toma el alias «CR Dev» como proveedor. En S0784 ninguna lectura trae horas ni tarifa.
+
+**Opciones (ninguna aplicada)**
+1. Una comprobación de recibos en código (`src/extract`, junto al detector de instrucciones): si el texto dice «payment received», «paid on», «recibo de pago», «payment receipt», «pagado» o algo parecido, la factura escala por LEC-1. No depende del modelo y cubre los dos perfiles. Unas 1–2 h y volver a correr las 61 (~USD 0,18).
+2. Prompts v4 y v4b: un recibo es `receipt` aunque traiga vencimiento o datos bancarios, y un total deducido del subtotal va con `legible: false`. Cambia la caché, así que hay que volver a correr `eval:live` y el piloto.
+3. `READER_PROFILE=calidad` arregla 3 de los 6, pero no los recibos en el cuerpo del correo, y cuesta unos USD 0,02 por factura en vez de USD 0,0026.
+
+**Costo:** USD 0,0026 por factura con `economico`. Las 2000 costarían unos USD 5,3 (con `calidad`, unos USD 41). En esta revisión se gastaron USD 0,66.
+
+**Cómo correrlo** (el perfil sale de `--profile` o de `READER_PROFILE`; por defecto `economico`):
+
+```bash
+npm run eval                                          # 41 casos, simulado, sin costo
+npm run eval:stress                                   # 2000 casos, simulado, ~6 s
+npm run eval:live -- --out=live-economico             # 41 casos con Claude, ~USD 0,10
+npm run eval:stress:live -- --sample=100              # piloto de 100, ~USD 0,26
+npm run eval:stress:live                              # las 2000, ~USD 5,3
+npm run eval:live -- --profile=calidad --out=live-calidad
+```
+
+Las lecturas quedan en caché (`dataset/reading-cache` y `dataset/stress/reading-cache`), así que repetir una corrida no cuesta.
+
+**Reportes:** en `eval/reports/`:
+- `live-economico.md`
+- `stress-live-economico-muestra100.md`
+- `stress-live-economico-recibos-borrosos.md`
+- `stress-live-calidad-indebidos.md`
+
+En cada fallo, el reporte muestra qué leyó cada lector.
+
+**Documentación pendiente:** `CLAUDE.md` y `docs/ARCHITECTURE.md` todavía dicen «Sonnet + Haiku».
+
 ## 1. ~~Clave de Anthropic y evaluación con lectura real~~ (hecho el 17 de octubre)
 
 `npm run eval:live`: 40 de 41 correctas, 0 pagos indebidos, 13 de 13 en el set reservado, USD 0,84. Reporte en [eval/reports/live.md](../eval/reports/live.md). La primera corrida destapó que la API rechazaba el esquema de salida (más de 16 campos opcionales); se corrigió con el formato de cable de `src/extract/wire.ts`.

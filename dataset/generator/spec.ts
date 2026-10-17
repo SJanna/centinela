@@ -65,7 +65,8 @@ const isoMonth = z
   .string()
   .regex(/^\d{4}-\d{2}$/, "periodo YYYY-MM")
   .refine((s) => isCalendarDate(`${s}-01`), "periodo YYYY-MM con un mes que no existe");
-const caseId = z.string().regex(/^[A-Z]\d{2}$/, "id de caso tipo B01");
+/** Ids del dataset base («B01») y del set de estrés de dataset/stress («S0001»). */
+const caseId = z.string().regex(/^(?:[A-Z]\d{2}|S\d{4})$/, "id de caso tipo B01 (o S0001 en el set de estrés)");
 
 export const PartySchema = z.strictObject({
   name: z.string().min(1),

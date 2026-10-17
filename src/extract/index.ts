@@ -5,9 +5,20 @@
  *
  * Lectores: createAnthropicReader (API), createCachedReader (+ createFileReadingCache),
  * createSimulatedReader (lectura «perfecta» del manifiesto del dataset).
+ * Perfiles de lectura (modelo y variante de prompt de cada lectura): READER_PROFILES.
  */
-export { PROMPT_VERSION, UNTRUSTED_TAG, READER_SYSTEM_PROMPT, buildReaderMessages } from "./prompt";
-export type { ReaderContentBlock, ReaderMessages } from "./prompt";
+export {
+  PROMPT_VERSION,
+  PROMPT_VERSION_B,
+  PROMPT_VERSIONS,
+  promptVersionOf,
+  UNTRUSTED_TAG,
+  READER_SYSTEM_PROMPT,
+  READER_SYSTEM_PROMPT_B,
+  readerSystemPrompt,
+  buildReaderMessages,
+} from "./prompt";
+export type { PromptVariant, ReaderContentBlock, ReaderMessages } from "./prompt";
 
 export {
   createAnthropicReader,
@@ -16,10 +27,22 @@ export {
   supportsServerFallback,
   PRIMARY_MODEL,
   SECONDARY_MODEL,
+  SONNET_MODEL,
+  HAIKU_MODEL,
   DEFAULT_MAX_TOKENS,
   SERVER_FALLBACK_BETA,
 } from "./anthropic-reader";
 export type { AnthropicReaderOptions } from "./anthropic-reader";
+
+export {
+  READER_PROFILES,
+  READER_PROFILE_NAMES,
+  DEFAULT_READER_PROFILE,
+  parseReaderProfile,
+  profileModels,
+  profilePromptVersions,
+} from "./profiles";
+export type { ReaderProfile, ReaderProfileSpec, ReaderSlotSpec } from "./profiles";
 
 export { readingCacheKey, createCachedReader, createFileReadingCache, createMemoryReadingCache } from "./cache";
 

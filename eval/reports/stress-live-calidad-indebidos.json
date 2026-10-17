@@ -1,0 +1,1661 @@
+{
+ "generatedAt": "2026-10-17T21:48:50.592Z",
+ "reader": "live",
+ "dataset": "stress",
+ "split": "all",
+ "caseFilter": [
+  "S0030",
+  "S0488",
+  "S0768",
+  "S0916",
+  "S0922",
+  "S1086"
+ ],
+ "promptVersion": "v3",
+ "models": [
+  "claude-sonnet-5-5",
+  "claude-haiku-5-5"
+ ],
+ "readerProfile": "calidad",
+ "readers": [
+  {
+   "id": "lector-a",
+   "model": "claude-sonnet-5-5",
+   "promptVersion": "v3"
+  },
+  {
+   "id": "lector-b",
+   "model": "claude-haiku-5-5",
+   "promptVersion": "v3"
+  }
+ ],
+ "metrics": {
+  "total": {
+   "total": 6,
+   "correct": 3,
+   "accuracy": 0.5,
+   "improperPayments": 3,
+   "shouldNotPay": 6,
+   "overEscalations": 0,
+   "overFreezes": 0,
+   "notFreeze": 6,
+   "autonomy": {
+    "resolved": 0,
+    "eligible": 0,
+    "rate": 0
+   }
+  },
+  "bySplit": {
+   "train": {
+    "total": 5,
+    "correct": 3,
+    "accuracy": 0.6,
+    "improperPayments": 2,
+    "shouldNotPay": 5,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 5,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "holdout": {
+    "total": 1,
+    "correct": 0,
+    "accuracy": 0,
+    "improperPayments": 1,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   }
+  },
+  "byScenario": {
+   "e01-volumen": {
+    "total": 1,
+    "correct": 0,
+    "accuracy": 0,
+    "improperPayments": 1,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e10-volumen": {
+    "total": 1,
+    "correct": 0,
+    "accuracy": 0,
+    "improperPayments": 1,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e16-volumen": {
+    "total": 1,
+    "correct": 0,
+    "accuracy": 0,
+    "improperPayments": 1,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e19-volumen": {
+    "total": 2,
+    "correct": 2,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 2,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 2,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e22-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "caseId": "S0030",
+   "split": "train",
+   "escenario": "e01-volumen",
+   "formato": "eml",
+   "descripcion": "Recibo de pago (no es una factura) de CloudMetrics · correo_cuerpo · USD 1.200,00",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "correo_cuerpo"
+   },
+   "outcome": "PAGAR",
+   "failCodes": [],
+   "notEvaluableCodes": [],
+   "missingCodes": [
+    "LEC-1"
+   ],
+   "correct": false,
+   "improperPayment": true,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "Se paga a CloudMetrics Inc.: USD 1.200,00. Cumple las 15 comprobaciones.",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 4073,
+     "outputTokens": 906
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 4073,
+     "outputTokens": 1779
+    }
+   ],
+   "reading": {
+    "readers": [
+     {
+      "readerId": "lector-a",
+      "model": "claude-sonnet-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "CloudMetrics",
+       "vendorTaxId": "88-1234567",
+       "invoiceNumber": "CM-INV-2026-1004",
+       "issueDate": "2026-09-08",
+       "servicePeriod": "2026-08",
+       "currency": "USD",
+       "subtotal": 1200,
+       "tax": 0,
+       "total": 1200,
+       "beneficiaryName": "CloudMetrics Inc.",
+       "bankName": "Silicon Valley Bank",
+       "accountNumber": "3300198822",
+       "routingOrSwift": "121140399"
+      },
+      "illegible": [
+       "issueDate"
+      ],
+      "embeddedInstructions": []
+     },
+     {
+      "readerId": "lector-b",
+      "model": "claude-haiku-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "CloudMetrics",
+       "vendorTaxId": "88-1234567",
+       "invoiceNumber": "CM-INV-2026-1004",
+       "issueDate": "2026-09-08",
+       "servicePeriod": "2026-08",
+       "currency": "USD",
+       "subtotal": 1200,
+       "tax": 0,
+       "total": 1200,
+       "beneficiaryName": "CloudMetrics Inc.",
+       "bankName": "Silicon Valley Bank",
+       "accountNumber": "3300198822",
+       "routingOrSwift": "121140399"
+      },
+      "illegible": [],
+      "embeddedInstructions": []
+     }
+    ],
+    "signals": {
+     "missingCriticalFields": [],
+     "illegibleCriticalFields": [],
+     "readersDisagreeOn": [],
+     "arithmeticIssues": [],
+     "suspiciousInstructions": [],
+     "evidenceNotFound": []
+    }
+   }
+  },
+  {
+   "caseId": "S0488",
+   "split": "holdout",
+   "escenario": "e10-volumen",
+   "formato": "eml",
+   "descripcion": "Recibo de pago (no es una factura) de Estudio Nopal S. de R.L. · correo_cuerpo · $65.925,00 MXN",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "correo_cuerpo"
+   },
+   "outcome": "PAGAR",
+   "failCodes": [],
+   "notEvaluableCodes": [],
+   "missingCodes": [
+    "LEC-1"
+   ],
+   "correct": false,
+   "improperPayment": true,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "Se paga a Estudio Nopal S. de R.L.: MXN 65.925,00 (≈ USD 3.625,88). Cumple las 15 comprobaciones.",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 4214,
+     "outputTokens": 966
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 4214,
+     "outputTokens": 1638
+    }
+   ],
+   "reading": {
+    "readers": [
+     {
+      "readerId": "lector-a",
+      "model": "claude-sonnet-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "Estudio Nopal S. de R.L.",
+       "vendorTaxId": "eno210415ab3",
+       "invoiceNumber": "A-505",
+       "issueDate": "2026-10-07",
+       "servicePeriod": "2026-10",
+       "currency": "MXN",
+       "subtotal": 65925,
+       "tax": 0,
+       "total": 65925,
+       "beneficiaryName": "Estudio Nopal S. de R.L.",
+       "bankName": "BBVA México",
+       "accountNumber": "012180001234567891",
+       "routingOrSwift": "BCMRMXMM"
+      },
+      "illegible": [],
+      "embeddedInstructions": []
+     },
+     {
+      "readerId": "lector-b",
+      "model": "claude-haiku-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "Estudio Nopal S. de R.L.",
+       "vendorTaxId": "eno210415ab3",
+       "invoiceNumber": "A-505",
+       "issueDate": "2026-10-07",
+       "servicePeriod": "2026-10",
+       "currency": "MXN",
+       "subtotal": 65925,
+       "tax": 0,
+       "total": 65925,
+       "beneficiaryName": "Estudio Nopal S. de R.L.",
+       "bankName": "BBVA México",
+       "accountNumber": "012180001234567891",
+       "routingOrSwift": "BCMRMXMM"
+      },
+      "illegible": [],
+      "embeddedInstructions": []
+     }
+    ],
+    "signals": {
+     "missingCriticalFields": [],
+     "illegibleCriticalFields": [],
+     "readersDisagreeOn": [],
+     "arithmeticIssues": [],
+     "suspiciousInstructions": [],
+     "evidenceNotFound": []
+    }
+   }
+  },
+  {
+   "caseId": "S0768",
+   "split": "train",
+   "escenario": "e16-volumen",
+   "formato": "eml",
+   "descripcion": "Recibo de pago (no es una factura) de Soporte Caribe · correo_cuerpo · COP 1.080.000",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "correo_cuerpo"
+   },
+   "outcome": "PAGAR",
+   "failCodes": [],
+   "notEvaluableCodes": [],
+   "missingCodes": [
+    "LEC-1"
+   ],
+   "correct": false,
+   "improperPayment": true,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "Se paga a Soporte Caribe S.A.S.: COP 1.080.000,00 (≈ USD 270,00). Cumple las 15 comprobaciones.",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 4142,
+     "outputTokens": 877
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 4142,
+     "outputTokens": 1627
+    }
+   ],
+   "reading": {
+    "readers": [
+     {
+      "readerId": "lector-a",
+      "model": "claude-sonnet-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "Soporte Caribe",
+       "vendorTaxId": "901.777.888",
+       "invoiceNumber": "SC-2488",
+       "issueDate": "2026-11-02",
+       "servicePeriod": "2026-10",
+       "currency": "COP",
+       "subtotal": 1080000,
+       "tax": 0,
+       "total": 1080000,
+       "beneficiaryName": "Soporte Caribe S.A.S.",
+       "bankName": "Banco Davivienda",
+       "accountNumber": "0550-4881-2233",
+       "routingOrSwift": "CAFECOBB"
+      },
+      "illegible": [],
+      "embeddedInstructions": []
+     },
+     {
+      "readerId": "lector-b",
+      "model": "claude-haiku-5-5",
+      "promptVersion": "v3",
+      "fields": {
+       "documentType": "invoice",
+       "vendorName": "Soporte Caribe",
+       "vendorTaxId": "901.777.888",
+       "invoiceNumber": "SC-2488",
+       "issueDate": "2026-11-02",
+       "servicePeriod": "2026-10",
+       "currency": "COP",
+       "subtotal": 1080000,
+       "tax": 0,
+       "total": 1080000,
+       "beneficiaryName": "Soporte Caribe S.A.S.",
+       "bankName": "Banco Davivienda",
+       "accountNumber": "0550-4881-2233",
+       "routingOrSwift": "CAFECOBB"
+      },
+      "illegible": [],
+      "embeddedInstructions": []
+     }
+    ],
+    "signals": {
+     "missingCriticalFields": [],
+     "illegibleCriticalFields": [],
+     "readersDisagreeOn": [],
+     "arithmeticIssues": [],
+     "suspiciousInstructions": [],
+     "evidenceNotFound": []
+    }
+   }
+  },
+  {
+   "caseId": "S0916",
+   "split": "train",
+   "escenario": "e19-volumen",
+   "formato": "pdf",
+   "descripcion": "Recibo de pago (no es una factura) de Pampa Ops SRL · PDF saas · USD 2.800,00",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 5907,
+     "outputTokens": 849
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5907,
+     "outputTokens": 1757
+    }
+   ]
+  },
+  {
+   "caseId": "S0922",
+   "split": "train",
+   "escenario": "e19-volumen",
+   "formato": "jpg",
+   "descripcion": "Estudio Nopal S. de R.L. · foto saas muy desenfocada: el total no se puede leer",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "total_borroso",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 7273,
+     "outputTokens": 789
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7273,
+     "outputTokens": 830
+    }
+   ]
+  },
+  {
+   "caseId": "S1086",
+   "split": "train",
+   "escenario": "e22-volumen",
+   "formato": "eml",
+   "descripcion": "Recibo de pago (no es una factura) de Estudio Nopal S. de R.L. · correo+adjunto_saas · $76.725,00 MXN",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "correo+adjunto_saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-sonnet-5-5",
+     "inputTokens": 6261,
+     "outputTokens": 957
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 6261,
+     "outputTokens": 2092
+    }
+   ]
+  }
+ ],
+ "contextCases": [
+  "S0001",
+  "S0002",
+  "S0003",
+  "S0004",
+  "S0005",
+  "S0006",
+  "S0007",
+  "S0008",
+  "S0009",
+  "S0010",
+  "S0011",
+  "S0012",
+  "S0013",
+  "S0014",
+  "S0015",
+  "S0016",
+  "S0017",
+  "S0018",
+  "S0019",
+  "S0020",
+  "S0021",
+  "S0022",
+  "S0023",
+  "S0024",
+  "S0025",
+  "S0026",
+  "S0027",
+  "S0028",
+  "S0029",
+  "S0447",
+  "S0448",
+  "S0449",
+  "S0450",
+  "S0451",
+  "S0452",
+  "S0453",
+  "S0454",
+  "S0455",
+  "S0456",
+  "S0457",
+  "S0458",
+  "S0459",
+  "S0460",
+  "S0461",
+  "S0462",
+  "S0463",
+  "S0464",
+  "S0465",
+  "S0466",
+  "S0467",
+  "S0468",
+  "S0469",
+  "S0470",
+  "S0471",
+  "S0472",
+  "S0473",
+  "S0474",
+  "S0475",
+  "S0476",
+  "S0477",
+  "S0478",
+  "S0479",
+  "S0480",
+  "S0481",
+  "S0482",
+  "S0483",
+  "S0484",
+  "S0485",
+  "S0486",
+  "S0487",
+  "S0736",
+  "S0737",
+  "S0738",
+  "S0739",
+  "S0740",
+  "S0741",
+  "S0742",
+  "S0743",
+  "S0744",
+  "S0745",
+  "S0746",
+  "S0747",
+  "S0748",
+  "S0749",
+  "S0750",
+  "S0751",
+  "S0752",
+  "S0753",
+  "S0754",
+  "S0755",
+  "S0756",
+  "S0757",
+  "S0758",
+  "S0759",
+  "S0760",
+  "S0761",
+  "S0762",
+  "S0763",
+  "S0764",
+  "S0765",
+  "S0766",
+  "S0767",
+  "S0883",
+  "S0884",
+  "S0885",
+  "S0886",
+  "S0887",
+  "S0888",
+  "S0889",
+  "S0890",
+  "S0891",
+  "S0892",
+  "S0893",
+  "S0894",
+  "S0895",
+  "S0896",
+  "S0897",
+  "S0898",
+  "S0899",
+  "S0900",
+  "S0901",
+  "S0902",
+  "S0903",
+  "S0904",
+  "S0905",
+  "S0906",
+  "S0907",
+  "S0908",
+  "S0909",
+  "S0910",
+  "S0911",
+  "S0912",
+  "S0913",
+  "S0914",
+  "S0915",
+  "S0917",
+  "S0918",
+  "S0919",
+  "S0920",
+  "S0921",
+  "S1036",
+  "S1037",
+  "S1038",
+  "S1039",
+  "S1040",
+  "S1041",
+  "S1042",
+  "S1043",
+  "S1044",
+  "S1045",
+  "S1046",
+  "S1047",
+  "S1048",
+  "S1049",
+  "S1050",
+  "S1051",
+  "S1052",
+  "S1053",
+  "S1054",
+  "S1055",
+  "S1056",
+  "S1057",
+  "S1058",
+  "S1059",
+  "S1060",
+  "S1061",
+  "S1062",
+  "S1063",
+  "S1064",
+  "S1065",
+  "S1066",
+  "S1067",
+  "S1068",
+  "S1069",
+  "S1070",
+  "S1071",
+  "S1072",
+  "S1073",
+  "S1074",
+  "S1075",
+  "S1076",
+  "S1077",
+  "S1078",
+  "S1079",
+  "S1080",
+  "S1081",
+  "S1082",
+  "S1083",
+  "S1084",
+  "S1085"
+ ],
+ "cacheMisses": 0,
+ "usage": {
+  "byModel": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 31870,
+    "outputTokens": 5344,
+    "costUsd": 0.11717999999999999
+   },
+   "claude-haiku-5-5": {
+    "inputTokens": 31870,
+    "outputTokens": 9723,
+    "costUsd": 0.0080485
+   }
+  },
+  "byReader": {
+   "lector-a": {
+    "inputTokens": 31870,
+    "outputTokens": 5344,
+    "costUsd": 0.11717999999999999
+   },
+   "lector-b": {
+    "inputTokens": 31870,
+    "outputTokens": 9723,
+    "costUsd": 0.0080485
+   }
+  },
+  "total": {
+   "inputTokens": 63740,
+   "outputTokens": 15067,
+   "costUsd": 0.1252285
+  }
+ },
+ "sample": {
+  "size": 6,
+  "seed": 17
+ },
+ "concurrency": 4,
+ "warnings": [],
+ "stress": {
+  "total": {
+   "metrics": {
+    "total": 6,
+    "correct": 3,
+    "accuracy": 0.5,
+    "improperPayments": 3,
+    "shouldNotPay": 6,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 6,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "accuracy": {
+    "rate": 0.5,
+    "low": 0.11811724875724394,
+    "high": 0.8818827512427561,
+    "k": 3,
+    "n": 6
+   },
+   "improperPayments": {
+    "rate": 0.5,
+    "low": 0.11811724875724394,
+    "high": 0.8818827512427561,
+    "k": 3,
+    "n": 6
+   },
+   "overEscalations": {
+    "rate": 0,
+    "low": 0,
+    "high": 1,
+    "k": 0,
+    "n": 0
+   },
+   "overFreezes": {
+    "rate": 0,
+    "low": 0,
+    "high": 0.45925812644009056,
+    "k": 0,
+    "n": 6
+   },
+   "autonomy": {
+    "rate": 0,
+    "low": 0,
+    "high": 1,
+    "k": 0,
+    "n": 0
+   },
+   "costUsd": 0.1252285,
+   "tokens": {
+    "input": 63740,
+    "output": 15067
+   }
+  },
+  "byTrap": {
+   "recibo": {
+    "metrics": {
+     "total": 5,
+     "correct": 2,
+     "accuracy": 0.4,
+     "improperPayments": 3,
+     "shouldNotPay": 5,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 5,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.4,
+     "low": 0.05274495052663042,
+     "high": 0.8533672003654829,
+     "k": 2,
+     "n": 5
+    },
+    "improperPayments": {
+     "rate": 0.6,
+     "low": 0.14663279963451714,
+     "high": 0.9472550494733696,
+     "k": 3,
+     "n": 5
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.10165019999999998,
+    "tokens": {
+     "input": 49194,
+     "output": 13448
+    }
+   },
+   "total_borroso": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0235783,
+    "tokens": {
+     "input": 14546,
+     "output": 1619
+    }
+   }
+  },
+  "byFormat": {
+   "eml": {
+    "metrics": {
+     "total": 4,
+     "correct": 1,
+     "accuracy": 0.25,
+     "improperPayments": 3,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.25,
+     "low": 0.006309463210072863,
+     "high": 0.8058795503170586,
+     "k": 1,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0.75,
+     "low": 0.1941204496829414,
+     "high": 0.9936905367899271,
+     "k": 3,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.07987699999999999,
+    "tokens": {
+     "input": 37380,
+     "output": 10842
+    }
+   },
+   "jpg": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0235783,
+    "tokens": {
+     "input": 14546,
+     "output": 1619
+    }
+   },
+   "pdf": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0217732,
+    "tokens": {
+     "input": 11814,
+     "output": 2606
+    }
+   }
+  },
+  "byPresentation": {
+   "correo_cuerpo": {
+    "metrics": {
+     "total": 3,
+     "correct": 0,
+     "accuracy": 0,
+     "improperPayments": 3,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 3,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 1,
+     "low": 0.2924017738209841,
+     "high": 1,
+     "k": 3,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.05611289999999999,
+    "tokens": {
+     "input": 24858,
+     "output": 7793
+    }
+   },
+   "saas": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0453515,
+    "tokens": {
+     "input": 26360,
+     "output": 4225
+    }
+   },
+   "correo+adjunto_saas": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0237641,
+    "tokens": {
+     "input": 12522,
+     "output": 3049
+    }
+   }
+  },
+  "byLanguage": {
+   "en": {
+    "metrics": {
+     "total": 3,
+     "correct": 2,
+     "accuracy": 0.6666666666666666,
+     "improperPayments": 1,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 3,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.6666666666666666,
+     "low": 0.09429932405009822,
+     "high": 0.9915962413401758,
+     "k": 2,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 0.3333333333333333,
+     "low": 0.008403758659824234,
+     "high": 0.9057006759499018,
+     "k": 1,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0638543,
+    "tokens": {
+     "input": 34506,
+     "output": 6910
+    }
+   },
+   "es": {
+    "metrics": {
+     "total": 3,
+     "correct": 1,
+     "accuracy": 0.3333333333333333,
+     "improperPayments": 2,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 3,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.3333333333333333,
+     "low": 0.008403758659824234,
+     "high": 0.9057006759499018,
+     "k": 1,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 0.6666666666666666,
+     "low": 0.09429932405009822,
+     "high": 0.9915962413401758,
+     "k": 2,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.06137419999999999,
+    "tokens": {
+     "input": 29234,
+     "output": 8157
+    }
+   }
+  },
+  "byDifficulty": {
+   "media": {
+    "metrics": {
+     "total": 6,
+     "correct": 3,
+     "accuracy": 0.5,
+     "improperPayments": 3,
+     "shouldNotPay": 6,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 6,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "improperPayments": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.1252285,
+    "tokens": {
+     "input": 63740,
+     "output": 15067
+    }
+   }
+  },
+  "byExpected": {
+   "ESCALAR": {
+    "metrics": {
+     "total": 6,
+     "correct": 3,
+     "accuracy": 0.5,
+     "improperPayments": 3,
+     "shouldNotPay": 6,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 6,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "improperPayments": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.1252285,
+    "tokens": {
+     "input": 63740,
+     "output": 15067
+    }
+   }
+  },
+  "byScenarioKind": {
+   "volumen": {
+    "metrics": {
+     "total": 6,
+     "correct": 3,
+     "accuracy": 0.5,
+     "improperPayments": 3,
+     "shouldNotPay": 6,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 6,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "improperPayments": {
+     "rate": 0.5,
+     "low": 0.11811724875724394,
+     "high": 0.8818827512427561,
+     "k": 3,
+     "n": 6
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.1252285,
+    "tokens": {
+     "input": 63740,
+     "output": 15067
+    }
+   }
+  },
+  "confusion": {
+   "ESCALAR": {
+    "PAGAR": 3,
+    "ESCALAR": 3
+   }
+  },
+  "failureKinds": [
+   {
+    "key": "recibo: esperado ESCALAR, obtenido PAGAR · faltan LEC-1",
+    "count": 3,
+    "examples": [
+     "S0030",
+     "S0488",
+     "S0768"
+    ]
+   }
+  ]
+ }
+}

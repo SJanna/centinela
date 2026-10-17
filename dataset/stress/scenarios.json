@@ -1,0 +1,447 @@
+{
+  "_doc": "Set de estrés (dataset/stress/build-stress.ts). Cada escenario arranca con historial vacío y procesa sus casos en el orden de casos.csv. 'rulesOverride' reemplaza campos de company.rules solo en ese escenario. Si company.json cambia (companySha256 distinto), hay que regenerar con npm run stress:generate.",
+  "seed": 20261017,
+  "companySha256": "1a2f6b536ff0ab6d8b60b70c5bee796bcfeb35bd814c9a4a581127f4b6e16822",
+  "scenarios": [
+    {
+      "id": "e01-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e02-umbral-bajo",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "approvalThresholdUsd": 2800
+      },
+      "kind": "umbral_bajo",
+      "split": "train",
+      "description": "Umbral de aprobación más bajo (USD 2800)."
+    },
+    {
+      "id": "e03-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e04-reglas-base",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {},
+      "kind": "reglas_base",
+      "split": "train",
+      "description": "Reglas de la empresa sin cambios (límite USD 25.000, fondo USD 40.000)."
+    },
+    {
+      "id": "e05-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e06-fondo-bajo",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 18000
+      },
+      "kind": "fondo_bajo",
+      "split": "train",
+      "description": "Fondo bajo (USD 18.000): las últimas facturas no alcanzan."
+    },
+    {
+      "id": "e07-tolerancia-0",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "amountTolerancePct": 0
+      },
+      "kind": "tolerancia_0",
+      "split": "train",
+      "description": "Tolerancia del monto 0 %: solo el monto exacto del acuerdo."
+    },
+    {
+      "id": "e08-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e09-limite-bajo",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 18000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "limite_bajo",
+      "split": "train",
+      "description": "Límite del mes bajo (USD 18.000): las últimas facturas lo superan."
+    },
+    {
+      "id": "e10-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e11-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e12-tolerancia-0",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "amountTolerancePct": 0
+      },
+      "kind": "tolerancia_0",
+      "split": "train",
+      "description": "Tolerancia del monto 0 %: solo el monto exacto del acuerdo."
+    },
+    {
+      "id": "e13-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e14-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e15-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e16-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e17-limite-bajo",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 18000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "limite_bajo",
+      "split": "train",
+      "description": "Límite del mes bajo (USD 18.000): las últimas facturas lo superan."
+    },
+    {
+      "id": "e18-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e19-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e20-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e21-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e22-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e23-reglas-base",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {},
+      "kind": "reglas_base",
+      "split": "train",
+      "description": "Reglas de la empresa sin cambios (límite USD 25.000, fondo USD 40.000)."
+    },
+    {
+      "id": "e24-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e25-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e26-tolerancia-2",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "amountTolerancePct": 2
+      },
+      "kind": "tolerancia_2",
+      "split": "train",
+      "description": "Tolerancia del monto 2 %."
+    },
+    {
+      "id": "e27-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e28-limite-bajo",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 18000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "limite_bajo",
+      "split": "train",
+      "description": "Límite del mes bajo (USD 18.000): las últimas facturas lo superan."
+    },
+    {
+      "id": "e29-fondo-bajo",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 18000
+      },
+      "kind": "fondo_bajo",
+      "split": "train",
+      "description": "Fondo bajo (USD 18.000): las últimas facturas no alcanzan."
+    },
+    {
+      "id": "e30-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e31-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e32-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e33-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e34-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e35-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "holdout",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e36-umbral-bajo",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "approvalThresholdUsd": 2000
+      },
+      "kind": "umbral_bajo",
+      "split": "train",
+      "description": "Umbral de aprobación más bajo (USD 2000)."
+    },
+    {
+      "id": "e37-tolerancia-2",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000,
+        "amountTolerancePct": 2
+      },
+      "kind": "tolerancia_2",
+      "split": "train",
+      "description": "Tolerancia del monto 2 %."
+    },
+    {
+      "id": "e38-volumen",
+      "now": "2026-10-20T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e39-volumen",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 1000000
+      },
+      "kind": "volumen",
+      "split": "train",
+      "description": "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas."
+    },
+    {
+      "id": "e40-fondo-bajo",
+      "now": "2026-11-18T15:00:00Z",
+      "rulesOverride": {
+        "periodLimitUsd": 500000,
+        "initialFundUsd": 18000
+      },
+      "kind": "fondo_bajo",
+      "split": "holdout",
+      "description": "Fondo bajo (USD 18.000): las últimas facturas no alcanzan."
+    }
+  ]
+}

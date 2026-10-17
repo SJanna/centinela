@@ -1,18 +1,25 @@
 /**
  * Lectores de la aplicación según el modo de lectura.
  *
- * - live: Sonnet 5.5 («lector-a») y Haiku 5.5 («lector-b»), cada uno con la caché de la base.
+ * - live: dos lectores de Anthropic («lector-a» y «lector-b»), cada uno con la caché de la base.
+ *   El perfil (`READER_PROFILE`) elige modelo y prompt de cada uno:
+ *     economico (por defecto) → Haiku 5.5 con el prompt «a» + Haiku 5.5 con el prompt «b»;
+ *     calidad                 → Sonnet 5.5 con el prompt «a» + Haiku 5.5 con el prompt «a».
  * - simulated: lectura «perfecta» de dataset/generated/manifest.json para los dos lectores.
  *   Cualquier archivo que no esté en el manifiesto no tiene lectura y escala por LEC-1.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import type { ReadingCache } from "../core/ports";
 import type { NormalizedDoc, Reader, ReaderResult } from "../core/schemas";
 import {
   createAnthropicReader,
   createCachedReader,
   createSimulatedReader,
-  PRIMARY_MODEL,
-  SECONDARY_MODEL,
+  parseReaderProfile,
+  promptVersionOf,
+  READER_PROFILES,
+  type PromptVariant,
+  type ReaderProfile,
 } from "../extract";
 import { createDbReadingCache } from "../store";
 import { loadManifest } from "./dataset";
@@ -25,15 +32,73 @@ export interface ReaderPair {
 }
 
 export { PRIMARY_READER_ID, SECONDARY_READER_ID };
+export type { ReaderProfile };
 
-const byMode: Partial<Record<ReadingMode, ReaderPair>> = {};
+/**
+ * `READER_PROFILE` = `economico` | `calidad` (por defecto `economico`; acepta «económico»).
+ * Un valor desconocido cuenta como `economico`.
+ */
+export function readerProfile(env: Record<string, string | undefined> = process.env): ReaderProfile {
+  return parseReaderProfile(env.READER_PROFILE);
+}
 
-/** Lectores del modo pedido (se crean una vez por proceso y modo). */
-export function getReaders(mode: ReadingMode): ReaderPair {
-  const existing = byMode[mode];
+/** Lo que identifica a un lector en vivo (y su clave de caché): id, modelo y versión de prompt. */
+export interface LiveReaderSpec {
+  id: string;
+  model: string;
+  promptVariant: PromptVariant;
+  promptVersion: string;
+}
+
+/** Lectores en vivo de un perfil, con los ids de siempre («lector-a» y «lector-b»). */
+export function liveReaderSpecs(profile: ReaderProfile = readerProfile()): { primary: LiveReaderSpec; secondary: LiveReaderSpec } {
+  const spec = READER_PROFILES[profile];
+  const make = (id: string, slot: { model: string; promptVariant: PromptVariant }): LiveReaderSpec => ({
+    id,
+    model: slot.model,
+    promptVariant: slot.promptVariant,
+    promptVersion: promptVersionOf(slot.promptVariant),
+  });
+  return { primary: make(PRIMARY_READER_ID, spec.primary), secondary: make(SECONDARY_READER_ID, spec.secondary) };
+}
+
+export interface LiveReadersOptions {
+  /** Perfil de lectura. Si falta, el de `READER_PROFILE` (por defecto «economico»). */
+  profile?: ReaderProfile;
+  /** Caché de lecturas (clave = archivo + lector + modelo + versión de prompt). */
+  cache: ReadingCache;
+  /** Cliente compartido por los dos lectores. Si falta, cada lector crea uno con las credenciales del entorno. */
+  client?: Anthropic;
+  /** Si se indica, cada lectura que tarde más se corta como no disponible (ver `withReadTimeout`). */
+  timeoutMs?: number;
+}
+
+/**
+ * Los dos lectores en vivo de un perfil, cada uno envuelto con la caché. Lo usan la aplicación
+ * (`getReaders`) y el banco de pruebas, así comparten lecturas guardadas. Esfuerzo «low»; Haiku 5.5
+ * va sin reintento del servidor (Sonnet 5.5, en el perfil «calidad», lo conserva).
+ */
+export function createLiveReaders(opts: LiveReadersOptions): ReaderPair {
+  const specs = liveReaderSpecs(opts.profile ?? readerProfile());
+  const build = (spec: LiveReaderSpec): Reader => {
+    const reader = createCachedReader(
+      createAnthropicReader({ id: spec.id, model: spec.model, promptVariant: spec.promptVariant, effort: "low", client: opts.client }),
+      opts.cache,
+    );
+    return opts.timeoutMs != null ? withReadTimeout(reader, opts.timeoutMs) : reader;
+  };
+  return { primary: build(specs.primary), secondary: build(specs.secondary) };
+}
+
+const byKey = new Map<string, ReaderPair>();
+
+/** Lectores del modo pedido (se crean una vez por proceso, modo y perfil). */
+export function getReaders(mode: ReadingMode, profile: ReaderProfile = readerProfile()): ReaderPair {
+  const key = mode === "live" ? `live:${profile}` : mode;
+  const existing = byKey.get(key);
   if (existing) return existing;
-  const pair = mode === "live" ? liveReaders() : simulatedReaders();
-  byMode[mode] = pair;
+  const pair = mode === "live" ? liveReaders(profile) : simulatedReaders();
+  byKey.set(key, pair);
   return pair;
 }
 
@@ -74,16 +139,10 @@ export function withReadTimeout(inner: Reader, ms: number): Reader {
   };
 }
 
-function liveReaders(): ReaderPair {
-  const cache = createDbReadingCache();
+function liveReaders(profile: ReaderProfile): ReaderPair {
   // Un intento más como máximo y cada intento acotado: la llamada de fondo tampoco queda colgada.
   const client = new Anthropic({ timeout: LIVE_READ_TIMEOUT_MS, maxRetries: 1 });
-  const live = (id: string, model: string) =>
-    withReadTimeout(createCachedReader(createAnthropicReader({ id, model, client }), cache), LIVE_READ_TIMEOUT_MS);
-  return {
-    primary: live(PRIMARY_READER_ID, PRIMARY_MODEL),
-    secondary: live(SECONDARY_READER_ID, SECONDARY_MODEL),
-  };
+  return createLiveReaders({ profile, cache: createDbReadingCache(), client, timeoutMs: LIVE_READ_TIMEOUT_MS });
 }
 
 function simulatedReaders(): ReaderPair {

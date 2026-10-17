@@ -53,3 +53,7 @@ next-env.d.ts
 
 # Lecturas reales guardadas por eval:live (locales; no se publican)
 /dataset/reading-cache
+
+# Set de estrés: archivos generados (npm run stress:generate) y lecturas reales guardadas
+/dataset/stress/generated/
+/dataset/stress/reading-cache/

@@ -13,10 +13,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ExtractionSchema, type Extraction, type NormalizedDoc, type Reader, type ReaderResult } from "../core/schemas";
 import { WireExtractionSchema, wireToExtraction } from "./wire";
-import { PROMPT_VERSION, buildReaderMessages } from "./prompt";
+import { buildReaderMessages, promptVersionOf, type PromptVariant } from "./prompt";
 
-export const PRIMARY_MODEL = "claude-sonnet-5-5";
-export const SECONDARY_MODEL = "claude-haiku-5-5";
+export const SONNET_MODEL = "claude-sonnet-5-5";
+export const HAIKU_MODEL = "claude-haiku-5-5";
+/**
+ * Modelos del perfil «calidad» (lector principal y segunda lectura). El perfil por defecto es
+ * «economico» (Haiku 5.5 en las dos lecturas): ver `READER_PROFILES` en `profiles.ts`.
+ */
+export const PRIMARY_MODEL = SONNET_MODEL;
+export const SECONDARY_MODEL = HAIKU_MODEL;
 export const DEFAULT_MAX_TOKENS = 8000;
 /** Beta de reintento en el servidor con `fallbacks: "default"` (solo Sonnet 5.5). */
 export const SERVER_FALLBACK_BETA = "server-side-fallback-2026-07-01";
@@ -27,9 +33,12 @@ export interface AnthropicReaderOptions {
   /** Cliente inyectable (pruebas). Si falta se crea al primer uso con las credenciales del entorno. */
   client?: Anthropic;
   effort?: "low" | "medium" | "high";
+  /** Variante del prompt («a» por defecto). Define también la versión de prompt del lector. */
+  promptVariant?: PromptVariant;
   /**
    * Reintento del servidor en otro modelo si el principal se niega (`fallbacks: "default"`).
-   * Solo aplica a claude-sonnet-5-5; por defecto activado para ese modelo e ignorado para los demás.
+   * Solo aplica a claude-sonnet-5-5; por defecto activado para ese modelo e ignorado para los demás
+   * (Haiku 5.5 no tiene reintento del servidor: nunca se le envía `fallbacks`).
    */
   serverFallback?: boolean;
   maxTokens?: number;
@@ -45,7 +54,7 @@ export function extractionOutputFormat(): ExtractionFormat {
 }
 
 export function supportsServerFallback(model: string): boolean {
-  return model === PRIMARY_MODEL || model.startsWith(`${PRIMARY_MODEL}-`);
+  return model === SONNET_MODEL || model.startsWith(`${SONNET_MODEL}-`);
 }
 
 type ModelResponse = Anthropic.Message | Anthropic.Beta.BetaMessage;
@@ -95,10 +104,12 @@ export function describeApiError(err: unknown, model: string): string {
 export function createAnthropicReader(opts: AnthropicReaderOptions): Reader {
   const effort = opts.effort ?? "low";
   const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const variant = opts.promptVariant ?? "a";
+  const promptVersion = promptVersionOf(variant);
   let client: Anthropic | null = opts.client ?? null;
   let useFallback = (opts.serverFallback ?? true) && supportsServerFallback(opts.model);
 
-  const meta = { readerId: opts.id, model: opts.model, promptVersion: PROMPT_VERSION };
+  const meta = { readerId: opts.id, model: opts.model, promptVersion };
   const fail = (error: "refusal" | "api_error" | "parse_error", message: string): ReaderResult => ({
     ok: false,
     ...meta,
@@ -107,7 +118,7 @@ export function createAnthropicReader(opts: AnthropicReaderOptions): Reader {
   });
 
   async function send(api: Anthropic, doc: NormalizedDoc): Promise<ModelResponse> {
-    const { system, content } = buildReaderMessages(doc);
+    const { system, content } = buildReaderMessages(doc, variant);
     const format = extractionOutputFormat();
     const params = {
       model: opts.model,
@@ -137,7 +148,7 @@ export function createAnthropicReader(opts: AnthropicReaderOptions): Reader {
   return {
     id: opts.id,
     model: opts.model,
-    promptVersion: PROMPT_VERSION,
+    promptVersion,
     async read(doc: NormalizedDoc): Promise<ReaderResult> {
       let response: ModelResponse;
       try {

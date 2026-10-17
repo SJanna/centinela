@@ -13,6 +13,9 @@
     "eval": "tsx eval/run.ts --reader=simulated",
     "eval:cache": "tsx eval/run.ts --reader=cache",
     "eval:live": "tsx eval/run.ts --reader=live",
+    "stress:generate": "tsx dataset/stress/build-stress.ts",
+    "eval:stress": "tsx eval/run.ts --dataset=stress --reader=simulated --concurrency=8",
+    "eval:stress:live": "tsx eval/run.ts --dataset=stress --reader=live --concurrency=4",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

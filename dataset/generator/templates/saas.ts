@@ -21,6 +21,11 @@ export function renderSaas(spec: DocumentSpec): Canvas {
   const M = 48;
   const L = spec.locale;
   const money = moneyOf(spec);
+  // «$1,200.00 USD»; si el formato ya trae el código («COP 12,000,000») no se repite.
+  const due = (amount: number) => {
+    const text = money(amount);
+    return text.includes(spec.currency) ? text : `${text} ${spec.currency}`;
+  };
   const brand = spec.brand ?? { color: "#4F46E5", accent: null, logo: "bars" as const, initials: null, wordmark: spec.vendor.name, tagline: null };
 
   // Franja de acento y encabezado
@@ -95,7 +100,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
 
   // Monto destacado
   const heroDate = spec.dueDate ? ` due ${formatDate(spec.dueDate, L, "long")}` : "";
-  c.text(M, y, `${money(spec.total)} ${spec.currency}${heroDate}`, { size: 17, font: "sansBold", color: INK, tags: ["total"] });
+  c.text(M, y, `${due(spec.total)}${heroDate}`, { size: 17, font: "sansBold", color: INK, tags: ["total"] });
   y += 18;
   const heroNote = td(spec, "heroNote");
   if (heroNote) {
@@ -146,7 +151,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
   if (spec.subtotal != null) sumRow("Subtotal", money(spec.subtotal), { key: "subtotal" });
   if (spec.tax) sumRow(spec.tax.label, money(spec.tax.amount), { key: "tax" });
   sumRow("Total", money(spec.total), { key: "total", tags: ["total"] });
-  sumRow("Amount due", `${money(spec.total)} ${spec.currency}`, { bold: true, tags: ["total"] });
+  sumRow("Amount due", due(spec.total), { bold: true, tags: ["total"] });
 
   // Pago
   y += 14;
@@ -183,7 +188,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
 
   // Pie
   c.line(M, H - 58, W - M, H - 58, HAIR, 0.8);
-  const footerLeft = `${spec.invoiceNumber} · ${money(spec.total)} ${spec.currency}${heroDate}`;
+  const footerLeft = `${spec.invoiceNumber} · ${due(spec.total)}${heroDate}`;
   // Lleva la etiqueta "total": si el total debe quedar ilegible (foto), el pie tampoco lo deja leer.
   c.text(M, H - 42, footerLeft, { size: 8, color: MUTED, tags: ["total"] });
   c.text(W - M, H - 42, "Page 1 of 1", { size: 8, color: MUTED, align: "right" });

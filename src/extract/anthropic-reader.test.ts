@@ -9,7 +9,7 @@ import {
   extractionOutputFormat,
   supportsServerFallback,
 } from "./anthropic-reader";
-import { PROMPT_VERSION } from "./prompt";
+import { PROMPT_VERSION, PROMPT_VERSION_B, READER_SYSTEM_PROMPT, READER_SYSTEM_PROMPT_B } from "./prompt";
 import { makeDoc, makeExtraction } from "./test-utils";
 import { extractionToWire } from "./wire";
 
@@ -81,6 +81,29 @@ describe("createAnthropicReader", () => {
     expect(params.output_config).toMatchObject({ effort: "low", format: { type: "json_schema" } });
     expect(typeof params.system).toBe("string");
     expect(params.messages).toHaveLength(1);
+  });
+
+  it("prompt «b»: manda su propio prompt y declara su versión (Haiku 5.5: esfuerzo low, sin thinking, temperature ni fallbacks)", async () => {
+    const { client, create, betaCreate } = fakeClient({});
+    const reader = createAnthropicReader({ id: "lector-b", model: "claude-haiku-5-5", client, promptVariant: "b" });
+    expect(reader).toMatchObject({ id: "lector-b", model: "claude-haiku-5-5", promptVersion: PROMPT_VERSION_B });
+
+    const result = await reader.read(makeDoc());
+    expect(result).toMatchObject({ ok: true, readerId: "lector-b", model: "claude-haiku-5-5", promptVersion: PROMPT_VERSION_B });
+    expect(betaCreate).not.toHaveBeenCalled();
+    const params = create.mock.calls[0][0];
+    expect(params.system).toBe(READER_SYSTEM_PROMPT_B);
+    expect(params.output_config).toMatchObject({ effort: "low", format: { type: "json_schema" } });
+    expect(params.output_config).toEqual({ effort: "low", format: expect.objectContaining({ schema: extractionOutputFormat().schema }) });
+    for (const key of ["temperature", "top_p", "top_k", "thinking", "fallbacks", "betas"]) expect(params).not.toHaveProperty(key);
+  });
+
+  it("sin variante usa el prompt «a»", async () => {
+    const { client, create } = fakeClient({});
+    const reader = createAnthropicReader({ id: "lector-a", model: "claude-haiku-5-5", client });
+    expect(reader.promptVersion).toBe(PROMPT_VERSION);
+    await reader.read(makeDoc());
+    expect(create.mock.calls[0][0].system).toBe(READER_SYSTEM_PROMPT);
   });
 
   it("Sonnet 5.5 usa el reintento del servidor (beta + fallbacks: default)", async () => {
