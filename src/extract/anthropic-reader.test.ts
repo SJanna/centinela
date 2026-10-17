@@ -11,6 +11,7 @@ import {
 } from "./anthropic-reader";
 import { PROMPT_VERSION } from "./prompt";
 import { makeDoc, makeExtraction } from "./test-utils";
+import { extractionToWire } from "./wire";
 
 interface FakeResponse {
   stop_reason: string | null;
@@ -23,7 +24,7 @@ function response(overrides: Partial<FakeResponse> = {}): FakeResponse {
   return {
     stop_reason: "end_turn",
     stop_details: null,
-    content: [{ type: "text", text: JSON.stringify(makeExtraction()) }],
+    content: [{ type: "text", text: JSON.stringify(extractionToWire(makeExtraction())) }],
     usage: { input_tokens: 1234, output_tokens: 567 },
     ...overrides,
   };
@@ -41,13 +42,13 @@ function fakeClient(opts: {
 
 const HEADERS = new Headers();
 
-describe("zodOutputFormat(ExtractionSchema)", () => {
-  it("se construye sin error y el helper acepta el esquema", () => {
+describe("formato de salida estructurada", () => {
+  it("se construye sin error y el helper acepta el esquema de cable", () => {
     expect(() => zodOutputFormat(ExtractionSchema)).not.toThrow();
     const format = extractionOutputFormat();
     expect(format.type).toBe("json_schema");
     expect(format.schema).toMatchObject({ type: "object" });
-    const sample = makeExtraction();
+    const sample = extractionToWire(makeExtraction());
     expect(format.parse(JSON.stringify(sample))).toEqual(sample);
     expect(() => format.parse('{"documentType":"invoice"}')).toThrow();
   });
@@ -176,7 +177,7 @@ describe("createAnthropicReader", () => {
   it("ignora bloques que no son de texto antes del JSON", async () => {
     const { client } = fakeClient({
       create: async () =>
-        response({ content: [{ type: "thinking" }, { type: "text", text: JSON.stringify(makeExtraction()) }] }),
+        response({ content: [{ type: "thinking" }, { type: "text", text: JSON.stringify(extractionToWire(makeExtraction())) }] }),
     });
     const result = await createAnthropicReader({ id: "s", model: "claude-haiku-5-5", client }).read(makeDoc());
     expect(result.ok).toBe(true);

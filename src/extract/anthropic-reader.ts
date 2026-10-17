@@ -5,10 +5,14 @@
  * `parse` interpreta el contenido dentro de la llamada y lanza si el texto es un JSON a medias,
  * así que una negativa a mitad de respuesta llegaría como error de parseo. Aquí se revisa
  * `stop_reason` ANTES de leer el contenido y después se valida con el mismo esquema zod.
+ *
+ * El modelo responde en el formato «de cable» de `wire.ts` (sin tipos unión: la API admite como
+ * máximo 16) y aquí se convierte a `Extraction`.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ExtractionSchema, type Extraction, type NormalizedDoc, type Reader, type ReaderResult } from "../core/schemas";
+import { WireExtractionSchema, wireToExtraction } from "./wire";
 import { PROMPT_VERSION, buildReaderMessages } from "./prompt";
 
 export const PRIMARY_MODEL = "claude-sonnet-5-5";
@@ -31,12 +35,12 @@ export interface AnthropicReaderOptions {
   maxTokens?: number;
 }
 
-type ExtractionFormat = ReturnType<typeof zodOutputFormat<typeof ExtractionSchema>>;
+type ExtractionFormat = ReturnType<typeof zodOutputFormat<typeof WireExtractionSchema>>;
 let cachedFormat: ExtractionFormat | null = null;
 
-/** Formato de salida estructurada para `Extraction` (se construye una sola vez). */
+/** Formato de salida estructurada (formato de cable de `wire.ts`; se construye una sola vez). */
 export function extractionOutputFormat(): ExtractionFormat {
-  cachedFormat ??= zodOutputFormat(ExtractionSchema);
+  cachedFormat ??= zodOutputFormat(WireExtractionSchema);
   return cachedFormat;
 }
 
@@ -157,16 +161,22 @@ export function createAnthropicReader(opts: AnthropicReaderOptions): Reader {
         return fail("parse_error", "El documento es demasiado largo para la ventana de contexto del modelo.");
       }
 
-      // 2) Contenido: JSON que cumpla ExtractionSchema.
+      // 2) Contenido: JSON en formato de cable → Extraction (validada con ExtractionSchema).
       const text = firstText(response.content);
       if (text == null || text.trim() === "") {
         return fail("parse_error", "La respuesta del modelo no trae contenido para leer.");
       }
       let extraction: Extraction;
       try {
-        const parsed = ExtractionSchema.safeParse(extractionOutputFormat().parse(text));
+        const wire = WireExtractionSchema.safeParse(extractionOutputFormat().parse(text));
+        if (!wire.success) {
+          return fail("parse_error", `La respuesta del modelo no cumple el esquema: ${wire.error.message}`);
+        }
+        const converted = wireToExtraction(wire.data);
+        if (!converted.ok) return fail("parse_error", converted.message);
+        const parsed = ExtractionSchema.safeParse(converted.extraction);
         if (!parsed.success) {
-          return fail("parse_error", `La respuesta del modelo no cumple el esquema: ${parsed.error.message}`);
+          return fail("parse_error", `La lectura convertida no cumple el esquema: ${parsed.error.message}`);
         }
         extraction = parsed.data;
       } catch (err) {

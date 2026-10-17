@@ -5,7 +5,7 @@ import { makeDoc } from "./test-utils";
 describe("buildReaderMessages", () => {
   it("usa un prompt de sistema en español que declara el documento como dato no confiable", () => {
     const { system } = buildReaderMessages(makeDoc());
-    expect(PROMPT_VERSION).toBe("v2");
+    expect(PROMPT_VERSION).toBe("v3");
     expect(system).toBe(READER_SYSTEM_PROMPT);
     expect(system).toContain("componente de extracción de datos");
     expect(system).toContain("DATO NO CONFIABLE");
@@ -15,8 +15,11 @@ describe("buildReaderMessages", () => {
     expect(system).toContain("YYYY-MM-DD");
     expect(system).toContain('"octubre 2026" → "2026-10"');
     expect(system).toContain("ISO 4217");
-    expect(system).toContain('"12.000.000,00" → 12000000');
-    expect(system).toContain('"1,200.00" → 1200');
+    expect(system).toContain('"12.000.000,00" → "12000000"');
+    expect(system).toContain('"1,200.00" → "1200"');
+    // Formato de cable sin null (la API admite como máximo 16 tipos unión en el esquema).
+    expect(system).toContain("nunca null");
+    expect(system).toContain("found");
     expect(system).toContain("accountNumber tal como aparece");
     // Decisiones del equipo: solo se pagan facturas y cuentas de cobro (un cobro por chat es "invoice"),
     // y el id tributario se compara sin etiqueta.
