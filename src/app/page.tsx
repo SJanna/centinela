@@ -13,7 +13,6 @@ export const metadata: Metadata = {
 
 /** Datos del resumen. Se leen en cada petición: cambian con cada factura. */
 async function loadDashboard() {
-  await connection();
   const now = new Date();
   const [stats, decisions, company, status] = await Promise.all([
     getStats(now.toISOString()),
@@ -31,6 +30,9 @@ async function loadDashboard() {
 }
 
 export default async function HomePage() {
+  // Fuera del try: si no, el aviso de "ruta dinámica" de Next durante el build se tomaría
+  // como un error de base y la portada quedaría prerenderizada con el estado de error.
+  await connection();
   let data: Awaited<ReturnType<typeof loadDashboard>>;
   try {
     data = await loadDashboard();

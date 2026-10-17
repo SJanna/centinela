@@ -139,7 +139,7 @@ export function DropZone({
                 <>
                   {" · "}
                   <span className="font-medium text-accent underline decoration-accent/30 underline-offset-[3px] group-hover/drop:decoration-accent">
-                    o elige archivos
+                    {multiple ? "o elige archivos" : "o elige un archivo"}
                   </span>
                 </>
               ) : null}

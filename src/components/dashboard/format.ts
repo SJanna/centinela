@@ -6,9 +6,12 @@ import type { CheckCode, Outcome } from "@/core/schemas";
 import { moneyParts } from "@/components/ui/money";
 import type { DecisionSummary, Stats, VendorCountries } from "./types";
 
-/** Lo que falló, dicho corto, por comprobación. Solo depende del código: no es texto de un modelo. */
+/**
+ * Lo que falló, dicho corto, por comprobación. Solo depende del código: no es texto de un modelo.
+ * LEC-1 se precisa con los datos del resumen (readingReason).
+ */
 const FAILED_REASON: Record<CheckCode, string> = {
-  "LEC-1": "Faltan datos o no se leen",
+  "LEC-1": "Datos clave incompletos o ilegibles",
   "LEC-2": "Las dos lecturas no coinciden",
   "LEC-3": "Las cuentas no cuadran",
   "LEC-4": "Trae instrucciones escondidas",
@@ -58,12 +61,52 @@ export interface Reason {
   codes: CheckCode[];
 }
 
+/** Datos clave de LEC-1 que trae el resumen (lo leído de la factura), con su nombre en la frase. */
+const KEY_FIELDS = [
+  ["vendorName", "el proveedor"],
+  ["invoiceNumber", "el número de factura"],
+  ["currency", "la moneda"],
+  ["total", "el total"],
+] as const;
+
+type KeyFields = Pick<DecisionSummary, (typeof KEY_FIELDS)[number][0]>;
+
+function isMissing(value: string | number | null | undefined): boolean {
+  if (value == null) return true;
+  return typeof value === "string" ? value.trim() === "" : !Number.isFinite(value);
+}
+
+/** "a", "a y b", "a, b y c". */
+function listEs(items: readonly string[]): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
+/**
+ * Motivo corto de LEC-1 con lo que se sabe: el resumen trae el proveedor, el número, la moneda y el
+ * total leídos (no la cuenta destino ni si un dato se leyó con dudas). Si falta alguno, se nombra;
+ * si faltan todos, no se leyó nada; si no falta ninguno, la causa es otra (la cuenta, un dato
+ * ilegible o sin respaldo en el texto) y no se adivina cuál.
+ */
+function readingReason(d: KeyFields): string {
+  const missing = KEY_FIELDS.filter(([key]) => isMissing(d[key])).map(([, label]) => label);
+  if (missing.length === KEY_FIELDS.length) return "No se pudieron leer los datos de la factura.";
+  if (missing.length === 1) return `Falta ${missing[0]}.`;
+  if (missing.length > 1) return `Faltan ${listEs(missing)}.`;
+  return `${FAILED_REASON["LEC-1"]}.`;
+}
+
+function failedReason(code: CheckCode, d: KeyFields): string {
+  if (code === "LEC-1") return readingReason(d);
+  return `${FAILED_REASON[code] ?? checkTitle(code)}.`;
+}
+
 /**
  * Motivo corto de la decisión y los códigos que lo explican.
  * PAGAR → todas cumplen · FRENAR → la primera que frena · ESCALAR → la causa que nombra el resumen
  * (no la primera que no pasó: un proveedor sin registrar deja "sin evaluar" los duplicados, que no son la causa).
+ * Si la causa es LEC-1, dice qué dato falta cuando el resumen lo permite ("Falta el total.").
  */
-export function reasonOf(d: Pick<DecisionSummary, "outcome" | "failedChecks" | "guardOverride" | "summary">): Reason {
+export function reasonOf(d: Pick<DecisionSummary, "outcome" | "failedChecks" | "guardOverride" | "summary"> & KeyFields): Reason {
   if (d.outcome === "PAGAR") return { text: `Las ${CHECK_CATALOG.length} comprobaciones se cumplen.`, codes: [] };
   const failed = d.failedChecks;
 
@@ -71,7 +114,7 @@ export function reasonOf(d: Pick<DecisionSummary, "outcome" | "failedChecks" | "
     const holds = failed.filter((c) => CHECK_BY_CODE[c]?.outcomeIfFail === "FRENAR");
     const codes = [...holds, ...failed.filter((c) => !holds.includes(c))];
     const decisive = codes[0];
-    return { text: decisive ? `${FAILED_REASON[decisive] ?? checkTitle(decisive)}.` : "Una comprobación frena el pago.", codes };
+    return { text: decisive ? failedReason(decisive, d) : "Una comprobación frena el pago.", codes };
   }
 
   if (d.guardOverride) return { text: "La guardia independiente no confirmó el pago.", codes: failed };
@@ -80,7 +123,7 @@ export function reasonOf(d: Pick<DecisionSummary, "outcome" | "failedChecks" | "
   const named = [...causes.failed, ...causes.missing].filter((c) => failed.includes(c));
   if (causes.failed[0]) {
     const first = causes.failed[0];
-    return { text: `${FAILED_REASON[first] ?? checkTitle(first)}.`, codes: named.length > 0 ? named : [first] };
+    return { text: failedReason(first, d), codes: named.length > 0 ? named : [first] };
   }
   if (causes.missing[0]) {
     return { text: `Sin datos para evaluar «${checkTitle(causes.missing[0])}».`, codes: named };

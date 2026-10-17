@@ -264,7 +264,7 @@ async function openPglite(config: Extract<DbConfig, { kind: "pglite" }>): Promis
     } else {
       const { mkdir } = await import("node:fs/promises");
       const path = await import("node:path");
-      const absolute = path.resolve(process.cwd(), config.dir);
+      const absolute = path.resolve(/*turbopackIgnore: true*/ process.cwd(), config.dir);
       await mkdir(absolute, { recursive: true });
       client = await PGlite.create(absolute);
     }

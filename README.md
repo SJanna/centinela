@@ -77,4 +77,6 @@ Pruebas unitarias y de propiedades (fast-check). Entre otras: «si el motor dice
 | `eval/` | Banco de pruebas |
 | `dataset/` | Empresa ficticia, casos etiquetados y generador de facturas |
 
+Lo que falta y requiere al equipo: [docs/PENDIENTES.md](docs/PENDIENTES.md). Guion del video: [docs/DEMO.md](docs/DEMO.md).
+
 Construido con Claude Code. Ningún dato real de clientes ni de empresas.

@@ -2,9 +2,20 @@
  * Detector de instrucciones escondidas por patrones (sin modelo), en español, inglés y portugués.
  *
  * Se busca sobre el texto plano del documento (incluye texto oculto de PDF) plegado a
- * minúsculas, sin tildes, con formas compatibles (NFKD) y sin caracteres de ancho cero, así
+ * minúsculas, sin tildes, con formas compatibles (NFKD) y sin caracteres invisibles (todo
+ * Default_Ignorable_Code_Point: ancho cero, marcas de dirección, guion blando, rellenos…), así
  * que "SYSTEM", "ｓｙｓｔｅｍ" o "ign​ore" cuentan igual. La cita que se devuelve es la del
  * texto original.
+ *
+ * Segunda pasada, contra el texto con letras separadas por espacios ("S Y S T E M : approved",
+ * "y a  f u e  a p r o b a d a", o lo que deja PDF.js con un título espaciado: "s k i p a l l c h e ck s"):
+ * se unen los tramos con 4+ letras sueltas (y trozos de hasta 4 letras, al menos la mitad sueltas)
+ * separadas por 1–6 espacios; el espacio más corto del tramo se toma como el que hay entre letras y
+ * uno más largo como el que hay entre palabras. Sobre ese texto se buscan los mismos patrones y, solo
+ * dentro de los tramos unidos, también los patrones de frases sin exigir espacios ni límites de
+ * palabra ("yafueaprobada", "skipallchecks"). Lo mismo para palabras en MAYÚSCULAS de 10+ letras
+ * (un título espaciado que la entrada de PDF ya unió, p. ej. "YAFUEAPROBADA"), pero ahí la frase debe
+ * empezar con la palabra. Los tramos de letras sueltas no aparecen en facturas normales.
  *
  * Lista de patrones (documentada a propósito; un falso positivo produce ESCALAR, nunca un pago):
  *
@@ -191,7 +202,12 @@ function isBlankSignatureField(folded: string, end: number): boolean {
   return next === undefined || FORM_LABEL_LINE.test(next);
 }
 
-const ZERO_WIDTH = /[​-‍⁠﻿­]/;
+/**
+ * Invisibles que se quitan antes de buscar: ancho cero (U+200B–U+200D, U+2060, U+FEFF), guion blando,
+ * marcas y forzados de dirección, operadores invisibles, rellenos Hangul, selectores de variante,
+ * caracteres etiqueta… (la propiedad Unicode Default_Ignorable_Code_Point completa).
+ */
+const INVISIBLE = /\p{Default_Ignorable_Code_Point}/u;
 const COMBINING = /[̀-ͯ]/g;
 
 interface Folded {
@@ -200,7 +216,7 @@ interface Folded {
   map: number[];
 }
 
-/** Minúsculas, sin tildes, NFKD y sin caracteres de ancho cero, con mapa de índices al original. */
+/** Minúsculas, sin tildes, NFKD y sin caracteres invisibles, con mapa de índices al original. */
 export function foldText(text: string): Folded {
   let folded = "";
   const map: number[] = [];
@@ -208,7 +224,7 @@ export function foldText(text: string): Folded {
   while (i < text.length) {
     const cp = text.codePointAt(i) ?? 0;
     const ch = String.fromCodePoint(cp);
-    if (!ZERO_WIDTH.test(ch)) {
+    if (!INVISIBLE.test(ch)) {
       const piece = ch.normalize("NFKD").replace(COMBINING, "").toLowerCase();
       for (let k = 0; k < piece.length; k++) map.push(i);
       folded += piece;
@@ -259,21 +275,43 @@ export function detectSuspiciousInstructions(text: string): SuspiciousMatch[] {
   const { folded, map } = foldText(text);
   const bySnippet = new Map<string, { position: number; reasons: Set<string> }>();
 
+  /** Registra una coincidencia [fStart, fEnd) del texto plegado. */
+  const add = (rule: Rule, fStart: number, fEnd: number) => {
+    if (rule.skipIfBlankField && isBlankSignatureField(folded, fEnd)) return;
+    const start = map[fStart];
+    const end = Math.max(map[Math.min(fEnd, map.length - 1)], start + 1);
+    const snippet = snippetAround(text, start, end);
+    if (!snippet) return;
+    const entry = bySnippet.get(snippet);
+    if (entry) {
+      entry.reasons.add(rule.reason);
+      entry.position = Math.min(entry.position, start);
+    } else {
+      bySnippet.set(snippet, { position: start, reasons: new Set([rule.reason]) });
+    }
+  };
+
   for (const rule of RULES) {
-    for (const m of folded.matchAll(rule.pattern)) {
-      const fStart = m.index ?? 0;
-      const fEnd = fStart + m[0].length;
-      if (rule.skipIfBlankField && isBlankSignatureField(folded, fEnd)) continue;
-      const start = map[fStart];
-      const end = Math.max(map[Math.min(fEnd, map.length - 1)], start + 1);
-      const snippet = snippetAround(text, start, end);
-      if (!snippet) continue;
-      const entry = bySnippet.get(snippet);
-      if (entry) {
-        entry.reasons.add(rule.reason);
-        entry.position = Math.min(entry.position, start);
-      } else {
-        bySnippet.set(snippet, { position: start, reasons: new Set([rule.reason]) });
+    for (const m of folded.matchAll(rule.pattern)) add(rule, m.index, m.index + m[0].length);
+  }
+
+  // Segunda pasada: letras sueltas unidas (y palabras largas en mayúsculas sin espacios).
+  const re = rejoinSpacedLetters(folded, text, map);
+  if (re) {
+    const toFolded = (i: number) => re.map[Math.min(i, re.map.length - 1)];
+    if (re.regions.some((r) => r.joined)) {
+      for (const rule of RULES) {
+        for (const m of re.text.matchAll(rule.pattern)) add(rule, toFolded(m.index), toFolded(m.index + m[0].length));
+      }
+    }
+    for (const rule of RELAXED_RULES) {
+      for (const m of re.text.matchAll(rule.pattern)) {
+        const s = m.index;
+        const e = s + m[0].length;
+        const region = regionAt(re.regions, s, e);
+        // En un tramo unido basta tocarlo; en una palabra larga la frase debe empezar con ella.
+        if (!region || (!region.joined && region.start !== s)) continue;
+        add(rule, toFolded(s), toFolded(e));
       }
     }
   }
@@ -281,4 +319,132 @@ export function detectSuspiciousInstructions(text: string): SuspiciousMatch[] {
   return [...bySnippet.entries()]
     .sort((a, b) => a[1].position - b[1].position)
     .map(([snippet, { reasons }]) => ({ text: snippet, reason: [...reasons].join("; ") }));
+}
+
+// ───────────────────────── Letras sueltas ─────────────────────────
+
+/**
+ * Los patrones de frases (con espacios obligatorios) sin exigir espacios ni límites de palabra, para
+ * texto que perdió los espacios entre palabras ("yafueaprobada"). Se dejan fuera los de casillas de
+ * firma, que con una sola palabra («aprovado») ya coinciden.
+ */
+const RELAXED_RULES: Rule[] = RULES.filter((r) => r.pattern.source.includes("\\s+") && !r.skipIfBlankField).map((r) => ({
+  ...r,
+  pattern: new RegExp(r.pattern.source.replace(/\\s\+/g, "\\s*").replace(/\\b/g, ""), r.pattern.flags),
+}));
+
+/** Mínimo de letras sueltas de un tramo para unirlo. */
+const MIN_SPACED_LETTERS = 4;
+/** Letras de un trozo que puede ir dentro de un tramo (las que PDF.js dejó juntas por el kerning). */
+const MAX_CLUSTER_LETTERS = 4;
+/** Espacios horizontales entre dos letras o palabras de un tramo (más es otra columna). */
+const MAX_SPACES = 6;
+/** Letras de una palabra en mayúsculas que se revisa sin espacios. */
+const MIN_LONG_WORD = 10;
+
+const LETTER_RUN = /\p{L}+/gu;
+const HORIZONTAL_SPACES = /^[^\S\n]+$/;
+
+interface Region {
+  /** [start, end) en el texto de la segunda pasada. */
+  start: number;
+  end: number;
+  /** true si son letras sueltas unidas; false si es una palabra larga en mayúsculas. */
+  joined: boolean;
+}
+
+interface Rejoined {
+  /** Texto plegado con los tramos de letras sueltas unidos. */
+  text: string;
+  /** map[i] = índice en el texto plegado del carácter i de `text` (con uno extra al final). */
+  map: number[];
+  /** Tramos unidos y palabras largas en mayúsculas, en orden y sin solaparse. */
+  regions: Region[];
+}
+
+function isUppercase(s: string): boolean {
+  return s === s.toUpperCase() && s !== s.toLowerCase();
+}
+
+/** La región que se solapa con [s, e), o null. Búsqueda binaria: las regiones están en orden y no se solapan. */
+function regionAt(regions: readonly Region[], s: number, e: number): Region | null {
+  let lo = 0;
+  let hi = regions.length - 1;
+  let found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (regions[mid].start < e) {
+      found = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return found >= 0 && regions[found].end > s ? regions[found] : null;
+}
+
+/**
+ * Une los tramos de letras sueltas del texto plegado y marca las palabras largas en mayúsculas (según
+ * el texto original). Devuelve null si no hay ninguno. Tiempo lineal: cada palabra se mira una vez.
+ */
+function rejoinSpacedLetters(folded: string, original: string, foldMap: readonly number[]): Rejoined | null {
+  const words: { start: number; end: number; letters: number }[] = [];
+  for (const m of folded.matchAll(LETTER_RUN)) {
+    words.push({ start: m.index, end: m.index + m[0].length, letters: [...m[0]].length });
+  }
+  const parts: string[] = [];
+  const map: number[] = [];
+  const regions: Region[] = [];
+  let outLength = 0;
+  let copied = 0;
+  const copyTo = (end: number) => {
+    if (end <= copied) return;
+    parts.push(folded.slice(copied, end));
+    for (let i = copied; i < end; i++) map.push(i);
+    outLength += end - copied;
+    copied = end;
+  };
+  const spacesBefore = (k: number) => folded.slice(words[k - 1].end, words[k].start);
+  const continuesRun = (k: number) => {
+    const gap = spacesBefore(k);
+    return words[k].letters <= MAX_CLUSTER_LETTERS && gap.length <= MAX_SPACES && HORIZONTAL_SPACES.test(gap);
+  };
+
+  let i = 0;
+  while (i < words.length) {
+    let j = i + 1;
+    if (words[i].letters <= MAX_CLUSTER_LETTERS) while (j < words.length && continuesRun(j)) j++;
+    let singles = 0;
+    for (let k = i; k < j; k++) if (words[k].letters === 1) singles++;
+    if (singles >= MIN_SPACED_LETTERS && singles * 2 >= j - i) {
+      // El espacio más corto del tramo separa letras; uno más largo, palabras.
+      let minGap = Infinity;
+      for (let k = i + 1; k < j; k++) minGap = Math.min(minGap, words[k].start - words[k - 1].end);
+      copyTo(words[i].start);
+      const start = outLength;
+      for (let k = i; k < j; k++) {
+        if (k > i && words[k].start - words[k - 1].end > minGap) {
+          parts.push(" ");
+          map.push(words[k - 1].end);
+          outLength += 1;
+        }
+        copied = words[k].start;
+        copyTo(words[k].end);
+      }
+      regions.push({ start, end: outLength, joined: true });
+    } else {
+      for (let k = i; k < j; k++) {
+        const w = words[k];
+        if (w.letters < MIN_LONG_WORD || !isUppercase(original.slice(foldMap[w.start], foldMap[w.end]))) continue;
+        // Fuera de un tramo se copia tal cual: su posición es la del texto plegado menos lo que ya se quitó.
+        const shift = copied - outLength;
+        regions.push({ start: w.start - shift, end: w.end - shift, joined: false });
+      }
+    }
+    i = j;
+  }
+  if (regions.length === 0) return null;
+  copyTo(folded.length);
+  map.push(folded.length);
+  return { text: parts.join(""), map, regions };
 }

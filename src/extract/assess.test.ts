@@ -1,6 +1,8 @@
 import fc from "fast-check";
+import PDFDocument from "pdfkit";
 import { describe, expect, it } from "vitest";
 import { CRITICAL_FIELDS, type Extraction } from "../core/schemas";
+import { normalizeFile } from "../ingest";
 import {
   PERIOD_DISAGREEMENT,
   SECOND_READING_UNAVAILABLE,
@@ -601,5 +603,32 @@ describe("revisión · citas y valores que solo son parte de un número (evidenc
         expect(findEvidenceNotFound(doc, e)).toEqual([]);
       }),
     );
+  });
+});
+
+describe("revisión · PDF con título espaciado y la moneda en el mismo fragmento (evidenceNotFound)", () => {
+  // PDF.js entrega "TOTA L A PAG A R USD 2.400,00" en un solo fragmento: al unir el título no puede
+  // llevarse "USD", o la moneda deja de aparecer como palabra y se rechaza un dato correcto.
+  it("la moneda escrita solo junto al título se encuentra en el texto del PDF", async () => {
+    const bytes = await new Promise<Uint8Array>((resolve) => {
+      const pdf = new PDFDocument();
+      const chunks: Buffer[] = [];
+      pdf.on("data", (c: Buffer) => chunks.push(c));
+      pdf.on("end", () => resolve(new Uint8Array(Buffer.concat(chunks))));
+      pdf.font("Helvetica").fontSize(10);
+      pdf.text("FACTURA DE VENTA N.º DS-0458", 50, 50, { lineBreak: false });
+      pdf.text("Datos del Sur S.A.S.", 50, 70, { lineBreak: false });
+      pdf
+        .font("Helvetica-Bold")
+        .fontSize(7.5)
+        .text("TOTAL A PAGAR", 50, 90, { characterSpacing: 0.8, continued: true, lineBreak: false })
+        .text(" USD 2.400,00", { characterSpacing: 0, lineBreak: false });
+      pdf.font("Helvetica").fontSize(10).text("Cuenta corriente 0012-3456-78", 50, 110, { lineBreak: false });
+      pdf.end();
+    });
+    const doc = await normalizeFile(bytes, "factura.pdf");
+    // Sin cita para la moneda: tiene que estar en el texto como palabra.
+    const e = makeExtraction({ currency: field("USD", null) });
+    expect(findEvidenceNotFound(doc, e), doc.plainText ?? "").toEqual([]);
   });
 });

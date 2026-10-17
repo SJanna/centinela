@@ -2,16 +2,21 @@ import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
 import { AccessForm } from "@/components/config/access-form";
 import { safeNextPath } from "@/components/config/safe-next";
+import { Button } from "@/components/ui/button";
 import { Ribbon } from "@/components/ui/ribbon";
 import { Sheet } from "@/components/ui/sheet";
 import { Eyebrow } from "@/components/ui/typography";
+import { configuredAccessCode } from "@/pipeline/access";
 
 export const metadata: Metadata = {
   title: "Acceso · Centinela",
   robots: { index: false },
 };
 
-/** Pantalla de acceso a la demo. Va sin barra lateral ni header (BARE_ROUTES). */
+/**
+ * Pantalla de acceso a la demo. Va sin barra lateral ni header (BARE_ROUTES). Sin `DEMO_ACCESS_CODE`
+ * la demo está abierta (el proxy no pide nada): no se muestra el formulario, solo el enlace para entrar.
+ */
 export default async function AccessPage({
   searchParams,
 }: {
@@ -19,6 +24,8 @@ export default async function AccessPage({
 }) {
   const { next } = await searchParams;
   const destination = safeNextPath(next);
+  // Después de leer searchParams la página se arma en cada petición: la variable se lee en tiempo de ejecución.
+  const protectedDemo = configuredAccessCode() != null;
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col overflow-hidden">
@@ -42,14 +49,30 @@ export default async function AccessPage({
           </p>
 
           <Sheet as="section" padding="none" aria-labelledby="acceso-titulo" className="space-y-6 p-7">
-            <div className="space-y-2">
-              <Eyebrow>Acceso</Eyebrow>
-              <h1 id="acceso-titulo" className="text-h1">
-                Esta demo está protegida.
-              </h1>
-              <p className="text-small text-ink-2">Escribe el código que te dio el equipo para entrar.</p>
-            </div>
-            <AccessForm next={destination} />
+            {protectedDemo ? (
+              <>
+                <div className="space-y-2">
+                  <Eyebrow>Acceso</Eyebrow>
+                  <h1 id="acceso-titulo" className="text-h1">
+                    Esta demo está protegida.
+                  </h1>
+                  <p className="text-small text-ink-2">Escribe el código que te dio el equipo para entrar.</p>
+                </div>
+                <AccessForm next={destination} />
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Eyebrow>Acceso</Eyebrow>
+                  <h1 id="acceso-titulo" className="text-h1">
+                    Esta demo no tiene código configurado.
+                  </h1>
+                </div>
+                <Button href="/" arrow="next" className="w-full">
+                  Entrar
+                </Button>
+              </>
+            )}
           </Sheet>
 
           <p className="mt-6 flex items-center justify-center gap-2 text-caption text-muted">
