@@ -7,21 +7,30 @@ import { OUTCOME_LABEL } from "../core/checks";
 import { normalizeAccount, toCents, monthOf } from "../core/normalize";
 import {
   CRITICAL_FIELDS,
+  type Agreement,
   type CheckCode,
   type CheckResult,
+  type CriticalField,
   type DecisionContext,
   type EngineInput,
+  type Extraction,
   type HistoryEntry,
+  type InvoiceData,
   type ReaderResult,
+  type ReadingSignals,
 } from "../core/schemas";
 import {
+  calendarDate,
   describeValidity,
   isFiniteNumber,
+  instantMonths,
+  isAbsent,
   isoDateOf,
   normalizeCurrency,
   normalizeFileHash,
   normalizeInvoiceNumber,
   periodOf,
+  roundCents,
   type Facts,
   type UsdAmount,
 } from "./facts";
@@ -123,7 +132,7 @@ function amountLabel(usd: Extract<UsdAmount, { ok: true }>): string {
   return usd.currency === "USD" ? usdText : `${money(usd.total, usd.currency)} ≈ ${usdText}`;
 }
 
-function usdNotEvaluable(usd: Extract<UsdAmount, { ok: false }>): Evaluation {
+function usdNotEvaluable(usd: Extract<UsdAmount, { ok: false }>, total: number | null | undefined): Evaluation {
   switch (usd.reason) {
     case "no_data":
       return derived(NO_DATA, { reason: usd.reason });
@@ -145,6 +154,19 @@ function usdNotEvaluable(usd: Extract<UsdAmount, { ok: false }>): Evaluation {
         `Convertir el monto a USD a mano: no hay tasa de cambio registrada para ${usd.currency}.`,
         { reason: usd.reason, currency: usd.currency },
       );
+    case "not_positive":
+      // Un total cero o negativo ya lo explica «Monto pactado»; aquí solo se marca sin evaluar.
+      if (!isFiniteNumber(total) || total <= 0) {
+        return derived("El total de la factura no es un monto a pagar; no hay monto en USD que comparar.", {
+          reason: usd.reason,
+          currency: usd.currency,
+        });
+      }
+      return notEvaluable(
+        `El total convertido a USD da menos de un centavo (${usd.currency ?? "moneda desconocida"} ${formatNumber(total)}); no se puede registrar como pago.`,
+        "Revisar el total y la moneda de la factura: convertido a USD no da un monto a pagar.",
+        { reason: usd.reason, currency: usd.currency },
+      );
   }
 }
 
@@ -162,6 +184,20 @@ function sumUsdCents(entries: readonly HistoryEntry[]): { cents: number; missing
   return { cents, missing };
 }
 
+/** "1 decisión" / "3 decisiones": cuántas entradas del historial no se pueden descartar. */
+function countText(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+/** Frase para las decisiones del historial con un resultado desconocido (podrían ser pagos), o null. */
+function unknownOutcomeText(f: Facts): string | null {
+  const n = f.unknownOutcome.length;
+  return n === 0 ? null : `${countText(n, "decisión", "decisiones")} con un resultado desconocido (podría ser un pago)`;
+}
+
+const ACTION_HISTORY = "Revisar el historial de decisiones: hay registros incompletos que podrían ser pagos de esta misma factura.";
+const ACTION_UNKNOWN_OUTCOME = "Revisar el historial de decisiones: hay registros con un resultado desconocido que podrían ser pagos.";
+
 type NumericRule = "approvalThresholdUsd" | "periodLimitUsd" | "initialFundUsd" | "amountTolerancePct";
 
 const RULE_LABELS: Record<NumericRule, string> = {
@@ -172,17 +208,19 @@ const RULE_LABELS: Record<NumericRule, string> = {
 };
 
 /**
- * Valor de una regla numérica, o una evaluación sin datos si no es un número finito. Un NaN o un
- * undefined (p. ej. al mezclar reglas) haría que «monto > umbral» diera false y se pagara sin límite.
+ * Valor de una regla numérica, o una evaluación sin datos si no es un número finito y no negativo.
+ * Un NaN o un undefined (p. ej. al mezclar reglas) haría que «monto > umbral» diera false y se pagara
+ * sin límite.
  */
 function ruleValue(ctx: DecisionContext, rule: NumericRule): { ok: true; value: number } | { ok: false; result: Evaluation } {
   const value: unknown = ctx.company.rules[rule];
-  if (isFiniteNumber(value)) return { ok: true, value };
+  // Un valor negativo tampoco es válido: una tolerancia negativa, por ejemplo, no tiene sentido.
+  if (isFiniteNumber(value) && value >= 0) return { ok: true, value };
   const label = RULE_LABELS[rule];
   return {
     ok: false,
     result: notEvaluable(
-      `La regla «${label}» no tiene un valor numérico válido en la configuración de la empresa; no se puede evaluar esta comprobación.`,
+      `La regla «${label}» no tiene un valor numérico válido (cero o más) en la configuración de la empresa; no se puede evaluar esta comprobación.`,
       `Revisar la configuración de reglas de la empresa: «${label}» no tiene un valor válido.`,
       { rule, ruleValue: String(value) },
     ),
@@ -190,6 +228,36 @@ function ruleValue(ctx: DecisionContext, rule: NumericRule): { ok: true; value: 
 }
 
 // ───────────────────────── Lectura ─────────────────────────
+
+/** Tipos de documento que se pagan: una factura o una cuenta de cobro. */
+const PAYABLE_DOCUMENT_TYPES: ReadonlySet<string> = new Set(["invoice", "cuenta_de_cobro"]);
+const RECEIPT_PROBLEM = "El documento parece un recibo de algo ya pagado, no una factura ni una cuenta de cobro";
+const OTHER_DOCUMENT_PROBLEM = "El documento no parece una factura ni una cuenta de cobro";
+const ACTION_RECEIPT = "Confirmar con el proveedor si hay un cobro pendiente: un recibo es de algo ya pagado y no se paga otra vez.";
+const ACTION_OTHER_DOCUMENT =
+  "Revisar el documento original: solo se pagan facturas y cuentas de cobro. Si es un cobro, pedir al proveedor la factura o la cuenta de cobro.";
+
+/** Extracciones de las lecturas que sí funcionaron (principal y segunda). */
+function okExtractions(input: EngineInput): Extraction[] {
+  const r = input.reading;
+  return [r.primary, r.secondary].flatMap((x) => (x != null && x.ok ? [x.extraction] : []));
+}
+
+function extractionField(e: Extraction, field: CriticalField): { legible?: unknown } | undefined {
+  return field === "accountNumber" ? e.payment?.accountNumber : e[field];
+}
+
+/**
+ * Campos críticos que alguna de las dos lecturas marcó como ilegibles. La señal la produce otro
+ * módulo y puede venir solo de la lectura principal: si la segunda dudó, tampoco se paga.
+ */
+function illegibleInReadings(input: EngineInput): CriticalField[] {
+  const out = new Set<CriticalField>();
+  for (const e of okExtractions(input)) {
+    for (const field of CRITICAL_FIELDS) if (extractionField(e, field)?.legible !== true) out.add(field);
+  }
+  return [...out];
+}
 
 const lec1: Evaluator = (f, input) => {
   const s = input.reading.signals;
@@ -202,18 +270,31 @@ const lec1: Evaluator = (f, input) => {
     );
   }
   const data = f.data;
+  const documentType = String(data.documentType);
+  // El tipo de documento de las DOS lecturas: si la segunda dice que es un recibo (algo ya pagado)
+  // u otro documento, la coincidencia en los demás datos no basta para pagarlo.
+  const readTypes = unique([documentType, ...okExtractions(input).map((e) => String(e.documentType))]);
+  const notPayable = readTypes.filter((t) => !PAYABLE_DOCUMENT_TYPES.has(t));
+  const documentKind = notPayable.length === 0 ? null : notPayable.includes("receipt") ? "receipt" : "other";
+  const documentProblem =
+    documentKind == null
+      ? null
+      : `${documentKind === "receipt" ? RECEIPT_PROBLEM : OTHER_DOCUMENT_PROBLEM}${
+          PAYABLE_DOCUMENT_TYPES.has(documentType) ? " (así lo clasifica una de las dos lecturas)" : ""
+        }`;
   const nullCritical = CRITICAL_FIELDS.filter((k) => isBlank(data[k]));
   const missing = unique([...s.missingCriticalFields, ...nullCritical].map(fieldLabel));
-  const illegible = unique(s.illegibleCriticalFields.map(fieldLabel));
+  const illegible = unique([...s.illegibleCriticalFields, ...illegibleInReadings(input)].map(fieldLabel));
   const notFound = unique(s.evidenceNotFound.map(fieldLabel));
 
-  if (missing.length === 0 && illegible.length === 0 && notFound.length === 0) {
+  if (documentProblem == null && missing.length === 0 && illegible.length === 0 && notFound.length === 0) {
     return pass(
       `Están completos y legibles los datos críticos: ${listEs(CRITICAL_FIELDS.map(fieldLabel))}.`,
-      { dataAvailable: true, missing: null, illegible: null, evidenceNotFound: null },
+      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null },
     );
   }
   const parts: string[] = [];
+  if (documentProblem != null) parts.push(documentProblem);
   if (missing.length > 0) parts.push(`Faltan datos críticos: ${listEs(missing)}`);
   if (illegible.length > 0) parts.push(`No se leen con claridad: ${listEs(illegible)}`);
   if (notFound.length > 0) {
@@ -224,16 +305,17 @@ const lec1: Evaluator = (f, input) => {
     );
   }
   const all = unique([...missing, ...illegible, ...notFound]);
-  return fail(
-    `${parts.join(". ")}.`,
-    `Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`,
-    {
-      dataAvailable: true,
-      missing: missing.join(", ") || null,
-      illegible: illegible.join(", ") || null,
-      evidenceNotFound: notFound.join(", ") || null,
-    },
-  );
+  const actions: string[] = [];
+  if (documentKind != null) actions.push(documentKind === "receipt" ? ACTION_RECEIPT : ACTION_OTHER_DOCUMENT);
+  if (all.length > 0) actions.push(`Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`);
+  return fail(`${parts.join(". ")}.`, actions.join(" "), {
+    dataAvailable: true,
+    documentType,
+    documentTypesRead: readTypes.join(", "),
+    missing: missing.join(", ") || null,
+    illegible: illegible.join(", ") || null,
+    evidenceNotFound: notFound.join(", ") || null,
+  });
 };
 
 const NO_SECOND_READING = "segunda_lectura_no_disponible";
@@ -281,8 +363,28 @@ const lec3: Evaluator = (f, input) => {
   return pass("Las líneas suman el subtotal y subtotal más impuestos da el total.", { issues: 0 });
 };
 
+const INSTRUCTIONS_UNREADABLE = "(la lectura no trae la lista de instrucciones detectadas)";
+
+/**
+ * Instrucciones a revisar: las de la señal; si la señal viene vacía pero alguna lectura reportó
+ * instrucciones (o no trae la lista), esas. La señal la produce otro módulo: no se le cree a ciegas.
+ */
+function suspiciousOf(input: EngineInput): ReadingSignals["suspiciousInstructions"] {
+  const fromSignals = input.reading.signals.suspiciousInstructions;
+  if (fromSignals.length > 0) return fromSignals;
+  return okExtractions(input).flatMap((e) =>
+    Array.isArray(e.embeddedInstructions)
+      ? e.embeddedInstructions.map((i) => ({
+          text: String(i?.text ?? ""),
+          source: "model" as const,
+          reason: String(i?.reason ?? "").trim() || "Instrucción reportada por el lector",
+        }))
+      : [{ text: INSTRUCTIONS_UNREADABLE, source: "model" as const, reason: "Lectura incompleta" }],
+  );
+}
+
 const lec4: Evaluator = (f, input) => {
-  const found = input.reading.signals.suspiciousInstructions;
+  const found = suspiciousOf(input);
   if (found.length > 0) {
     const shown = found
       .slice(0, 2)
@@ -316,12 +418,21 @@ const dup1: Evaluator = (_f, input, ctx) => {
     );
   }
   const shortHash = hash.slice(0, 12);
-  const prev = ctx.history.find((h) => normalizeFileHash(h.fileHash) === hash);
+  const prev = ctx.history.find((h) => normalizeFileHash(typeof h.fileHash === "string" ? h.fileHash : null) === hash);
   if (prev) {
     return fail(
-      `Este mismo archivo ya se procesó el ${shortDate(prev.decidedAt)} (factura ${prev.invoiceId}, decisión: ${OUTCOME_LABEL[prev.outcome]}).`,
+      `Este mismo archivo ya se procesó el ${shortDate(prev.decidedAt)} (factura ${prev.invoiceId}, decisión: ${OUTCOME_LABEL[prev.outcome] ?? "desconocida"}).`,
       "Confirmar si es un reenvío del mismo archivo; no pagarlo dos veces.",
       { fileHash: shortHash, previousInvoiceId: prev.invoiceId, previousOutcome: prev.outcome },
+    );
+  }
+  // Una decisión sin huella podría ser de este mismo archivo: no se descarta en silencio.
+  const unhashed = ctx.history.filter((h) => normalizeFileHash(typeof h.fileHash === "string" ? h.fileHash : null) == null).length;
+  if (unhashed > 0) {
+    return notEvaluable(
+      `Hay ${countText(unhashed, "decisión", "decisiones")} en el historial sin huella de archivo; no se puede descartar que este archivo ya se haya procesado.`,
+      ACTION_HISTORY,
+      { fileHash: shortHash, decisionsWithoutHash: unhashed },
     );
   }
   return pass(`Este archivo no se había procesado antes (huella ${shortHash}…).`, {
@@ -357,6 +468,21 @@ const dup2: Evaluator = (f) => {
       { vendorId: vendor.id, invoiceNumber: number, previousInvoiceId: prev.invoiceId },
     );
   }
+  // Un pago sin proveedor, o de este proveedor sin número, podría ser esta misma factura.
+  const noVendor = f.paid.filter((h) => isAbsent(h.vendorId)).length;
+  const noNumber = f.paid.filter((h) => h.vendorId === vendor.id && normalizeInvoiceNumber(h.invoiceNumber) == null).length;
+  const doubts = [
+    noVendor > 0 ? `${countText(noVendor, "pago", "pagos")} sin proveedor` : null,
+    noNumber > 0 ? `${countText(noNumber, "pago", "pagos")} de ${vendor.name} sin número de factura` : null,
+    unknownOutcomeText(f),
+  ].filter((x): x is string => x != null);
+  if (doubts.length > 0) {
+    return notEvaluable(
+      `No se puede descartar que el número ${shown} ya se haya pagado: en el historial hay ${listEs(doubts)}.`,
+      ACTION_HISTORY,
+      { vendorId: vendor.id, invoiceNumber: number, paymentsWithoutVendor: noVendor, paymentsWithoutNumber: noNumber },
+    );
+  }
   return pass(`No hay otra factura pagada de ${vendor.name} con el número ${shown}.`, {
     vendorId: vendor.id,
     invoiceNumber: number,
@@ -364,7 +490,65 @@ const dup2: Evaluator = (f) => {
   });
 };
 
-const dup3: Evaluator = (f) => {
+/** Otros acuerdos vigentes que cubren el periodo con los que la factura también cuadra (misma moneda, monto dentro de lo pactado). */
+function otherFittingAgreements(f: Facts, chosen: Agreement, ctx: DecisionContext): Agreement[] {
+  const data = f.data;
+  const cur = f.currency;
+  const sel = f.selection;
+  if (data == null || cur == null || sel == null || !isFiniteNumber(data.total)) return [];
+  const total = data.total;
+  return sel.candidates.filter(
+    (other) =>
+      other.id !== chosen.id &&
+      normalizeCurrency(other.currency) === cur &&
+      amountEvaluation(other, data, cur, total, ctx).status === "pass",
+  );
+}
+
+/**
+ * Pagos del historial que impiden descartar que este periodo (o este pago único) ya se pagó: pagos
+ * sin acuerdo, pagos de este acuerdo (o de otro con el que la factura también cuadra) mensuales sin
+ * un periodo válido, y decisiones con un resultado desconocido. Devuelve las frases, o [] si no hay.
+ */
+function periodDoubts(f: Facts, chosen: Agreement, ctx: DecisionContext): string[] {
+  const related = [chosen, ...otherFittingAgreements(f, chosen, ctx)];
+  const monthlyIds = new Set(related.filter((a) => a.frequency !== "once").map((a) => a.id));
+  const noAgreement = f.paid.filter((h) => isAbsent(h.agreementId)).length;
+  const noPeriod = f.paid.filter((h) => monthlyIds.has(String(h.agreementId)) && periodOf(h.agreementPeriod) == null).length;
+  return [
+    noAgreement > 0 ? `${countText(noAgreement, "pago", "pagos")} sin acuerdo` : null,
+    noPeriod > 0 ? `${countText(noPeriod, "pago", "pagos")} de este acuerdo sin un periodo válido` : null,
+    unknownOutcomeText(f),
+  ].filter((x): x is string => x != null);
+}
+
+/**
+ * Si la factura cuadra también con OTRO acuerdo vigente del proveedor (misma moneda, mismo periodo
+ * cubierto, monto dentro de lo pactado) y ese ya se pagó para este periodo (o era de pago único y
+ * ya se pagó), no se puede descartar un cobro repetido aunque el acuerdo elegido esté libre.
+ */
+function paidUnderAnotherAgreement(f: Facts, chosen: Agreement, ctx: DecisionContext): Evaluation | null {
+  const sel = f.selection;
+  if (sel == null) return null;
+  for (const other of otherFittingAgreements(f, chosen, ctx)) {
+    const prev = f.paid.find(
+      (h) => h.agreementId === other.id && (other.frequency === "once" || periodOf(h.agreementPeriod) === sel.billedPeriod),
+    );
+    if (prev == null) continue;
+    const what =
+      other.frequency === "once"
+        ? `el acuerdo de pago único «${other.description}», que ya se pagó`
+        : `el acuerdo «${other.description}», cuyo periodo ${formatPeriod(sel.billedPeriod ?? "")} ya se pagó`;
+    return notEvaluable(
+      `La factura también cuadra con ${what} (factura ${prev.invoiceId}); no se puede descartar un cobro repetido.`,
+      "Confirmar con el proveedor a qué acuerdo corresponde esta factura y que ese periodo no se haya pagado ya.",
+      { agreementId: chosen.id, otherAgreementId: other.id, previousInvoiceId: prev.invoiceId, period: f.period },
+    );
+  }
+  return null;
+}
+
+const dup3: Evaluator = (f, _input, ctx) => {
   if (f.data == null) return derived(NO_DATA);
   if (f.vendor == null) {
     return derived("Sin un proveedor registrado identificado no hay acuerdo ni periodo que revisar.", {
@@ -386,6 +570,16 @@ const dup3: Evaluator = (f) => {
         { agreementId: agreement.id, frequency: "once", period: null, previousInvoiceId: prev.invoiceId },
       );
     }
+    const doubts = periodDoubts(f, agreement, ctx);
+    if (doubts.length > 0) {
+      return notEvaluable(
+        `No se puede descartar que el acuerdo de pago único «${agreement.description}» ya se haya pagado: en el historial hay ${listEs(doubts)}.`,
+        ACTION_HISTORY,
+        { agreementId: agreement.id, frequency: "once", period: null },
+      );
+    }
+    const other = paidUnderAnotherAgreement(f, agreement, ctx);
+    if (other) return other;
     return pass(`El acuerdo de pago único «${agreement.description}» no se ha pagado todavía.`, {
       agreementId: agreement.id,
       frequency: "once",
@@ -409,6 +603,16 @@ const dup3: Evaluator = (f) => {
       { agreementId: agreement.id, frequency: "monthly", period, previousInvoiceId: prev.invoiceId },
     );
   }
+  const doubts = periodDoubts(f, agreement, ctx);
+  if (doubts.length > 0) {
+    return notEvaluable(
+      `No se puede descartar que el periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» ya se haya pagado: en el historial hay ${listEs(doubts)}.`,
+      ACTION_HISTORY,
+      { agreementId: agreement.id, frequency: "monthly", period },
+    );
+  }
+  const other = paidUnderAnotherAgreement(f, agreement, ctx);
+  if (other) return other;
   return pass(`El periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» no se ha pagado.`, {
     agreementId: agreement.id,
     frequency: "monthly",
@@ -448,7 +652,16 @@ const prv1: Evaluator = (f) => {
   }
 };
 
-const prv2: Evaluator = (f) => {
+/**
+ * ¿Una cuenta escrita solo con letras y dígitos ASCII y separadores habituales (espacios, guiones,
+ * puntos, barras, guion bajo)? Un valor ausente no cuenta como raro (de eso se ocupa LEC-1).
+ */
+function isPlainAccountText(raw: unknown): boolean {
+  if (raw == null) return true;
+  return typeof raw === "string" && /^[A-Za-z0-9\s\-‐-―./_]*$/.test(raw);
+}
+
+const prv2: Evaluator = (f, input) => {
   if (f.data == null) return derived(NO_DATA);
   const vendor = f.vendor;
   if (vendor == null) {
@@ -475,6 +688,16 @@ const prv2: Evaluator = (f) => {
   const a = lastDigits(invoiceAccount);
   const b = lastDigits(registered);
   const params = { vendorId: vendor.id, invoiceAccountLast4: a, registeredAccountLast4: b };
+  // Los datos traen la cuenta ya limpia (solo letras y dígitos). Si alguna lectura la escribió con
+  // otros caracteres (invisibles, «#», dígitos de ancho completo…), limpiarla podría convertir en
+  // «la registrada» algo que no lo es: no se da por buena.
+  if (okExtractions(input).some((e) => !isPlainAccountText(e.payment?.accountNumber?.value))) {
+    return fail(
+      `La cuenta destino leída trae caracteres que no son letras, dígitos ni separadores; no se puede confirmar que sea la registrada para ${vendor.name} (terminada en ${b}).`,
+      "Confirmar la cuenta destino con el proveedor por un canal conocido, no por el que llegó la factura.",
+      { ...params, match: false, unusualCharacters: true },
+    );
+  }
   if (invoiceAccount === registered) {
     return pass(`La cuenta destino (terminada en ${a}) es la registrada para ${vendor.name}.`, {
       ...params,
@@ -491,6 +714,17 @@ const prv2: Evaluator = (f) => {
 
 // ───────────────────────── Acuerdo ─────────────────────────
 
+/**
+ * "el 5 de octubre de 2026" o, si la factura no trae fecha de emisión y se usó el día de ctx.now,
+ * "el 20 de octubre de 2026 (la factura no trae fecha de emisión; se usa la fecha actual)".
+ */
+function referenceText(date: string, source: "issue_date" | "now" | null): string {
+  const base = `el ${formatDate(date)}`;
+  return source === "now" ? `${base} (la factura no trae fecha de emisión; se usa la fecha actual)` : base;
+}
+
+const ACTION_DATE = "Confirmar la fecha de emisión de la factura para revisar la vigencia del acuerdo.";
+
 const acu1: Evaluator = (f) => {
   if (f.data == null) return derived(NO_DATA);
   const vendor = f.vendor;
@@ -498,37 +732,69 @@ const acu1: Evaluator = (f) => {
   if (vendor == null || sel == null) {
     return derived("Sin un proveedor registrado identificado no hay acuerdo que revisar.", { agreementId: null });
   }
+  const params = {
+    vendorId: vendor.id,
+    agreementId: null,
+    referenceDate: sel.referenceDate,
+    referenceSource: sel.referenceSource,
+    billedPeriod: sel.billedPeriod,
+  };
   switch (sel.status) {
     case "no_agreements":
       return fail(
         `${vendor.name} no tiene acuerdos registrados.`,
         "Confirmar el acuerdo con el proveedor y registrarlo en la ficha antes de pagar.",
-        { vendorId: vendor.id, agreementId: null, referenceDate: sel.referenceDate },
+        params,
+      );
+    case "invalid_date":
+      return notEvaluable(
+        `La fecha de emisión de la factura («${truncate(String(f.data.issueDate), 40)}») no es una fecha válida; no se puede saber qué acuerdo estaba vigente.`,
+        ACTION_DATE,
+        params,
       );
     case "no_date":
       return notEvaluable(
-        "La factura no trae una fecha de emisión válida; no se puede saber qué acuerdo estaba vigente.",
-        "Confirmar la fecha de emisión de la factura para revisar la vigencia del acuerdo.",
-        { vendorId: vendor.id, agreementId: null, referenceDate: null },
+        "La factura no trae fecha de emisión y no hay una fecha actual válida; no se puede saber qué acuerdo estaba vigente.",
+        ACTION_DATE,
+        params,
       );
     case "none_valid": {
       const ref = sel.referenceDate ?? "";
       const c = sel.closest;
       let detail = "";
       if (c != null) {
-        const closestEnd = isoDateOf(c.validTo);
+        const closestEnd = calendarDate(c.validTo);
         detail =
           closestEnd != null && closestEnd < ref
             ? `: «${c.description}» estuvo vigente ${describeValidity(c)}`
             : `: «${c.description}» empieza el ${formatDate(c.validFrom)}`;
       }
       return fail(
-        `${vendor.name} no tiene un acuerdo vigente el ${formatDate(ref)}${detail}.`,
+        `${vendor.name} no tiene un acuerdo vigente ${referenceText(ref, sel.referenceSource)}${detail}.`,
         "Confirmar si hay un acuerdo vigente con el proveedor; si se renovó, actualizar la ficha antes de pagar.",
         {
-          vendorId: vendor.id,
-          agreementId: null,
-          referenceDate: ref,
+          ...params,
+          closestAgreementId: c?.id ?? null,
+          closestValidFrom: c?.validFrom ?? null,
+          closestValidTo: c?.validTo ?? null,
+        },
+      );
+    }
+    case "invalid_period":
+      return notEvaluable(
+        `El periodo facturado («${truncate(String(f.data.servicePeriod), 40)}») no es un mes válido; no se puede comprobar que esté dentro de la vigencia del acuerdo.`,
+        "Confirmar qué mes se está cobrando y que esté dentro de la vigencia del acuerdo.",
+        params,
+      );
+    case "period_outside": {
+      const c = sel.closest;
+      const period = sel.billedPeriod ?? "";
+      const which = c != null ? ` «${c.description}» (${describeValidity(c)})` : "";
+      return fail(
+        `El periodo facturado, ${formatPeriod(period)}, está fuera de la vigencia del acuerdo${which}: no se paga un servicio de antes de que empiece ni de después de que termine.`,
+        "Confirmar con el proveedor qué mes se está cobrando; si el acuerdo se renovó o amplió, actualizar la ficha antes de pagar.",
+        {
+          ...params,
           closestAgreementId: c?.id ?? null,
           closestValidFrom: c?.validFrom ?? null,
           closestValidTo: c?.validTo ?? null,
@@ -537,16 +803,10 @@ const acu1: Evaluator = (f) => {
     }
     case "selected": {
       const a = sel.agreement;
-      if (a == null) return derived(NO_AGREEMENT);
+      if (a == null || sel.referenceDate == null || sel.billedPeriod == null) return derived(NO_AGREEMENT);
       return pass(
-        `Acuerdo vigente el ${formatDate(sel.referenceDate ?? "")}: «${a.description}» (${describeValidity(a)}).`,
-        {
-          vendorId: vendor.id,
-          agreementId: a.id,
-          referenceDate: sel.referenceDate,
-          validFrom: a.validFrom,
-          validTo: a.validTo,
-        },
+        `Acuerdo vigente ${referenceText(sel.referenceDate, sel.referenceSource)}: «${a.description}» (${describeValidity(a)}). El periodo facturado, ${formatPeriod(sel.billedPeriod)}, está dentro de su vigencia.`,
+        { ...params, agreementId: a.id, validFrom: a.validFrom, validTo: a.validTo },
       );
     }
   }
@@ -609,6 +869,15 @@ const acu3: Evaluator = (f, _input, ctx) => {
       agreementCurrency: agreedCurrency,
     });
   }
+  return amountEvaluation(a, data, cur, total, ctx);
+};
+
+/**
+ * Compara el monto de la factura con lo pactado en un acuerdo de la misma moneda: monto fijo con
+ * tolerancia, o tarifa × horas (con tarifa y horas en cada línea y dentro del máximo). La usa ACU-3
+ * con el acuerdo elegido y DUP-3 con los otros acuerdos a los que la factura podría imputarse.
+ */
+function amountEvaluation(a: Agreement, data: InvoiceData, cur: string, total: number, ctx: DecisionContext): Evaluation {
   const totalCents = toCents(total);
   if (totalCents <= 0) {
     return fail(
@@ -668,7 +937,7 @@ const acu3: Evaluator = (f, _input, ctx) => {
     );
   }
   const rate = a.rate;
-  // null = sin máximo; cualquier otro valor no numérico es un dato corrupto, no «sin máximo».
+  // null = el acuerdo no fija máximo (se trata más abajo); otro valor no numérico es un dato corrupto.
   if (a.maxQuantity != null && !isFiniteNumber(a.maxQuantity)) {
     return notEvaluable(
       `El acuerdo por hora «${a.description}» tiene un máximo de horas no válido en la ficha.`,
@@ -676,35 +945,46 @@ const acu3: Evaluator = (f, _input, ctx) => {
       { agreementId: a.id, kind: a.kind, rate, maxQuantity: String(a.maxQuantity) },
     );
   }
-  const withQty = data.lineItems.filter((l) => isFiniteNumber(l.quantity));
-  if (withQty.length === 0) {
+  // Cada línea debe decir cuántas horas y a qué tarifa: sin eso no se puede comprobar
+  // «tarifa × cantidad» ni el máximo (una línea sin cantidad podría esconder horas de más).
+  const lines = data.lineItems;
+  const withoutQuantity = lines.filter((l) => !isFiniteNumber(l.quantity)).length;
+  const withoutRate = lines.filter((l) => !isFiniteNumber(l.unitPrice)).length;
+  if (lines.length === 0 || withoutQuantity > 0 || withoutRate > 0) {
+    const what =
+      lines.length === 0
+        ? "La factura no detalla las horas ni la tarifa"
+        : withoutQuantity > 0
+          ? `${withoutQuantity === 1 ? "Una línea" : `${withoutQuantity} líneas`} de la factura no ${withoutQuantity === 1 ? "indica" : "indican"} la cantidad de horas`
+          : `${withoutRate === 1 ? "Una línea" : `${withoutRate} líneas`} de la factura no ${withoutRate === 1 ? "indica" : "indican"} la tarifa por hora`;
     return notEvaluable(
-      "La factura no indica cantidad de horas; no se puede comparar con la tarifa pactada.",
-      "Confirmar con el proveedor cuántas horas factura.",
-      { agreementId: a.id, kind: a.kind, rate, quantity: null },
+      `${what}; no se puede comparar con la tarifa pactada (${money(rate, cur)} por hora).`,
+      "Confirmar con el proveedor cuántas horas factura y a qué tarifa.",
+      { agreementId: a.id, kind: a.kind, rate, quantity: null, linesWithoutQuantity: withoutQuantity, linesWithoutRate: withoutRate },
     );
   }
-  const quantity = withQty.reduce((sum, l) => sum + (l.quantity ?? 0), 0);
+  // Suma limpia de ruido de coma flotante (0,1 + 0,2 h son 0,3 h, no 0,30000000000000004).
+  const quantity = Number(lines.reduce((sum, l) => sum + (l.quantity ?? 0), 0).toPrecision(12));
   const expected = quantity * rate;
-  const expectedCents = toCents(expected);
+  const expectedCents = roundCents(quantity * toCents(rate));
   const diffCents = Math.abs(totalCents - expectedCents);
   const tolCents = toleranceCents(expectedCents, pct);
   const problems: string[] = [];
 
-  if (withQty.some((l) => (l.quantity ?? 0) < 0)) problems.push("Hay líneas con cantidad negativa");
+  if (lines.some((l) => (l.quantity ?? 0) <= 0)) problems.push("Hay líneas con cantidad de horas cero o negativa");
 
   const rateCents = toCents(rate);
-  const wrongRates = unique(
-    data.lineItems
-      .filter((l) => isFiniteNumber(l.unitPrice) && toCents(l.unitPrice) !== rateCents)
-      .map((l) => money(l.unitPrice ?? 0, cur)),
-  );
+  // La tarifa de cada línea debe ser exactamente la pactada en centavos, sin fracciones de centavo:
+  // 900,004 por hora no es 900 (sus importes ya no salen de cantidad × tarifa pactada). Solo se
+  // limpia el ruido de coma flotante (60,01 × 100 = 6000,999999999999 son 6001 centavos).
+  const isPactedRate = (unitPrice: number) => Number((unitPrice * 100).toPrecision(15)) === rateCents;
+  const wrongRates = unique(lines.filter((l) => !isPactedRate(l.unitPrice ?? 0)).map((l) => money(l.unitPrice ?? 0, cur)));
   if (wrongRates.length > 0) {
     problems.push(`La tarifa facturada (${listEs(wrongRates)} por hora) no es la pactada (${money(rate, cur)} por hora)`);
   }
 
   const max = a.maxQuantity;
-  const overMax = isFiniteNumber(max) && Math.round(quantity * 100) > Math.round(max * 100);
+  const overMax = isFiniteNumber(max) && quantity > max;
   const perWhat = a.frequency === "monthly" ? "por mes" : "en total";
   if (overMax) {
     problems.push(`Se facturan ${formatNumber(quantity)} h y el máximo pactado es ${formatNumber(max)} h ${perWhat}`);
@@ -712,7 +992,7 @@ const acu3: Evaluator = (f, _input, ctx) => {
 
   if (diffCents > tolCents) {
     problems.push(
-      `${formatNumber(quantity)} h × ${money(rate, cur)} = ${money(expected, cur)}, pero se facturan ${money(total, cur)} (diferencia de ${money(diffCents / 100, cur)}, fuera de la tolerancia de ±${formatPct(pct)})`,
+      `${formatNumber(quantity)} h × ${money(rate, cur)} = ${money(expectedCents / 100, cur)}, pero se facturan ${money(total, cur)} (diferencia de ${money(diffCents / 100, cur)}, fuera de la tolerancia de ±${formatPct(pct)})`,
     );
   }
 
@@ -732,19 +1012,28 @@ const acu3: Evaluator = (f, _input, ctx) => {
   };
   if (problems.length > 0) return fail(`${problems.join(". ")}.`, ACTION_AMOUNT, params);
 
-  const maxText = isFiniteNumber(max) ? `; máximo pactado ${formatNumber(max)} h ${perWhat}` : "";
+  if (max == null) {
+    // Sin máximo pactado no se puede comprobar que las horas estén dentro de lo acordado.
+    return notEvaluable(
+      `${formatNumber(quantity)} h × ${money(rate, cur)} cuadra con lo facturado, pero no se puede comprobar la cantidad: el acuerdo no define un máximo de horas («${a.description}»).`,
+      "Confirmar que las horas facturadas estén dentro de lo acordado y registrar en la ficha el máximo de horas del acuerdo.",
+      params,
+    );
+  }
+
+  const maxText = `; máximo pactado ${formatNumber(max)} h ${perWhat}`;
   const match =
     diffCents === 0
       ? "igual a lo facturado"
       : `y se facturan ${money(total, cur)}, dentro de la tolerancia de ±${formatPct(pct)}`;
-  return pass(`${formatNumber(quantity)} h × ${money(rate, cur)} = ${money(expected, cur)}, ${match}${maxText}.`, params);
-};
+  return pass(`${formatNumber(quantity)} h × ${money(rate, cur)} = ${money(expectedCents / 100, cur)}, ${match}${maxText}.`, params);
+}
 
 // ───────────────────────── Límites y fondo ─────────────────────────
 
 const lim1: Evaluator = (f, _input, ctx) => {
   const usd = f.usd;
-  if (!usd.ok) return usdNotEvaluable(usd);
+  if (!usd.ok) return usdNotEvaluable(usd, f.data?.total);
   const rule = ruleValue(ctx, "approvalThresholdUsd");
   if (!rule.ok) return rule.result;
   const threshold = rule.value;
@@ -762,7 +1051,7 @@ const lim1: Evaluator = (f, _input, ctx) => {
 
 const lim2: Evaluator = (f, _input, ctx) => {
   const usd = f.usd;
-  if (!usd.ok) return usdNotEvaluable(usd);
+  if (!usd.ok) return usdNotEvaluable(usd, f.data?.total);
   const rule = ruleValue(ctx, "periodLimitUsd");
   if (!rule.ok) return rule.result;
   // Con una fecha actual ilegible, monthOf daría un «mes» que no coincide con ningún pago y lo
@@ -776,6 +1065,9 @@ const lim2: Evaluator = (f, _input, ctx) => {
     );
   }
   const month = monthOf(today);
+  // Si `now` o un pago traen zona horaria y en UTC caen en otro mes, el pago cuenta si cae en el mes
+  // de `now` según cualquiera de las dos lecturas: ante la duda se suma de más, nunca de menos.
+  const nowMonths = instantMonths(ctx.now) ?? [month];
   // Un pago sin fecha válida podría ser de este mes: no se descarta en silencio.
   const undated = f.paid.filter((h) => isoDateOf(h.decidedAt) == null).length;
   if (undated > 0) {
@@ -785,7 +1077,15 @@ const lim2: Evaluator = (f, _input, ctx) => {
       { month, paymentsWithoutDate: undated },
     );
   }
-  const inMonth = f.paid.filter((h) => monthOf(isoDateOf(h.decidedAt) ?? "") === month);
+  const unknown = unknownOutcomeText(f);
+  if (unknown != null) {
+    return notEvaluable(
+      `En el historial hay ${unknown}; no se puede calcular lo pagado en ${formatPeriod(month)}.`,
+      ACTION_UNKNOWN_OUTCOME,
+      { month, decisionsWithUnknownOutcome: f.unknownOutcome.length },
+    );
+  }
+  const inMonth = f.paid.filter((h) => (instantMonths(h.decidedAt) ?? []).some((m) => nowMonths.includes(m)));
   const spent = sumUsdCents(inMonth);
   if (spent.missing > 0) {
     return notEvaluable(
@@ -819,9 +1119,17 @@ const lim2: Evaluator = (f, _input, ctx) => {
 
 const fon1: Evaluator = (f, _input, ctx) => {
   const usd = f.usd;
-  if (!usd.ok) return usdNotEvaluable(usd);
+  if (!usd.ok) return usdNotEvaluable(usd, f.data?.total);
   const rule = ruleValue(ctx, "initialFundUsd");
   if (!rule.ok) return rule.result;
+  const unknown = unknownOutcomeText(f);
+  if (unknown != null) {
+    return notEvaluable(
+      `En el historial hay ${unknown}; no se puede calcular el fondo disponible.`,
+      ACTION_UNKNOWN_OUTCOME,
+      { decisionsWithUnknownOutcome: f.unknownOutcome.length },
+    );
+  }
   const spent = sumUsdCents(f.paid);
   if (spent.missing > 0) {
     return notEvaluable(

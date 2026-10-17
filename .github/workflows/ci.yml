@@ -1,0 +1,58 @@
+# Integración continua: tipos, lint, pruebas, banco de pruebas (simulado, sin costo) y build.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Tipos, lint, pruebas, banco de pruebas y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Sin API ni base externa: lectura simulada y PGlite en memoria.
+      READING_MODE: simulated
+      PGLITE_DIR: memory
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Pruebas
+        run: npm run test
+
+      - name: Banco de pruebas (simulado; falla si hay algún pago indebido)
+        run: npm run eval
+
+      - name: Subir reporte del banco de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: eval/reports/
+          if-no-files-found: ignore
+
+      - name: Build
+        run: npm run build

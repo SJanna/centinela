@@ -12,10 +12,29 @@ describe("matchVendor", () => {
     expect(m.basis).toBe("tax_id");
   });
 
+  it("empareja si solo una identificación trae el dígito de verificación separado", () => {
+    expect(matchVendor(acmeInvoice({ vendorName: "Otro nombre", vendorTaxId: "900.123.456" }), VENDORS).basis).toBe("tax_id");
+    expect(matchVendor(acmeInvoice({ vendorName: "Otro nombre", vendorTaxId: "900 123 456 - 7" }), VENDORS).basis).toBe("tax_id");
+  });
+
+  it("no empareja si las dos traen dígito de verificación y difieren", () => {
+    const m = matchVendor(acmeInvoice({ vendorTaxId: "900.123.456-8" }), VENDORS);
+    expect(m.basis).toBe("tax_id_conflict");
+  });
+
   it("empareja por nombre normalizado (tildes, mayúsculas, sufijo societario) si falta la identificación", () => {
     const m = matchVendor(acmeInvoice({ vendorName: "ACME DEV SAS", vendorTaxId: null }), VENDORS);
     expect(m.vendor?.id).toBe("v-acme");
     expect(m.basis).toBe("name");
+  });
+
+  it("por nombre solo ignora la forma societaria AL FINAL (no en medio, ni «ME», ni pegada con punto)", () => {
+    for (const vendorName of ["Acme SA Dev", "Acme Dev ME", "Acme Dev.SAS"]) {
+      expect(matchVendor(acmeInvoice({ vendorName, vendorTaxId: null }), VENDORS).vendor, vendorName).toBeNull();
+    }
+    for (const vendorName of ["Acme Dev S.A.S.", "ACME DEV S A S", "Acme Dev, S.A.S", "Acme Dev SA", "Acme Dev"]) {
+      expect(matchVendor(acmeInvoice({ vendorName, vendorTaxId: null }), VENDORS).vendor?.id, vendorName).toBe("v-acme");
+    }
   });
 
   it("empareja por alias", () => {
@@ -59,9 +78,34 @@ describe("selectAgreement", () => {
     expect(before.closest?.id).toBe("a-bufete-cotizacion");
   });
 
-  it("sin fecha de emisión → no_date", () => {
+  it("sin fecha de emisión usa el día de now; sin now válido → no_date", () => {
+    const s = selectAgreement(ACME, acmeInvoice({ issueDate: null }), "2026-10-20T15:00:00Z");
+    expect(s).toMatchObject({ status: "selected", referenceDate: "2026-10-20", referenceSource: "now", billedPeriod: "2026-10" });
     expect(selectAgreement(ACME, acmeInvoice({ issueDate: null })).status).toBe("no_date");
-    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "05/10/2026" })).status).toBe("no_date");
+    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "  " }), "no es fecha").status).toBe("no_date");
+  });
+
+  it("fecha de emisión presente pero inválida → invalid_date (no se usa now)", () => {
+    for (const issueDate of ["05/10/2026", "2026-02-29", "2026-10-05T00:00:00Z"]) {
+      expect(selectAgreement(ACME, acmeInvoice({ issueDate }), "2026-10-20T15:00:00Z").status, issueDate).toBe("invalid_date");
+    }
+  });
+
+  it("el periodo facturado debe caer dentro de la vigencia (period_outside / invalid_period)", () => {
+    const out = selectAgreement(BUFETE, bufeteInvoice({ servicePeriod: "2026-09" }));
+    expect(out).toMatchObject({ status: "period_outside", agreement: null, billedPeriod: "2026-09" });
+    expect(out.closest?.id).toBe("a-bufete-cotizacion");
+    expect(selectAgreement(BUFETE, bufeteInvoice({ servicePeriod: "sept." })).status).toBe("invalid_period");
+    expect(selectAgreement(BUFETE, bufeteInvoice({ servicePeriod: "2026-12" })).status).toBe("selected");
+  });
+
+  it("entre varios vigentes elige uno que cubra el periodo", () => {
+    const v: Vendor = {
+      ...ACME,
+      agreements: [ag({ id: "nuevo", validFrom: "2026-10-01" }), ag({ id: "viejo", validFrom: "2026-01-01", validTo: "2026-12-31" })],
+    };
+    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-10-05", servicePeriod: "2026-09" })).agreement?.id).toBe("viejo");
+    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-10-05", servicePeriod: "2026-10" })).agreement?.id).toBe("nuevo");
   });
 
   it("prefiere el de la misma moneda y luego el primero", () => {
@@ -88,13 +132,16 @@ describe("selectAgreement", () => {
 });
 
 describe("agreementPeriodOf", () => {
-  it("mensual: periodo facturado, o mes de emisión; único: null", () => {
+  it("mensual: periodo facturado, o mes de emisión, o mes de now; único: null", () => {
     expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: "2026-09" }))).toBe("2026-09");
+    expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: "2026-09-15" }))).toBe("2026-09");
     expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: null }))).toBe("2026-10");
-    expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: "septiembre", issueDate: "2026-08-31" }))).toBe(
-      "2026-08",
-    );
+    // Un periodo escrito que no es un mes válido no se reemplaza por el mes de emisión.
+    expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: "septiembre", issueDate: "2026-08-31" }))).toBeNull();
     expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: null, issueDate: null }))).toBeNull();
+    expect(agreementPeriodOf(ACME.agreements[0], acmeInvoice({ servicePeriod: null, issueDate: null }), "2026-11-02T08:00:00Z")).toBe(
+      "2026-11",
+    );
     expect(agreementPeriodOf(BUFETE.agreements[0], bufeteInvoice({ servicePeriod: "2026-10" }))).toBeNull();
   });
 });
@@ -108,9 +155,14 @@ describe("computeUsdAmount y normalizeInvoiceNumber", () => {
     expect(computeUsdAmount(acmeInvoice({ currency: "XYZ" }), RULES)).toMatchObject({ ok: false, reason: "no_rate" });
     expect(computeUsdAmount(acmeInvoice({ currency: "constructor" }), RULES)).toMatchObject({ ok: false, reason: "no_rate" });
   });
-  it("normaliza números de factura", () => {
+  it("normaliza números de factura (sin ceros a la izquierda en cada tramo)", () => {
     expect(normalizeInvoiceNumber(" fe-1001 ")).toBe("FE1001");
     expect(normalizeInvoiceNumber("Nº 12/á")).toBe("N12A");
     expect(normalizeInvoiceNumber(" - ")).toBeNull();
+    expect(normalizeInvoiceNumber("FE-0012")).toBe("FE12");
+    expect(normalizeInvoiceNumber("fe 12")).toBe("FE12");
+    expect(normalizeInvoiceNumber("FE0012")).toBe("FE12");
+    expect(normalizeInvoiceNumber("F-0-01")).toBe("F01");
+    expect(normalizeInvoiceNumber("000")).toBe("0");
   });
 });

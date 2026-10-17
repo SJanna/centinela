@@ -8,7 +8,7 @@
  */
 import type { DocPart, NormalizedDoc } from "../core/schemas";
 
-export const PROMPT_VERSION = "v1";
+export const PROMPT_VERSION = "v2";
 
 export const UNTRUSTED_TAG = "documento_no_confiable";
 
@@ -45,8 +45,8 @@ Cada campo tiene value, evidence y legible:
 - legible: false si el dato está borroso, cortado, tachado, sobrescrito, es ambiguo (admite dos lecturas) o lo dedujiste en vez de leerlo. true si lo leíste con claridad. Si el dato simplemente no aparece: value null, evidence null, legible true. Si aparece pero no se puede leer: value null (o tu mejor lectura) y legible false.
 
 # Formato de los valores
-- documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo de algo ya pagado) u "other".
-- vendorName: quien cobra (el emisor), tal como aparece. vendorTaxId: su identificación tributaria (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece.
+- documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro).
+- vendorName: quien cobra (el emisor), tal como aparece. vendorTaxId: su identificación tributaria (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
 - invoiceNumber: el número del documento sin la etiqueta ("Factura N.º", "Invoice #", "No.") pero con sus prefijos y ceros (p. ej. "FV-0012").
 - issueDate y dueDate: YYYY-MM-DD.
 - servicePeriod: YYYY-MM si el documento indica el periodo facturado (p. ej. "octubre 2026" → "2026-10"). Si el año no aparece y lo deduces de la fecha de emisión, legible = false. null si no indica periodo.

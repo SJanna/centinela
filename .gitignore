@@ -45,3 +45,5 @@ next-env.d.ts
 /.cache
 .env*.local
 .env
+
+!.env.example

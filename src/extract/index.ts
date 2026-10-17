@@ -40,4 +40,6 @@ export {
   normalizeCurrency,
   normalizeInvoiceNumber,
   SECOND_READING_UNAVAILABLE,
+  PERIOD_DISAGREEMENT,
+  billedPeriodOfReading,
 } from "./assess";

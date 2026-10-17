@@ -50,10 +50,17 @@ describe("guardTaxId / sameTaxId", () => {
     expect(guardTaxId("88-1234567")).toEqual({ full: "881234567", base: null });
     expect(guardTaxId("ENO210415AB3")).toEqual({ full: "ENO210415AB3", base: null });
   });
-  it("quita etiquetas solo si van seguidas de separador", () => {
-    expect(guardTaxId("NIT: 901.456.789-1")?.full).toBe("9014567891");
-    expect(guardTaxId("RFC ENO210415AB3")?.full).toBe("ENO210415AB3");
+  it("no quita etiquetas ni tildes (misma semántica que taxIdsEquivalent del núcleo)", () => {
+    expect(guardTaxId("RFC ENO210415AB3")?.full).toBe("RFCENO210415AB3");
     expect(guardTaxId("RUCA800101XYZ")?.full).toBe("RUCA800101XYZ");
+    // «:» no es un separador: un id así es raro y no se aprueba.
+    expect(guardTaxId("NIT: 901.456.789-1")).toBeNull();
+    expect(guardTaxId("ÉNO210415AB3")).toBeNull();
+    expect(same("NIT 901.456.789-1", "901.456.789-1")).toBe(false);
+  });
+  it("acepta espacios alrededor del guion del dígito de verificación y guiones tipográficos", () => {
+    expect(guardTaxId("901 456 789 - 1")).toEqual({ full: "9014567891", base: "901456789" });
+    expect(same("901.456.789\u20131", "901456789")).toBe(true);
   });
   it("compara con y sin dígito de verificación, nunca base contra base", () => {
     expect(same("901.456.789-1", "9014567891")).toBe(true);

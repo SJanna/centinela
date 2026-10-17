@@ -224,7 +224,15 @@ export interface DecisionContext {
   company: Company;
   /** Solo decisiones anteriores a esta factura, en orden. */
   history: HistoryEntry[];
-  /** ISO 8601. Define el mes calendario para LIM-2 y la vigencia de acuerdos si no hay fecha en la factura. */
+  /**
+   * ISO 8601. Su fecha tal como está escrita (YYYY-MM-DD, sin convertir de zona horaria) define el
+   * mes calendario de LIM-2; si trae zona horaria y en UTC cae en otro mes, un pago del historial
+   * cuenta para el límite si cae en cualquiera de los dos (según su día escrito o su día en UTC):
+   * ante la duda se suma de más. Si la factura NO trae fecha de emisión (issueDate ausente), esa misma
+   * fecha es la fecha de referencia del acuerdo: con ella se revisa la vigencia (ACU-1) y, si
+   * tampoco hay servicePeriod, su mes es el periodo facturado. Una fecha de emisión presente pero
+   * inválida no se reemplaza por esta: deja el acuerdo sin evaluar. Motor y guardia hacen lo mismo.
+   */
   now: string;
 }
 

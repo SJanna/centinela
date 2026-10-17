@@ -2,7 +2,7 @@
  * Hechos derivados de la factura y la ficha de la empresa que usan varias comprobaciones:
  * proveedor emparejado, acuerdo vigente, periodo y monto en USD. Todo puro y determinista.
  */
-import { monthOf, normalizeName, normalizeTaxId, toCents } from "../core/normalize";
+import { monthOf, normalizeName, normalizeTaxId, taxIdsEquivalent, toCents } from "../core/normalize";
 import type {
   Agreement,
   DecisionContext,
@@ -16,14 +16,23 @@ import { formatDate, listEs, truncate } from "./text";
 
 // ───────────────────────── Normalizaciones locales ─────────────────────────
 
-/** Número de factura: sin tildes, alfanumérico, mayúsculas. "fac-001 / a" → "FAC001A". */
+/**
+ * Número de factura comparable: sin tildes, mayúsculas, sin separadores y sin ceros a la izquierda
+ * en cada tramo numérico. "FE-0012", "fe 12" y "FE0012" → "FE12"; "fac-001 / a" → "FAC1A".
+ * Generosa a propósito: confundir dos números solo frena o escala, nunca hace pagar dos veces.
+ * Los tramos se separan por cualquier carácter que no sea letra o dígito ("1-02" → "12"). Las letras
+ * y dígitos de ancho completo cuentan como los normales: "FE-１００１" es "FE1001", no "FE".
+ */
 export function normalizeInvoiceNumber(raw: string | null | undefined): string | null {
-  if (raw == null) return null;
-  const v = raw
+  if (typeof raw !== "string") return null;
+  const tokens = raw
+    .replace(/[\uff01-\uff5e]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+    .split(/[^A-Z0-9]+/)
+    .filter((t) => t.length > 0);
+  const v = tokens.map((t) => t.replace(/\d+/g, (digits) => String(digits.replace(/^0+/, "") || "0"))).join("");
   return v.length > 0 ? v : null;
 }
 
@@ -34,25 +43,95 @@ export function normalizeCurrency(raw: string | null | undefined): string | null
   return v.length > 0 ? v : null;
 }
 
-/** "2026-10-05" o "2026-10-05T…" → "2026-10-05"; cualquier otra cosa → null. */
-export function isoDateOf(raw: string | null | undefined): string | null {
-  if (raw == null) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw.trim());
-  if (!m) return null;
-  const month = Number(m[2]);
-  const day = Number(m[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  return `${m[1]}-${m[2]}-${m[3]}`;
+function daysIn(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-/** "2026-10" o "2026-10-05" → "2026-10"; cualquier otra cosa → null. */
-export function periodOf(raw: string | null | undefined): string | null {
-  if (raw == null) return null;
-  const m = /^(\d{4})-(\d{2})(?:$|-)/.exec(raw.trim());
+/** "YYYY-MM-DD" → la misma fecha si existe en el calendario; null si no ("2026-02-30"). */
+function existingDay(y: string, m: string, d: string): string | null {
+  const month = Number(m);
+  const day = Number(d);
+  if (month < 1 || month > 12 || day < 1 || day > daysIn(Number(y), month)) return null;
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Fecha de calendario escrita exactamente como YYYY-MM-DD (se toleran espacios alrededor). Es el
+ * formato del contrato para issueDate, validFrom y validTo: con hora, con barras o con un día que
+ * no existe → null (y quien la usa no la da por buena).
+ */
+export function calendarDate(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
+  return m ? existingDay(m[1], m[2], m[3]) : null;
+}
+
+/**
+ * Instante ISO 8601: solo fecha, o fecha y hora (con «T» o espacio, segundos y fracción opcionales)
+ * y zona opcional (Z, ±HH, ±HHMM, ±HH:MM). Devuelve el día TAL COMO ESTÁ ESCRITO, sin convertir de
+ * zona: "2026-10-31T19:15:00-05:00" → "2026-10-31". Cualquier otra forma, o una hora imposible → null.
+ */
+export function isoDateOf(raw: unknown): string | null {
+  return instantDays(raw)?.written ?? null;
+}
+
+/**
+ * Día escrito de un instante ISO 8601 (ver isoDateOf) y día en UTC: si el instante trae zona
+ * horaria distinta de UTC, puede ser otro ("2026-10-31T22:00:00-05:00" → escrito "2026-10-31",
+ * UTC "2026-11-01"). Sin hora o sin zona, los dos son el mismo. null si no es un instante válido.
+ */
+function instantDays(raw: unknown): { written: string; utc: string } | null {
+  if (typeof raw !== "string") return null;
+  const m =
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?\s?(Z|([+-])(\d{2})(?::?(\d{2}))?)?)?$/.exec(
+      raw.trim(),
+    );
   if (!m) return null;
-  const month = Number(m[2]);
-  if (month < 1 || month > 12) return null;
-  return `${m[1]}-${m[2]}`;
+  const outOfRange = (v: string | undefined, max: number) => v !== undefined && Number(v) > max;
+  if (outOfRange(m[4], 23) || outOfRange(m[5], 59) || outOfRange(m[6], 59)) return null;
+  if (outOfRange(m[9], 23) || outOfRange(m[10], 59)) return null;
+  const written = existingDay(m[1], m[2], m[3]);
+  if (written == null) return null;
+  if (m[4] === undefined || m[8] === undefined) return { written, utc: written };
+  const offsetMinutes = (m[8] === "-" ? -1 : 1) * (Number(m[9]) * 60 + Number(m[10] ?? 0));
+  const localMs = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] ?? 0));
+  return { written, utc: new Date(localMs - offsetMinutes * 60_000).toISOString().slice(0, 10) };
+}
+
+/**
+ * Meses calendario (YYYY-MM) a los que puede pertenecer un instante: el de su día escrito y, si con
+ * su zona horaria en UTC cae en otro mes, también ese. null si no es un instante válido.
+ */
+export function instantMonths(raw: unknown): string[] | null {
+  const days = instantDays(raw);
+  if (days == null) return null;
+  return Array.from(new Set([monthOf(days.written), monthOf(days.utc)]));
+}
+
+/** Periodo "YYYY-MM" (mes 01–12), o el mes de una fecha de calendario válida. Otra forma → null. */
+export function periodOf(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  if (/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) return v;
+  const day = calendarDate(v);
+  return day == null ? null : monthOf(day);
+}
+
+/** null, undefined o texto en blanco: el dato no vino. Cualquier otro valor vino (y se valida). */
+export function isAbsent(raw: unknown): boolean {
+  return raw == null || (typeof raw === "string" && raw.trim().length === 0);
+}
+
+/**
+ * Centavos enteros a partir de un monto en centavos con decimales (p. ej. tras aplicar una tasa):
+ * primero se limpia el ruido de coma flotante (300000.49999999994 es 300000.5) y luego se redondea
+ * la mitad hacia arriba (lejos de cero). Sin la limpieza, MXN 1.001 × 0,055 daría USD 55,05 en vez
+ * de USD 55,06.
+ */
+export function roundCents(rawCents: number): number {
+  const clean = Number(rawCents.toPrecision(15));
+  const r = Math.round(Math.abs(clean));
+  return clean < 0 && r !== 0 ? -r : r;
 }
 
 export function isFiniteNumber(v: unknown): v is number {
@@ -94,9 +173,11 @@ export interface VendorMatch {
 
 /**
  * Empareja la factura con la ficha de proveedores.
- * Coincide si las identificaciones tributarias normalizadas son iguales (ambas presentes),
- * o si el nombre normalizado es igual al nombre o a un alias. Si ambas identificaciones
- * existen y difieren, NO coincide aunque el nombre sí. Dos o más coincidencias → ambiguo.
+ * Coincide si las identificaciones tributarias son equivalentes (`taxIdsEquivalent`: iguales tras
+ * normalizar, o iguales sin el dígito de verificación cuando solo una lo trae), con ambas presentes;
+ * o, si alguna falta, si el nombre normalizado es igual al nombre o a un alias. Si ambas
+ * identificaciones existen y no son equivalentes, NO coincide aunque el nombre sí. Dos o más
+ * coincidencias → ambiguo.
  */
 export function matchVendor(data: InvoiceData, vendors: readonly Vendor[]): VendorMatch {
   const invoiceTax = normalizeTaxId(data.vendorTaxId);
@@ -121,7 +202,7 @@ export function matchVendor(data: InvoiceData, vendors: readonly Vendor[]): Vend
     const nameHit =
       invoiceName != null && [vendor.name, ...vendor.aliases].some((n) => normalizeName(n) === invoiceName);
     if (invoiceTax != null && vendorTax != null) {
-      if (invoiceTax === vendorTax) matches.push({ vendor, by: "tax_id" });
+      if (taxIdsEquivalent(data.vendorTaxId, vendor.taxId)) matches.push({ vendor, by: "tax_id" });
       else if (nameHit) conflicts.push(vendor);
     } else if (nameHit) {
       matches.push({ vendor, by: "name" });
@@ -162,82 +243,170 @@ export function matchVendor(data: InvoiceData, vendors: readonly Vendor[]): Vend
 
 // ───────────────────────── Acuerdo ─────────────────────────
 
+/**
+ * Fecha con la que se mide la vigencia del acuerdo: la de emisión de la factura; si la factura NO
+ * la trae, el día de ctx.now tal como está escrito. Una fecha de emisión presente pero inválida no
+ * se reemplaza (sería pagar con una fecha que la factura no dice).
+ */
+export type ReferenceDate =
+  | { ok: true; date: string; source: "issue_date" | "now" }
+  | { ok: false; reason: "invalid_issue_date" | "no_date" };
+
+export function referenceDateOf(data: InvoiceData, now: string | null | undefined): ReferenceDate {
+  if (!isAbsent(data.issueDate)) {
+    const issue = calendarDate(data.issueDate);
+    return issue != null ? { ok: true, date: issue, source: "issue_date" } : { ok: false, reason: "invalid_issue_date" };
+  }
+  const today = isoDateOf(now);
+  return today != null ? { ok: true, date: today, source: "now" } : { ok: false, reason: "no_date" };
+}
+
+/** Mes facturado: servicePeriod; si la factura no lo trae, el mes de la fecha de referencia. */
+export type BilledPeriod =
+  | { ok: true; period: string; source: "service_period" | "reference_date" }
+  | { ok: false; reason: "invalid_service_period" | "no_date" };
+
+export function billedPeriodOf(data: InvoiceData, referenceDate: string | null): BilledPeriod {
+  if (!isAbsent(data.servicePeriod)) {
+    const period = periodOf(data.servicePeriod);
+    return period != null ? { ok: true, period, source: "service_period" } : { ok: false, reason: "invalid_service_period" };
+  }
+  const day = calendarDate(referenceDate);
+  return day != null ? { ok: true, period: monthOf(day), source: "reference_date" } : { ok: false, reason: "no_date" };
+}
+
 export type AgreementSelectionStatus =
-  /** Hay acuerdo vigente para la fecha de referencia. */
+  /** Hay acuerdo vigente para la fecha de referencia y cubre el periodo facturado. */
   | "selected"
-  /** La factura no trae fecha de emisión válida. */
+  /** La factura no trae fecha de emisión y la fecha actual tampoco es válida. */
   | "no_date"
+  /** La factura trae una fecha de emisión que no es una fecha YYYY-MM-DD válida. */
+  | "invalid_date"
   /** El proveedor no tiene acuerdos registrados. */
   | "no_agreements"
   /** Ningún acuerdo está vigente para la fecha de referencia. */
-  | "none_valid";
+  | "none_valid"
+  /** La factura trae un periodo facturado que no es YYYY-MM válido. */
+  | "invalid_period"
+  /** Hay acuerdo vigente en la fecha de referencia, pero el periodo facturado queda fuera de su vigencia. */
+  | "period_outside";
 
 export interface AgreementSelection {
   status: AgreementSelectionStatus;
   agreement: Agreement | null;
-  /** Fecha usada para la vigencia (data.issueDate normalizada), o null. */
+  /** Fecha usada para la vigencia (emisión o, si no hay, el día de `now`), o null. */
   referenceDate: string | null;
-  /** Si no hay vigente: el acuerdo más cercano a la fecha (el último vencido o el próximo a empezar). */
+  /** De dónde salió referenceDate. */
+  referenceSource: "issue_date" | "now" | null;
+  /** Mes facturado (YYYY-MM) contra el que se revisa la vigencia, o null si no se pudo saber. */
+  billedPeriod: string | null;
+  /**
+   * Si no hay vigente: el acuerdo más cercano a la fecha (el último vencido o el próximo a empezar).
+   * Si el periodo queda fuera ("period_outside"): el acuerdo vigente en la fecha que no lo cubre.
+   */
   closest: Agreement | null;
+  /**
+   * Todos los acuerdos vigentes en la fecha que cubren el periodo (incluido el elegido). Si hay más
+   * de uno, la factura podría imputarse a otro: DUP-3 revisa que tampoco esté ya pagado.
+   */
+  candidates: Agreement[];
 }
 
-/** Inicio de vigencia normalizado (YYYY-MM-DD) o null si la ficha trae una fecha ilegible. */
+/** Inicio de vigencia (YYYY-MM-DD) o null si la ficha trae una fecha que no es YYYY-MM-DD válida. */
 function startOf(agreement: Agreement): string | null {
-  return isoDateOf(agreement.validFrom);
+  return calendarDate(agreement.validFrom);
 }
 
-/** Fin de vigencia normalizado, null si la ficha trae una fecha ilegible, o "open" si no vence. */
+/** Fin de vigencia, null si la ficha trae una fecha que no es YYYY-MM-DD válida, o "open" si no vence. */
 function endOf(agreement: Agreement): string | null | "open" {
-  return agreement.validTo == null ? "open" : isoDateOf(agreement.validTo);
+  return agreement.validTo == null ? "open" : calendarDate(agreement.validTo);
 }
 
 /**
- * Vigente si validFrom ≤ fecha ≤ validTo (validTo null = sin fin). Las fechas se normalizan antes
- * de comparar: comparar textos tal cual daría «2026-10-05» ≤ «2026-6-30». Una fecha ilegible en la
- * ficha o en la factura nunca hace vigente un acuerdo.
+ * Vigente si validFrom ≤ fecha ≤ validTo (validTo null = sin fin). Las fechas deben ser YYYY-MM-DD
+ * válidas (el formato del contrato): comparar textos tal cual daría «2026-10-05» ≤ «2026-6-30». Una
+ * fecha ilegible (o con hora) en la ficha o en la factura nunca hace vigente un acuerdo.
  */
 export function isAgreementValidOn(agreement: Agreement, date: string): boolean {
-  const day = isoDateOf(date);
+  const day = calendarDate(date);
   const from = startOf(agreement);
   const to = endOf(agreement);
   if (day == null || from == null || to == null) return false;
   return from <= day && (to === "open" || day <= to);
 }
 
+/** Último día del mes "YYYY-MM" (el periodo ya validado). */
+function lastDayOf(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  return `${period}-${String(daysIn(y, m)).padStart(2, "0")}`;
+}
+
 /**
- * Elige el acuerdo vigente para la fecha de emisión de la factura.
- * Vigente si validFrom ≤ fecha ≤ validTo (validTo null = sin fin). Con varios vigentes,
- * prefiere el de la moneda de la factura; si sigue el empate, el primero de la ficha.
+ * ¿El mes facturado se cruza con la vigencia del acuerdo? Basta con que algún día del mes esté
+ * dentro: el mes no puede terminar antes de que empiece el acuerdo ni empezar después de que termine.
  */
-export function selectAgreement(vendor: Vendor, data: InvoiceData): AgreementSelection {
-  const referenceDate = isoDateOf(data.issueDate);
-  if (vendor.agreements.length === 0) {
-    return { status: "no_agreements", agreement: null, referenceDate, closest: null };
-  }
-  if (referenceDate == null) {
-    return { status: "no_date", agreement: null, referenceDate: null, closest: null };
-  }
+export function agreementCoversPeriod(agreement: Agreement, period: string): boolean {
+  const from = startOf(agreement);
+  const to = endOf(agreement);
+  if (periodOf(period) !== period || from == null || to == null) return false;
+  const firstDay = `${period}-01`;
+  const endsBeforeStart = lastDayOf(period) < from;
+  const startsAfterEnd = to !== "open" && firstDay > to;
+  return !endsBeforeStart && !startsAfterEnd;
+}
+
+/** Entre varios acuerdos, el de la moneda de la factura; si ninguno la tiene, el primero de la ficha. */
+function preferCurrency(agreements: readonly Agreement[], currency: string | null): Agreement {
+  return agreements.find((a) => normalizeCurrency(a.currency) === currency) ?? agreements[0];
+}
+
+/**
+ * Elige el acuerdo vigente para la factura. Fecha de referencia: la de emisión o, si la factura no
+ * la trae, el día de `now`. El acuerdo debe estar vigente esa fecha Y su vigencia debe cubrir el
+ * mes facturado (servicePeriod, o el mes de la fecha de referencia). Con varios candidatos, prefiere
+ * el de la moneda de la factura; si sigue el empate, el primero de la ficha.
+ */
+export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string | null): AgreementSelection {
+  const base = { agreement: null, referenceDate: null, referenceSource: null, billedPeriod: null, closest: null, candidates: [] };
+  if (vendor.agreements.length === 0) return { ...base, status: "no_agreements" };
+  const ref = referenceDateOf(data, now);
+  if (!ref.ok) return { ...base, status: ref.reason === "invalid_issue_date" ? "invalid_date" : "no_date" };
+  const referenceDate = ref.date;
+  const dated = { ...base, referenceDate, referenceSource: ref.source };
+
   const valid = vendor.agreements.filter((a) => isAgreementValidOn(a, referenceDate));
-  if (valid.length > 0) {
-    const currency = normalizeCurrency(data.currency);
-    const sameCurrency = valid.find((a) => normalizeCurrency(a.currency) === currency);
-    return { status: "selected", agreement: sameCurrency ?? valid[0], referenceDate, closest: null };
+  if (valid.length === 0) {
+    const endedOn = (a: Agreement): string | null => {
+      const to = endOf(a);
+      return to != null && to !== "open" && to < referenceDate ? to : null;
+    };
+    const startsOn = (a: Agreement): string | null => {
+      const from = startOf(a);
+      return from != null && from > referenceDate ? from : null;
+    };
+    const ended = vendor.agreements
+      .filter((a) => endedOn(a) != null)
+      .reduce<Agreement | null>((best, a) => (best == null || (endedOn(a) ?? "") > (endedOn(best) ?? "") ? a : best), null);
+    const upcoming = vendor.agreements
+      .filter((a) => startsOn(a) != null)
+      .reduce<Agreement | null>((best, a) => (best == null || (startsOn(a) ?? "") < (startsOn(best) ?? "") ? a : best), null);
+    return { ...dated, status: "none_valid", closest: ended ?? upcoming };
   }
-  const endedOn = (a: Agreement): string | null => {
-    const to = endOf(a);
-    return to != null && to !== "open" && to < referenceDate ? to : null;
+
+  const billed = billedPeriodOf(data, referenceDate);
+  if (!billed.ok) return { ...dated, status: "invalid_period" };
+  const currency = normalizeCurrency(data.currency);
+  const covering = valid.filter((a) => agreementCoversPeriod(a, billed.period));
+  if (covering.length === 0) {
+    return { ...dated, status: "period_outside", billedPeriod: billed.period, closest: preferCurrency(valid, currency) };
+  }
+  return {
+    ...dated,
+    status: "selected",
+    agreement: preferCurrency(covering, currency),
+    billedPeriod: billed.period,
+    candidates: covering,
   };
-  const startsOn = (a: Agreement): string | null => {
-    const from = startOf(a);
-    return from != null && from > referenceDate ? from : null;
-  };
-  const ended = vendor.agreements
-    .filter((a) => endedOn(a) != null)
-    .reduce<Agreement | null>((best, a) => (best == null || (endedOn(a) ?? "") > (endedOn(best) ?? "") ? a : best), null);
-  const upcoming = vendor.agreements
-    .filter((a) => startsOn(a) != null)
-    .reduce<Agreement | null>((best, a) => (best == null || (startsOn(a) ?? "") < (startsOn(best) ?? "") ? a : best), null);
-  return { status: "none_valid", agreement: null, referenceDate, closest: ended ?? upcoming };
 }
 
 /** Texto de vigencia: "desde el 1 de enero de 2026, sin fecha de fin" o "del … al …". */
@@ -247,24 +416,32 @@ export function describeValidity(agreement: Agreement): string {
 }
 
 /**
- * Periodo al que se imputa el pago: mensual → servicePeriod (YYYY-MM) o el mes de emisión;
- * pago único → null.
+ * Periodo al que se imputa el pago: mensual → servicePeriod (YYYY-MM) o, si la factura no lo trae,
+ * el mes de la fecha de referencia (emisión, o el día de `now` si no hay emisión); pago único → null.
+ * null también si el periodo que viene en la factura no es válido o si no hay fecha de referencia.
  */
-export function agreementPeriodOf(agreement: Agreement, data: InvoiceData): string | null {
+export function agreementPeriodOf(agreement: Agreement, data: InvoiceData, now?: string | null): string | null {
   if (agreement.frequency === "once") return null;
-  const fromService = periodOf(data.servicePeriod);
-  if (fromService != null) return fromService;
-  const issue = isoDateOf(data.issueDate);
-  return issue != null ? monthOf(issue) : null;
+  const ref = referenceDateOf(data, now);
+  const billed = billedPeriodOf(data, ref.ok ? ref.date : null);
+  return billed.ok ? billed.period : null;
 }
 
 // ───────────────────────── Monto en USD ─────────────────────────
 
 export type UsdAmount =
   | { ok: true; currency: string; total: number; fxRate: number; amountUsdCents: number }
-  | { ok: false; reason: "no_data" | "no_total" | "no_currency" | "no_rate"; currency: string | null };
+  | {
+      ok: false;
+      /** not_positive: el total no es positivo o, convertido a USD, da menos de un centavo. */
+      reason: "no_data" | "no_total" | "no_currency" | "no_rate" | "not_positive";
+      currency: string | null;
+    };
 
-/** total × rules.fxToUsd[moneda], en centavos de USD. */
+/**
+ * total × rules.fxToUsd[moneda], en centavos de USD (mitades hacia arriba). Un pago siempre es de
+ * al menos un centavo de USD: si no, se registraría un pago que no cuenta para el límite ni el fondo.
+ */
 export function computeUsdAmount(data: InvoiceData | null, rules: Rules): UsdAmount {
   if (data == null) return { ok: false, reason: "no_data", currency: null };
   const currency = normalizeCurrency(data.currency);
@@ -272,7 +449,11 @@ export function computeUsdAmount(data: InvoiceData | null, rules: Rules): UsdAmo
   if (currency == null) return { ok: false, reason: "no_currency", currency };
   const fx = Object.prototype.hasOwnProperty.call(rules.fxToUsd, currency) ? rules.fxToUsd[currency] : undefined;
   if (!isFiniteNumber(fx) || fx <= 0) return { ok: false, reason: "no_rate", currency };
-  return { ok: true, currency, total: data.total, fxRate: fx, amountUsdCents: toCents(data.total * fx) };
+  // Se convierten los centavos de la factura (no el total con decimales) y se limpia el ruido de
+  // coma flotante antes de redondear: así el mismo total da siempre los mismos centavos de USD.
+  const amountUsdCents = roundCents(toCents(data.total) * fx);
+  if (amountUsdCents <= 0) return { ok: false, reason: "not_positive", currency };
+  return { ok: true, currency, total: data.total, fxRate: fx, amountUsdCents };
 }
 
 // ───────────────────────── Hechos completos ─────────────────────────
@@ -290,15 +471,22 @@ export interface Facts {
   usd: UsdAmount;
   /** Entradas del historial con resultado PAGAR. */
   paid: HistoryEntry[];
+  /**
+   * Entradas del historial cuyo resultado no es PAGAR, FRENAR ni ESCALAR: podrían ser pagos, así que
+   * duplicados, límite del mes y fondo no se dan por buenos mientras existan.
+   */
+  unknownOutcome: HistoryEntry[];
 }
+
+const KNOWN_OUTCOMES: readonly unknown[] = ["PAGAR", "FRENAR", "ESCALAR"];
 
 export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
   const data = input.reading.data;
   const match = data != null ? matchVendor(data, ctx.company.vendors) : null;
   const vendor = match?.vendor ?? null;
-  const selection = data != null && vendor != null ? selectAgreement(vendor, data) : null;
+  const selection = data != null && vendor != null ? selectAgreement(vendor, data, ctx.now) : null;
   const agreement = selection?.agreement ?? null;
-  const period = data != null && agreement != null ? agreementPeriodOf(agreement, data) : null;
+  const period = agreement != null && agreement.frequency !== "once" ? (selection?.billedPeriod ?? null) : null;
   return {
     data,
     match,
@@ -309,5 +497,6 @@ export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
     currency: normalizeCurrency(data?.currency),
     usd: computeUsdAmount(data, ctx.company.rules),
     paid: ctx.history.filter((h) => h.outcome === "PAGAR"),
+    unknownOutcome: ctx.history.filter((h) => !KNOWN_OUTCOMES.includes(h.outcome)),
   };
 }

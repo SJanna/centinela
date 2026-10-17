@@ -7,6 +7,9 @@ export {
   matchVendor,
   selectAgreement,
   agreementPeriodOf,
+  agreementCoversPeriod,
+  referenceDateOf,
+  billedPeriodOf,
   computeUsdAmount,
   isAgreementValidOn,
   normalizeInvoiceNumber,
@@ -14,5 +17,7 @@ export {
   type VendorMatchBasis,
   type AgreementSelection,
   type AgreementSelectionStatus,
+  type ReferenceDate,
+  type BilledPeriod,
   type UsdAmount,
 } from "./facts";

@@ -53,6 +53,66 @@ describe("LEC-1 · datos completos y legibles", () => {
     expect(c.explanation).toContain("no respaldado por el texto del documento");
   });
 
+  it("falla si el documento es un recibo de algo ya pagado", () => {
+    const d = decide(engineInput(acmeInvoice({ documentType: "receipt" })), context());
+    const c = check(d, "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe("El documento parece un recibo de algo ya pagado, no una factura ni una cuenta de cobro.");
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.humanAction).toContain("un recibo es de algo ya pagado");
+  });
+
+  it("falla si el documento no es una factura ni una cuenta de cobro", () => {
+    const c = check(decide(engineInput(acmeInvoice({ documentType: "other" })), context()), "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe("El documento no parece una factura ni una cuenta de cobro.");
+    expect(c.params.documentType).toBe("other");
+  });
+
+  it("acepta una cuenta de cobro", () => {
+    const d = decide(engineInput(acmeInvoice({ documentType: "cuenta_de_cobro" })), context());
+    expect(check(d, "LEC-1").status).toBe("pass");
+    expect(d.outcome).toBe("PAGAR");
+  });
+
+  it("recibo con datos faltantes: nombra las dos cosas", () => {
+    const c = check(decide(engineInput(acmeInvoice({ documentType: "receipt", accountNumber: null })), context()), "LEC-1");
+    expect(c.explanation).toBe(
+      "El documento parece un recibo de algo ya pagado, no una factura ni una cuenta de cobro. Faltan datos críticos: cuenta destino.",
+    );
+  });
+
+  it("falla si la segunda lectura marcó un campo crítico como ilegible, aunque la señal no lo diga", () => {
+    const input = engineInput(acmeInvoice());
+    const r = input.reading;
+    if (!r.secondary?.ok) throw new Error("fixture");
+    const secondary = {
+      ...r.secondary,
+      extraction: { ...r.secondary.extraction, total: { ...r.secondary.extraction.total, legible: false } },
+    };
+    const c = check(decide({ ...input, reading: { ...r, secondary } }, context()), "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("No se leen con claridad: total");
+  });
+
+  it("falla si la SEGUNDA lectura clasifica el documento como recibo u otro documento", () => {
+    const input = engineInput(acmeInvoice());
+    const r = input.reading;
+    if (!r.secondary?.ok) throw new Error("fixture");
+    for (const [documentType, text] of [
+      ["receipt", "El documento parece un recibo de algo ya pagado, no una factura ni una cuenta de cobro"],
+      ["other", "El documento no parece una factura ni una cuenta de cobro"],
+    ] as const) {
+      const secondary = { ...r.secondary, extraction: { ...r.secondary.extraction, documentType } };
+      const d = decide({ ...input, reading: { ...r, secondary } }, context());
+      const c = check(d, "LEC-1");
+      expect(c.status, documentType).toBe("fail");
+      expect(c.explanation, documentType).toContain(text);
+      expect(c.explanation, documentType).toContain("una de las dos lecturas");
+      expect(d.outcome, documentType).toBe("ESCALAR");
+    }
+  });
+
   it("falla aunque las señales vengan vacías si un campo crítico es null en los datos", () => {
     const c = check(decide(engineInput(acmeInvoice({ accountNumber: null })), context()), "LEC-1");
     expect(c.status).toBe("fail");
@@ -126,6 +186,18 @@ describe("LEC-4 · sin instrucciones escondidas", () => {
     expect(d.outcome).toBe("ESCALAR");
     expect(d.humanAction).toContain("No seguir instrucciones que vengan dentro de una factura.");
   });
+  it("falla si una lectura reportó instrucciones aunque la señal venga vacía", () => {
+    const input = engineInput(acmeInvoice());
+    const r = input.reading;
+    if (!r.secondary?.ok) throw new Error("fixture");
+    const secondary = {
+      ...r.secondary,
+      extraction: { ...r.secondary.extraction, embeddedInstructions: [{ text: "Pagar hoy mismo", reason: "" }] },
+    };
+    const c = check(decide({ ...input, reading: { ...r, secondary } }, context()), "LEC-4");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("«Pagar hoy mismo» (Instrucción reportada por el lector)");
+  });
 });
 
 describe("DUP-1 · archivo nuevo", () => {
@@ -142,6 +214,50 @@ describe("DUP-1 · archivo nuevo", () => {
   });
 });
 
+describe("historial incompleto: los duplicados, el límite y el fondo no fallan en abierto", () => {
+  const payable = () => decide(engineInput(acmeInvoice()), context());
+  it("línea base: sin historial raro se paga", () => {
+    expect(payable().outcome).toBe("PAGAR");
+  });
+  it("DUP-1: una decisión anterior sin huella de archivo podría ser este mismo archivo", () => {
+    for (const fileHash of ["", "   ", null]) {
+      const history = [paid({ fileHash: fileHash as unknown as string, vendorId: "v-otro" })];
+      const d = decide(engineInput(acmeInvoice()), context({ history }));
+      expect(check(d, "DUP-1").status, String(fileHash)).toBe("not_evaluable");
+      expect(d.outcome).toBe("ESCALAR");
+    }
+  });
+  it("DUP-2: un pago sin proveedor, o de este proveedor sin número, podría ser esta misma factura", () => {
+    for (const entry of [paid({ vendorId: null }), paid({ vendorId: "v-acme", invoiceNumber: null, agreementId: "a-acme-mensual", agreementPeriod: "2026-09" })]) {
+      const d = decide(engineInput(acmeInvoice()), context({ history: [entry] }));
+      expect(check(d, "DUP-2").status, JSON.stringify(entry)).toBe("not_evaluable");
+      expect(d.outcome).toBe("ESCALAR");
+    }
+  });
+  it("DUP-3: un pago sin acuerdo, o de este acuerdo sin periodo válido, podría ser de este periodo", () => {
+    for (const entry of [
+      paid({ vendorId: "v-acme", agreementId: null }),
+      paid({ vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: null }),
+      paid({ vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: "octubre" }),
+    ]) {
+      const d = decide(engineInput(acmeInvoice()), context({ history: [entry] }));
+      expect(check(d, "DUP-3").status, JSON.stringify(entry)).toBe("not_evaluable");
+      expect(d.outcome).toBe("ESCALAR");
+    }
+  });
+  it("una decisión con un resultado desconocido podría ser un pago: duplicados, límite y fondo sin evaluar", () => {
+    const history = [paid({ outcome: "PAGADO" as unknown as "PAGAR", vendorId: "v-acme", invoiceNumber: "FE-1001" })];
+    const d = decide(engineInput(acmeInvoice()), context({ history }));
+    for (const code of ["DUP-2", "DUP-3", "LIM-2", "FON-1"] as const) expect(check(d, code).status, code).toBe("not_evaluable");
+    expect(d.outcome).toBe("ESCALAR");
+    // El mismo archivo con un resultado desconocido: el texto no dice «undefined».
+    const same = decide(engineInput(acmeInvoice(), { fileHash: "h" }), context({ history: [{ ...history[0], fileHash: "h" }] }));
+    expect(check(same, "DUP-1").status).toBe("fail");
+    expect(check(same, "DUP-1").explanation).toContain("decisión: desconocida");
+    expect(check(same, "DUP-1").explanation).not.toContain("undefined");
+  });
+});
+
 describe("DUP-2 · número de factura nuevo", () => {
   it("pasa si el mismo número existe pero de otro proveedor", () => {
     const history = [paid({ vendorId: "v-otro", invoiceNumber: "FE-1001" })];
@@ -154,6 +270,19 @@ describe("DUP-2 · número de factura nuevo", () => {
   it("falla si ya se pagó el mismo número normalizado del mismo proveedor", () => {
     const history = [paid({ vendorId: "v-acme", invoiceNumber: "fe 1001", agreementId: "otro" })];
     const d = decide(engineInput(acmeInvoice()), context({ history }));
+    expect(check(d, "DUP-2").status).toBe("fail");
+    expect(d.outcome).toBe("FRENAR");
+  });
+  it("falla si ya se pagó el mismo número escrito con otros ceros a la izquierda o separadores", () => {
+    for (const previous of ["FE-01001", "fe 1001", "FE1001"]) {
+      const history = [paid({ vendorId: "v-acme", invoiceNumber: previous, agreementId: "a-acme-mensual", agreementPeriod: "2026-09" })];
+      const c = check(decide(engineInput(acmeInvoice({ invoiceNumber: "FE-1001" })), context({ history })), "DUP-2");
+      expect(c.status, previous).toBe("fail");
+    }
+  });
+  it("falla si el número ya pagado viene escrito con dígitos de ancho completo (FE-１００１)", () => {
+    const history = [paid({ vendorId: "v-acme", invoiceNumber: "FE-1001", agreementId: "a-acme-mensual", agreementPeriod: "2026-09" })];
+    const d = decide(engineInput(acmeInvoice({ invoiceNumber: "FE-\uff11\uff10\uff10\uff11" })), context({ history }));
     expect(check(d, "DUP-2").status).toBe("fail");
     expect(d.outcome).toBe("FRENAR");
   });
@@ -190,8 +319,30 @@ describe("DUP-3 · periodo no pagado", () => {
     const history = [paid({ vendorId: "v-bufete", agreementId: "a-bufete-cotizacion", outcome: "ESCALAR" })];
     expect(check(decide(engineInput(bufeteInvoice()), context({ history })), "DUP-3").status).toBe("pass");
   });
+  it("no se paga si la factura cuadra también con otro acuerdo vigente cuyo periodo ya se pagó", () => {
+    const base = context().company.vendors[1];
+    const twin = { ...base.agreements[0], id: "a-nopal-2", description: "Diseño, segundo contrato" };
+    const nopal = { ...base, agreements: [base.agreements[0], twin] };
+    const history = [paid({ vendorId: "v-nopal", agreementId: "a-nopal-2", agreementPeriod: "2026-09", invoiceNumber: "N-1" })];
+    const d = decide(engineInput(nopalInvoice()), context({ vendors: [nopal], history }));
+    const c = check(d, "DUP-3");
+    expect(d.agreementId).toBe("a-nopal-diseno");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("también cuadra con el acuerdo «Diseño, segundo contrato»");
+    expect(d.outcome).toBe("ESCALAR");
+    // Si el otro acuerdo no cuadra con el monto (otra tarifa), no importa que esté pagado.
+    const other = { ...nopal, agreements: [base.agreements[0], { ...twin, rate: 1000 }] };
+    expect(check(decide(engineInput(nopalInvoice()), context({ vendors: [other], history })), "DUP-3").status).toBe("pass");
+  });
   it("no es evaluable sin acuerdo", () => {
-    expect(check(decide(engineInput(acmeInvoice({ issueDate: null })), context()), "DUP-3").status).toBe("not_evaluable");
+    const d = decide(engineInput(acmeInvoice({ issueDate: "05/10/2026" })), context());
+    expect(check(d, "DUP-3").status).toBe("not_evaluable");
+  });
+  it("sin fecha de emisión ni periodo, el periodo es el mes de la fecha actual", () => {
+    const history = [paid({ vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: "2026-10", invoiceNumber: "FE-999" })];
+    const d = decide(engineInput(acmeInvoice({ issueDate: null, servicePeriod: null })), context({ history }));
+    expect(d.agreementPeriod).toBe("2026-10");
+    expect(check(d, "DUP-3").status).toBe("fail");
   });
 });
 
@@ -231,6 +382,21 @@ describe("PRV-2 · cuenta destino registrada", () => {
       "Confirmar el cambio de cuenta con el proveedor por un canal conocido, no por el que llegó la factura.",
     );
   });
+  it("falla si la cuenta leída trae caracteres que no son letras, dígitos ni separadores (aunque al limpiarla coincida)", () => {
+    for (const raw of ["4512​0098-7731", "4512#0098#7731", "４５１２-0098-7731"]) {
+      const input = engineInput(acmeInvoice());
+      const r = input.reading;
+      if (!r.primary.ok || !r.secondary?.ok) throw new Error("fixture");
+      const account = { value: raw, evidence: raw, legible: true };
+      const primary = { ...r.primary, extraction: { ...r.primary.extraction, payment: { ...r.primary.extraction.payment, accountNumber: account } } };
+      const d = decide({ ...input, reading: { ...r, primary } }, context());
+      const c = check(d, "PRV-2");
+      expect(c.status, raw).toBe("fail");
+      expect(c.explanation, raw).toContain("caracteres que no son letras, dígitos ni separadores");
+      expect(c.explanation, raw).not.toContain("4512");
+      expect(d.outcome, raw).toBe("ESCALAR");
+    }
+  });
 });
 
 describe("ACU-1 · acuerdo vigente", () => {
@@ -254,8 +420,58 @@ describe("ACU-1 · acuerdo vigente", () => {
     expect(d.agreementId).toBeNull();
     expect(d.outcome).toBe("ESCALAR");
   });
-  it("no es evaluable sin fecha de emisión", () => {
-    expect(check(decide(engineInput(acmeInvoice({ issueDate: null })), context()), "ACU-1").status).toBe("not_evaluable");
+  it("sin fecha de emisión usa el día de la fecha actual (ctx.now) y lo dice", () => {
+    const d = decide(engineInput(acmeInvoice({ issueDate: null })), context());
+    const c = check(d, "ACU-1");
+    expect(c.status).toBe("pass");
+    expect(c.params.referenceDate).toBe("2026-10-20");
+    expect(c.params.referenceSource).toBe("now");
+    expect(c.explanation).toContain("se usa la fecha actual");
+    expect(d.outcome).toBe("PAGAR");
+  });
+  it("sin fecha de emisión, con la fecha actual fuera de la vigencia: falla", () => {
+    const d = decide(engineInput(bufeteInvoice({ issueDate: null })), context({ now: "2027-01-05T12:00:00Z" }));
+    expect(check(d, "ACU-1").status).toBe("fail");
+    expect(check(d, "ACU-1").explanation).toContain("5 de enero de 2027");
+  });
+  it("no es evaluable con una fecha de emisión presente pero inválida (no se reemplaza por la actual)", () => {
+    for (const issueDate of ["05/10/2026", "2026-02-30", "2026-10-05T10:00:00Z"]) {
+      const c = check(decide(engineInput(acmeInvoice({ issueDate })), context()), "ACU-1");
+      expect(c.status, issueDate).toBe("not_evaluable");
+      expect(c.explanation, issueDate).toContain("no es una fecha válida");
+    }
+  });
+  it("no es evaluable sin fecha de emisión ni fecha actual válida", () => {
+    const c = check(decide(engineInput(acmeInvoice({ issueDate: null })), context({ now: "ayer" })), "ACU-1");
+    expect(c.status).toBe("not_evaluable");
+  });
+  it("falla si el periodo facturado es anterior al inicio de la vigencia", () => {
+    const d = decide(engineInput(bufeteInvoice({ issueDate: "2026-10-10", servicePeriod: "2026-09" })), context());
+    const c = check(d, "ACU-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("El periodo facturado, septiembre de 2026, está fuera de la vigencia del acuerdo");
+    expect(c.explanation).toContain("1 de octubre de 2026");
+    expect(d.agreementId).toBeNull();
+    expect(d.outcome).toBe("ESCALAR");
+  });
+  it("falla si el periodo facturado es posterior al fin de la vigencia", () => {
+    const d = decide(engineInput(bufeteInvoice({ issueDate: "2026-12-20", servicePeriod: "2027-01" })), context());
+    expect(check(d, "ACU-1").status).toBe("fail");
+    expect(check(d, "ACU-1").explanation).toContain("enero de 2027");
+  });
+  it("pasa si el periodo facturado se cruza con la vigencia en algún día (meses de borde)", () => {
+    const v = { ...context().company.vendors[2], agreements: [{ ...context().company.vendors[2].agreements[0], validFrom: "2026-10-15", validTo: "2026-12-10" }] };
+    const at = (servicePeriod: string) =>
+      check(decide(engineInput(bufeteInvoice({ issueDate: "2026-11-02", servicePeriod })), context({ vendors: [v] })), "ACU-1").status;
+    expect(at("2026-10")).toBe("pass");
+    expect(at("2026-12")).toBe("pass");
+    expect(at("2026-09")).toBe("fail");
+    expect(at("2027-01")).toBe("fail");
+  });
+  it("no es evaluable con un periodo facturado que no es un mes válido", () => {
+    const c = check(decide(engineInput(acmeInvoice({ servicePeriod: "octubre 2026" })), context()), "ACU-1");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("no es un mes válido");
   });
 });
 
@@ -281,6 +497,13 @@ describe("ACU-3 · monto pactado", () => {
   });
   it("monto fijo: pasa justo en el borde de la tolerancia", () => {
     expect(check(decide(engineInput(acmeInvoice({ total: 12_120_000 })), context()), "ACU-3").status).toBe("pass");
+  });
+  it("monto fijo: medio centavo se redondea hacia arriba sin ruido de coma flotante (40.091,005 ≠ 40.091 con tolerancia 0)", () => {
+    // 40091.005 × 100 = 4009100.4999999995 en coma flotante: sin limpiar el ruido daría 4009100.
+    const vendor = { ...context().company.vendors[0] };
+    vendor.agreements = [{ ...vendor.agreements[0], amount: 40_091 }];
+    const d = decide(engineInput(acmeInvoice({ total: 40_091.005, subtotal: 40_091.005 })), context({ vendors: [vendor], rules: { amountTolerancePct: 0 } }));
+    expect(check(d, "ACU-3").status).toBe("fail");
   });
   it("monto fijo: falla por un centavo fuera de la tolerancia", () => {
     const c = check(decide(engineInput(acmeInvoice({ total: 12_120_000.01 })), context()), "ACU-3");
@@ -329,8 +552,90 @@ describe("ACU-3 · monto pactado", () => {
     const inv = nopalInvoice({ lineItems: [{ description: "Diseño", quantity: null, unitPrice: null, amount: 36_000 }] });
     expect(check(decide(engineInput(inv), context()), "ACU-3").status).toBe("not_evaluable");
   });
+  it("por hora: no es evaluable si una línea no indica la tarifa por hora", () => {
+    const inv = nopalInvoice({ lineItems: [{ description: "Diseño", quantity: 40, unitPrice: null, amount: 36_000 }] });
+    const c = check(decide(engineInput(inv), context()), "ACU-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("no indica la tarifa por hora");
+  });
+  it("por hora: no es evaluable si alguna línea no indica horas (aunque otra sí)", () => {
+    const inv = nopalInvoice({
+      lineItems: [
+        { description: "Diseño", quantity: 40, unitPrice: 900, amount: 36_000 },
+        { description: "Ajustes", quantity: null, unitPrice: null, amount: 0 },
+      ],
+    });
+    const c = check(decide(engineInput(inv), context()), "ACU-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("no indica la cantidad de horas");
+  });
+  it("por hora: falla con una línea de cero horas", () => {
+    const inv = nopalInvoice({
+      lineItems: [
+        { description: "Diseño", quantity: 40, unitPrice: 900, amount: 36_000 },
+        { description: "Ajustes", quantity: 0, unitPrice: 900, amount: 0 },
+      ],
+    });
+    const c = check(decide(engineInput(inv), context()), "ACU-3");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("cero o negativa");
+  });
+  it("por hora: sin máximo de horas en el acuerdo queda sin evaluar", () => {
+    const base = context().company.vendors[1];
+    const nopal = { ...base, agreements: [{ ...base.agreements[0], maxQuantity: null }] };
+    const d = decide(engineInput(nopalInvoice()), context({ vendors: [nopal] }));
+    const c = check(d, "ACU-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("el acuerdo no define un máximo de horas");
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.humanAction).toContain("registrar en la ficha el máximo de horas");
+  });
+  it("por hora: sin máximo y con la tarifa equivocada, falla por la tarifa", () => {
+    const base = context().company.vendors[1];
+    const nopal = { ...base, agreements: [{ ...base.agreements[0], maxQuantity: null }] };
+    const inv = nopalInvoice({
+      total: 40 * 950,
+      subtotal: 40 * 950,
+      lineItems: [{ description: "Diseño", quantity: 40, unitPrice: 950, amount: 40 * 950 }],
+    });
+    expect(check(decide(engineInput(inv), context({ vendors: [nopal] })), "ACU-3").status).toBe("fail");
+  });
+  it("por hora: compara el máximo sin redondear las horas a centésimas", () => {
+    const inv = nopalInvoice({
+      total: 120.004 * 900,
+      subtotal: 120.004 * 900,
+      lineItems: [{ description: "Diseño", quantity: 120.004, unitPrice: 900, amount: 120.004 * 900 }],
+    });
+    const c = check(decide(engineInput(inv), context({ rules: { amountTolerancePct: 5 } })), "ACU-3");
+    expect(c.status).toBe("fail");
+    expect(c.params.overMax).toBe(true);
+  });
+  it("por hora: una tarifa con fracciones de centavo no es la pactada (900,004 ≠ 900)", () => {
+    const inv = nopalInvoice({
+      total: 9000.04,
+      subtotal: 9000.04,
+      lineItems: [{ description: "Diseño", quantity: 10, unitPrice: 900.004, amount: 9000.04 }],
+    });
+    const c = check(decide(engineInput(inv), context()), "ACU-3");
+    expect(c.status).toBe("fail");
+    expect(c.params.wrongRate).toBe(true);
+  });
   it("falla con total no positivo", () => {
     expect(check(decide(engineInput(acmeInvoice({ total: 0 })), context()), "ACU-3").status).toBe("fail");
+  });
+});
+
+describe("monto en USD", () => {
+  it("redondea la mitad de centavo hacia arriba sin ruido de coma flotante (MXN 1.001 × 0,055 = USD 55,055)", () => {
+    const inv = nopalInvoice({
+      total: 1001,
+      subtotal: 1001,
+      lineItems: [{ description: "Diseño", quantity: 1, unitPrice: 1001, amount: 1001 }],
+    });
+    expect(decide(engineInput(inv), context()).amountUsd).toBe(55.06);
+  });
+  it("COP 12.000.020 × 0,00025 = USD 3.000,005 → USD 3.000,01", () => {
+    expect(decide(engineInput(acmeInvoice({ total: 12_000_020, subtotal: 12_000_020 })), context()).amountUsd).toBe(3000.01);
   });
 });
 
@@ -376,6 +681,30 @@ describe("LIM-2 · límite del mes", () => {
     const c = check(d, "LIM-2");
     expect(c.status).toBe("fail");
     expect(c.explanation).toContain("USD 6.005,00");
+  });
+  it("con zonas horarias, un pago cuenta si cae en el mes de now según el día escrito o según UTC", () => {
+    // now: 31 de octubre escrito, 1 de noviembre en UTC. El pago anterior: 1 de noviembre en UTC.
+    const history = [paid({ amountUsd: 23_000, decidedAt: "2026-11-01T02:00:00Z" })];
+    const c = check(decide(engineInput(acmeInvoice()), context({ history, now: "2026-10-31T22:00:00-05:00" })), "LIM-2");
+    expect(c.status).toBe("fail");
+    expect(c.params.spentUsd).toBe(23_000);
+    // Pago del 30 de septiembre escrito con zona horaria que en UTC ya es 1 de octubre.
+    const history2 = [paid({ amountUsd: 23_000, decidedAt: "2026-09-30T22:00:00-05:00" })];
+    expect(check(decide(engineInput(acmeInvoice()), context({ history: history2 })), "LIM-2").status).toBe("fail");
+    // Sin zona horaria distinta, nada cambia: un pago del 30 de septiembre en UTC no es de octubre.
+    const history3 = [paid({ amountUsd: 23_000, decidedAt: "2026-09-30T22:00:00Z" })];
+    expect(check(decide(engineInput(acmeInvoice()), context({ history: history3 })), "LIM-2").status).toBe("pass");
+  });
+});
+
+describe("monto en USD de menos de un centavo", () => {
+  it("no se paga una factura cuyo monto en USD redondea a cero", () => {
+    const vendor = { ...context().company.vendors[0] };
+    vendor.agreements = [{ ...vendor.agreements[0], amount: 12 }];
+    const d = decide(engineInput(acmeInvoice({ total: 12, subtotal: 12 })), context({ vendors: [vendor] }));
+    expect(d.outcome).toBe("ESCALAR");
+    expect(check(d, "LIM-1").status).toBe("not_evaluable");
+    expect(check(d, "LIM-1").explanation).toContain("menos de un centavo");
   });
 });
 

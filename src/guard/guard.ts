@@ -52,6 +52,7 @@ const FIELD_LABEL: Record<string, string> = {
   issueDate: "fecha de emisión",
   dueDate: "fecha de vencimiento",
   servicePeriod: "periodo",
+  periodo: "periodo",
   currency: "moneda",
   subtotal: "subtotal",
   tax: "impuestos",
@@ -66,6 +67,15 @@ function label(field: string): string {
 
 function labelList(fields: Iterable<string>): string {
   return Array.from(new Set(Array.from(fields, label))).join(", ");
+}
+
+/**
+ * Un valor que viene de la factura (texto arbitrario de quien la envía), listo para una violación:
+ * espacios compactados y recortado a `max` caracteres. Las violaciones se muestran en la pantalla.
+ */
+function shown(raw: unknown, max = 60): string {
+  const text = String(raw).replace(/\s+/g, " ").trim();
+  return text.length <= max ? text : `${text.slice(0, max).trimEnd()}…`;
 }
 
 export const GUARD_MESSAGES = {
@@ -387,7 +397,7 @@ function checkReading(reading: ReadingAssessment, today: string | null, v: Viola
     if (!nonEmpty(data.currency)) missing.add("currency");
     else {
       currency = guardCurrency(data.currency);
-      if (currency === null) v.add(`la moneda «${data.currency}» no es un código válido`);
+      if (currency === null) v.add(`la moneda «${shown(data.currency, 20)}» no es un código válido`);
     }
 
     if (typeof data.total !== "number" || !Number.isFinite(data.total)) missing.add("total");
@@ -404,8 +414,16 @@ function checkReading(reading: ReadingAssessment, today: string | null, v: Viola
       account = guardAccount(data.accountNumber);
       if (account === null) v.add("la cuenta destino no tiene un formato válido");
     }
+  }
 
-    if (data.documentType === "receipt") v.add("el documento es un recibo de algo ya pagado, no un cobro");
+  // Solo se pagan facturas y cuentas de cobro: un recibo es de algo ya pagado y cualquier otro
+  // documento (o un tipo desconocido) no es un cobro. Cuenta lo que diga CUALQUIERA de las lecturas.
+  const documentTypes: unknown[] = [];
+  if (data !== null) documentTypes.push(data.documentType);
+  for (const e of [primary, secondary]) if (e !== null) documentTypes.push(e.documentType);
+  if (documentTypes.includes("receipt")) v.add("el documento es un recibo de algo ya pagado, no un cobro");
+  else if (documentTypes.some((t) => t !== "invoice" && t !== "cuenta_de_cobro")) {
+    v.add("el documento no parece una factura ni una cuenta de cobro");
   }
 
   if (missing.size > 0) v.add(`faltan datos críticos: ${labelList(missing)}`);
@@ -418,16 +436,19 @@ function checkReading(reading: ReadingAssessment, today: string | null, v: Viola
     return null;
   }
 
-  // Fechas: la de emisión define la vigencia; el periodo de servicio (o el mes de emisión) el periodo pagado.
+  // Fechas (decisión del equipo, igual que el motor): la de emisión define la vigencia; si la factura
+  // no la trae, se usa el día de `now` tal como está escrito. Una fecha de emisión presente pero
+  // inválida es una violación (no se reemplaza). El periodo pagado es el de servicio o, si no hay,
+  // el mes de esa fecha de referencia.
   let issueDay: string | null = null;
   if (!isAbsent(data.issueDate)) {
     issueDay = guardDate(data.issueDate);
-    if (issueDay === null) v.add(`la fecha de emisión no es válida (${String(data.issueDate)})`);
+    if (issueDay === null) v.add(`la fecha de emisión no es válida (${shown(data.issueDate, 40)})`);
   }
   let servicePeriod: string | null = null;
   if (!isAbsent(data.servicePeriod)) {
     servicePeriod = guardPeriod(data.servicePeriod);
-    if (servicePeriod === null) v.add(`el periodo de servicio no es válido (${String(data.servicePeriod)})`);
+    if (servicePeriod === null) v.add(`el periodo de servicio no es válido (${shown(data.servicePeriod, 40)})`);
   }
   const referenceDay = issueDay ?? today;
   const period = servicePeriod ?? (referenceDay ? monthOfDay(referenceDay) : null);
@@ -457,11 +478,11 @@ function vendorMatches(invoice: GuardInvoice, vendor: Vendor): boolean {
 
 function checkVendor(invoice: GuardInvoice, vendors: readonly Vendor[], decision: Decision, v: Violations): Vendor | null {
   if (!isAbsent(invoice.data.vendorTaxId) && invoice.taxId === null) {
-    v.add(`el id tributario de la factura no es válido (${String(invoice.data.vendorTaxId)})`);
+    v.add(`el id tributario de la factura no es válido (${shown(invoice.data.vendorTaxId, 40)})`);
   }
   const matches = vendors.filter((vendor) => vendorMatches(invoice, vendor));
   if (matches.length === 0) {
-    v.add(`ningún proveedor registrado corresponde a «${invoice.data.vendorName}»`);
+    v.add(`ningún proveedor registrado corresponde a «${shown(invoice.data.vendorName, 80)}»`);
     return null;
   }
   if (matches.length > 1) {
@@ -482,7 +503,8 @@ function checkAccount(invoice: GuardInvoice, vendor: Vendor, v: Violations): voi
   if (registered === null) {
     v.add(`la cuenta registrada de ${vendor.id} no tiene un formato válido`);
   } else if (registered !== invoice.account) {
-    v.add(`la cuenta destino ${invoice.account} no es la registrada del proveedor (${registered})`);
+    // Solo los últimos 4 caracteres: el texto de la violación se muestra en la pantalla.
+    v.add(`la cuenta destino (terminada en ${invoice.account.slice(-4)}) no es la registrada del proveedor (terminada en ${registered.slice(-4)})`);
   }
 }
 
@@ -743,7 +765,7 @@ function checkDuplicates(
     if (h.invoiceNumber == null || guardInvoiceKey(h.invoiceNumber) === null) {
       v.add("el historial tiene un pago de este proveedor sin número de factura");
     } else if (guardInvoiceKey(h.invoiceNumber) === invoice.invoiceKey) {
-      v.add(`ya se pagó una factura de este proveedor con el número ${invoice.data.invoiceNumber}`);
+      v.add(`ya se pagó una factura de este proveedor con el número ${shown(invoice.data.invoiceNumber, 40)}`);
     }
   }
 

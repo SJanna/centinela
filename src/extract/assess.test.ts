@@ -2,10 +2,12 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { CRITICAL_FIELDS, type Extraction } from "../core/schemas";
 import {
+  PERIOD_DISAGREEMENT,
   SECOND_READING_UNAVAILABLE,
   arithmeticIssues,
   assessReadings,
   canonicalText,
+  compareReadings,
   findEvidenceNotFound,
   readInvoice,
   toInvoiceData,
@@ -113,6 +115,59 @@ describe("assessReadings · dos lecturas (LEC-2)", () => {
     );
     const a = assessReadings(makeDoc(), okResult(makeExtraction()), okResult(b, "segunda"));
     expect(a.signals.readersDisagreeOn).toEqual(["vendorName", "currency", "total", "accountNumber"]);
+  });
+
+  it("periodo: desacuerdo si las dos lecturas lo tienen y difiere", () => {
+    const b = makeExtraction({ servicePeriod: field("2026-09") });
+    const a = assessReadings(makeDoc(), okResult(makeExtraction()), okResult(b, "segunda"));
+    expect(a.signals.readersDisagreeOn).toEqual([PERIOD_DISAGREEMENT]);
+    expect(PERIOD_DISAGREEMENT).toBe("periodo");
+  });
+
+  it("periodo: sin servicePeriod se usa el mes de issueDate de cada lectura", () => {
+    const a1 = makeExtraction({ servicePeriod: field<string>(null), issueDate: field("2026-10-31") });
+    const b1 = makeExtraction({ servicePeriod: field<string>(null), issueDate: field("2026-11-01") });
+    expect(compareReadings(okResult(a1), okResult(b1, "segunda"))).toEqual(["periodo"]);
+    // servicePeriod en una y mes de emisión en la otra, mismo mes → coinciden.
+    const b2 = makeExtraction({ servicePeriod: field<string>(null), issueDate: field("2026-10-02") });
+    expect(compareReadings(okResult(makeExtraction()), okResult(b2, "segunda"))).toEqual([]);
+    // Una fecha completa en servicePeriod cuenta por su mes.
+    const b3 = makeExtraction({ servicePeriod: field("2026-10-01") });
+    expect(compareReadings(okResult(makeExtraction()), okResult(b3, "segunda"))).toEqual([]);
+  });
+
+  it("periodo: si una lectura no lo tiene (ni fecha de emisión), no es desacuerdo", () => {
+    const b = makeExtraction({ servicePeriod: field<string>(null), issueDate: field<string>(null) });
+    expect(compareReadings(okResult(makeExtraction()), okResult(b, "segunda"))).toEqual([]);
+    expect(compareReadings(okResult(b), okResult(makeExtraction(), "segunda"))).toEqual([]);
+  });
+
+  it("periodo: una lectura que SÍ lo trae pero no como mes válido no confirma el de la otra → desacuerdo", () => {
+    // La principal dice noviembre; la segunda escribió el periodo de otra forma («octubre 2026»): no se
+    // puede confirmar que sea el mismo mes, así que no se paga sin revisar.
+    const nov = makeExtraction({ servicePeriod: field("2026-11"), issueDate: field("2026-11-02") });
+    const written = makeExtraction({ servicePeriod: field("octubre 2026"), issueDate: field("2026-11-02") });
+    expect(compareReadings(okResult(nov), okResult(written, "segunda"))).toEqual(["periodo"]);
+    expect(compareReadings(okResult(written), okResult(nov, "segunda"))).toEqual(["periodo"]);
+    // Sin periodo, una fecha de emisión ilegible («05/10/2026»: ¿mayo u octubre?) tampoco confirma el mes.
+    const noPeriod = (issueDate: string) => makeExtraction({ servicePeriod: field<string>(null), issueDate: field(issueDate) });
+    expect(compareReadings(okResult(noPeriod("2026-10-05")), okResult(noPeriod("05/10/2026"), "segunda"))).toEqual(["periodo"]);
+    // Las dos con el mismo texto no son desacuerdo (si es la principal, el motor ya no lo puede evaluar).
+    expect(compareReadings(okResult(written), okResult(makeExtraction({ ...written }), "segunda"))).toEqual([]);
+  });
+
+  it("proveedor: una forma societaria en medio del nombre o «ME» no es la misma razón social", () => {
+    const named = (name: string) => makeExtraction({ vendorName: field(name) });
+    expect(compareReadings(okResult(named("Datos del Sur S.A.S.")), okResult(named("DATOS DEL SUR SAS"), "segunda"))).toEqual([]);
+    expect(compareReadings(okResult(named("Datos del Sur")), okResult(named("Datos SA del Sur"), "segunda"))).toEqual(["vendorName"]);
+    expect(compareReadings(okResult(named("Datos del Sur Ltda")), okResult(named("Datos del Sur ME"), "segunda"))).toEqual(["vendorName"]);
+  });
+
+  it("un campo crítico que la segunda lectura marcó como ilegible cuenta como ilegible", () => {
+    const b = makeExtraction({ total: field(2400, "Total a pagar: USD 2.400,00", false) });
+    const a = assessReadings(makeDoc(), okResult(makeExtraction()), okResult(b, "segunda"));
+    expect(a.signals.illegibleCriticalFields).toEqual(["total"]);
+    expect(a.signals.readersDisagreeOn).toEqual([]);
   });
 
   it("un dato presente en una lectura y ausente en la otra es desacuerdo", () => {

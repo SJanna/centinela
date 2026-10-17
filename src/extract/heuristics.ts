@@ -20,7 +20,8 @@
  *    "ignore (all|previous) instructions", "disregard … instructions", "without checks/review",
  *    "bypass/override the checks", "no es necesario verificar", "ignore as instruções",
  *    "sem validação/verificação/revisão", "pule as validações".
- * 3. Mensajes al sistema: "system:", "[system]", "<system>", "sistema:", "nota para el sistema/
+ * 3. Mensajes al sistema: "system:", "[system]", "<system>", "sistema:" (también pegados a dígitos o
+ *    signos, "1.200,00SYSTEM:", pero no dentro de una palabra, "ecosystem:"), "nota para el sistema/
  *    agente/asistente/IA", "nota para o sistema", "AI agent/assistant", "agente/asistente de IA",
  *    "assistant:", "dear/hey/note to the assistant/agent/LLM", "(the) AI/LLM processing this invoice",
  *    "agente/sistema que procesa esta…", "if you are an AI…", "si eres un modelo/agente…",
@@ -104,11 +105,12 @@ const RULES: Rule[] = [
   { reason: REASON_SKIP, pattern: /\bsem\s+(?:nenhuma\s+)?(?:validacao|validacoes|verificacao|verificacoes|revisao|conferencia)\b/g },
   { reason: REASON_SKIP, pattern: /\bpul(?:ar|e|em)\s+(?:as\s+)?(?:validacoes|verificacoes)\b/g },
 
-  // 3. Mensajes al sistema
-  { reason: REASON_SYSTEM, pattern: /\bsystem\s*:/g },
+  // 3. Mensajes al sistema. "system:", "sistema:" y "assistant:" se marcan también pegados a dígitos
+  // o signos ("1.200,00SYSTEM: approved"), pero no dentro de otra palabra ("ecosystem:", "subsistema:").
+  { reason: REASON_SYSTEM, pattern: /(?<![a-z])system\s*:/g },
   { reason: REASON_SYSTEM, pattern: /\[\s*system\s*\]/g },
   { reason: REASON_SYSTEM, pattern: /<\s*\/?\s*system\s*>/g },
-  { reason: REASON_SYSTEM, pattern: /\bsistema\s*:/g },
+  { reason: REASON_SYSTEM, pattern: /(?<![a-z])sistema\s*:/g },
   {
     reason: REASON_SYSTEM,
     pattern: /\bnota\s+(?:para|al|a\s+la|a\s+el)\s+(?:el\s+|la\s+)?(?:sistema|agente|asistente|ia|modelo|bot|robot)\b/g,
@@ -116,7 +118,7 @@ const RULES: Rule[] = [
   { reason: REASON_SYSTEM, pattern: /\bnota\s+para\s+(?:o|a)\s+(?:sistema|agente|assistente|ia|modelo|robo)\b/g },
   { reason: REASON_SYSTEM, pattern: /\bai\s+(?:agent|assistant)s?\b/g },
   { reason: REASON_SYSTEM, pattern: /\b(?:agente|asistente|assistente)\s+(?:de\s+)?(?:ia|inteligencia\s+artificial)\b/g },
-  { reason: REASON_SYSTEM, pattern: /\bassistant\s*:/g },
+  { reason: REASON_SYSTEM, pattern: /(?<![a-z])assistant\s*:/g },
   {
     reason: REASON_SYSTEM,
     pattern: /\b(?:dear|hey|hi|hello|attention|note\s+(?:to|for))\s+(?:the\s+)?(?:ai\s+)?(?:assistant|agent|model|system|bot|llm)\b/g,

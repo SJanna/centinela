@@ -137,11 +137,15 @@ describe("ACU-1 · vigencia con fechas de la ficha mal escritas", () => {
     expect(isAgreementValidOn(a, "2026-10-05")).toBe(false);
   });
 
-  it("acepta fechas de la ficha con hora (validFrom el mismo día de la factura)", () => {
+  it("una fecha de la ficha con hora no es YYYY-MM-DD: el acuerdo no está vigente (la guardia tampoco lo aceptaría)", () => {
     const v = withDates("2026-10-05T00:00:00Z", "2026-10-31T23:59:59Z");
-    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-10-05" })).status).toBe("selected");
-    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-10-31" })).status).toBe("selected");
-    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-11-01" })).status).toBe("none_valid");
+    expect(selectAgreement(v, acmeInvoice({ issueDate: "2026-10-05" })).status).toBe("none_valid");
+    expect(selectAgreement(withDates("2026-10-05", "2026-10-31"), acmeInvoice({ issueDate: "2026-10-31" })).status).toBe("selected");
+    expect(selectAgreement(withDates("2026-10-05", "2026-10-31"), acmeInvoice({ issueDate: "2026-11-01" })).status).toBe("none_valid");
+  });
+
+  it("un día que no existe en el calendario no es una fecha válida", () => {
+    expect(isAgreementValidOn({ ...ACME.agreements[0], validTo: "2026-02-30" }, "2026-02-10")).toBe(false);
   });
 });
 

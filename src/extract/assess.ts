@@ -18,6 +18,8 @@ import { formatMoney, normalizeAccount, normalizeName, toCents } from "../core/n
 import { detectSuspiciousInstructions } from "./heuristics";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
+/** Clave en readersDisagreeOn cuando las dos lecturas imputan la factura a meses distintos. */
+export const PERIOD_DISAGREEMENT = "periodo";
 
 // ───────────────────────── Normalización ─────────────────────────
 
@@ -136,12 +138,55 @@ function comparable(e: Extraction | null, field: CriticalField): string | null {
 
 // ───────────────────────── Señales ─────────────────────────
 
-/** LEC-2: campos críticos en que las lecturas no coinciden. */
+/** "YYYY-MM" (mes 01–12) o el mes de una fecha "YYYY-MM-DD" válida; cualquier otra cosa → null. */
+function monthOfText(value: string | null | undefined): string | null {
+  const v = value?.trim() ?? "";
+  if (/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) return v;
+  const m = /^(\d{4})-(0[1-9]|1[0-2])-(\d{2})$/.exec(v);
+  if (!m) return null;
+  const day = Number(m[3]);
+  const daysInMonth = new Date(Date.UTC(Number(m[1]), Number(m[2]), 0)).getUTCDate();
+  return day >= 1 && day <= daysInMonth ? `${m[1]}-${m[2]}` : null;
+}
+
+/**
+ * Mes facturado según una lectura: su servicePeriod o, si no lo trae, el mes de su issueDate.
+ * null si la lectura no permite saberlo (incluido un servicePeriod escrito que no es un mes válido).
+ */
+export function billedPeriodOfReading(e: Extraction | null): string | null {
+  if (!e) return null;
+  const service = cleanText(e.servicePeriod?.value);
+  if (service != null) return monthOfText(service);
+  return monthOfText(cleanText(e.issueDate?.value));
+}
+
+/**
+ * Periodo de una lectura para comparar con la otra: el mes (YYYY-MM) si se puede saber; si la
+ * lectura SÍ trae el dato (servicePeriod o, sin él, issueDate) pero no es un mes o fecha válidos
+ * («octubre 2026», «05/10/2026»), su texto canónico marcado como no confirmable; null si no lo trae.
+ */
+function periodKeyOfReading(e: Extraction | null): string | null {
+  if (!e) return null;
+  const written = cleanText(e.servicePeriod?.value) ?? cleanText(e.issueDate?.value);
+  if (written == null) return null;
+  return billedPeriodOfReading(e) ?? `sin-confirmar:${canonicalText(written)}`;
+}
+
+/**
+ * LEC-2: campos críticos en que las lecturas no coinciden y, además, "periodo" si las dos lecturas
+ * imputan la factura a meses distintos (servicePeriod, o el mes de issueDate si no hay). Si una de
+ * las dos no trae el dato, eso no cuenta como desacuerdo; si lo trae escrito de una forma que no es
+ * un mes válido, no confirma el de la otra y sí cuenta (salvo que las dos digan exactamente lo mismo).
+ */
 export function compareReadings(primary: ReaderResult, secondary: ReaderResult | null): string[] {
   if (!secondary || !secondary.ok) return [SECOND_READING_UNAVAILABLE];
   const a = primary.ok ? primary.extraction : null;
   const b = secondary.extraction;
-  return CRITICAL_FIELDS.filter((field) => comparable(a, field) !== comparable(b, field));
+  const out: string[] = CRITICAL_FIELDS.filter((field) => comparable(a, field) !== comparable(b, field));
+  const periodA = periodKeyOfReading(a);
+  const periodB = periodKeyOfReading(b);
+  if (periodA != null && periodB != null && periodA !== periodB) out.push(PERIOD_DISAGREEMENT);
+  return out;
 }
 
 const CENT_TOLERANCE = 1;
@@ -403,8 +448,11 @@ export function assessReadings(
   const missingCriticalFields: string[] = data
     ? CRITICAL_FIELDS.filter((field) => dataValue(data, field) == null)
     : [...CRITICAL_FIELDS];
+  // Ilegible si CUALQUIERA de las dos lecturas dudó del dato: si la segunda no lo leyó con claridad,
+  // la coincidencia entre ambas no lo respalda.
+  const okReadings = [extraction, secondary?.ok ? secondary.extraction : null].filter((e): e is Extraction => e != null);
   const illegibleCriticalFields: string[] = extraction
-    ? CRITICAL_FIELDS.filter((field) => !criticalField(extraction, field).legible)
+    ? CRITICAL_FIELDS.filter((field) => okReadings.some((e) => !criticalField(e, field).legible))
     : [];
 
   const signals: ReadingSignals = {

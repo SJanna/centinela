@@ -367,10 +367,10 @@ export function incaOctober(total: number, over: Partial<InvoiceSpec> = {}): Inv
   };
 }
 
-/** B05: cobro por chat de Pampa Ops, USD 2.800, sin fecha ni periodo escritos. */
+/** B05: cobro por chat de Pampa Ops, USD 2.800, sin fecha ni periodo escritos (un cobro: tipo "invoice"). */
 export function pampaChat(over: Partial<InvoiceSpec> = {}): InvoiceSpec {
   return {
-    documentType: "other",
+    documentType: "invoice",
     vendorName: "Pampa Ops",
     vendorTaxId: null,
     invoiceNumber: "PO-1010",

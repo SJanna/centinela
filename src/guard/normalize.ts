@@ -43,12 +43,16 @@ export interface TaxId {
   base: string | null;
 }
 
-/** Etiquetas que a veces acompañan al id ("NIT: 900..."). Solo se quitan si van seguidas de un separador. */
-const TAX_LABEL = /^(?:NIT|RUT|RUC|RFC|CNPJ|CPF|CUIT|CUIL|EIN|TIN|NIF|CIF|VAT(?:\s*ID)?|TAX\s*ID)[\s:#.]+/;
-
+/**
+ * Id tributario de la guardia. Misma semántica de comparación que la decisión del equipo
+ * (`taxIdsEquivalent` del núcleo, que la guardia no importa): solo cuentan letras ASCII y dígitos
+ * en mayúscula, sin quitar etiquetas («NIT 900…» no es «900…») ni convertir letras con tilde. Más
+ * estricta en la forma: si además de letras, dígitos y separadores (espacios, guiones, puntos,
+ * barras, guion bajo) queda cualquier otro carácter, devuelve null y la guardia no aprueba.
+ */
 export function guardTaxId(raw: string | null | undefined): TaxId | null {
   if (typeof raw !== "string") return null;
-  const upper = stripDiacritics(raw).toUpperCase().trim().replace(TAX_LABEL, "").trim();
+  const upper = raw.toUpperCase().trim();
   const full = upper.replace(SEPARATOR_CHARS, "");
   if (!/^[A-Z0-9]+$/.test(full)) return null;
   const dv = /^(.*[A-Z0-9])\s*[-‐-―]\s*([A-Z0-9]{1,2})$/.exec(upper);
@@ -118,10 +122,12 @@ export function guardNameKey(raw: string | null | undefined): string | null {
  * Clave de un número de factura para detectar duplicados. Generosa a propósito (detectar de más
  * solo hace que se frene o escale, nunca que se pague de más): sin tildes, mayúsculas, sin
  * separadores y sin ceros a la izquierda en cada tramo numérico. "FE-0012" y "fe 12" → "FE12".
+ * Dígitos y letras de ancho completo cuentan como los normales: "FE-１２" → "FE12".
  */
 export function guardInvoiceKey(raw: string | null | undefined): string | null {
   if (typeof raw !== "string") return null;
-  const segments = stripDiacritics(raw).toUpperCase().split(/[^A-Z0-9]+/).filter((s) => s.length > 0);
+  const halfWidth = raw.replace(/[\uff01-\uff5e]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
+  const segments = stripDiacritics(halfWidth).toUpperCase().split(/[^A-Z0-9]+/).filter((s) => s.length > 0);
   const key = segments.map((s) => s.replace(/\d+/g, (run) => run.replace(/^0+(?=\d)/, ""))).join("");
   return key.length > 0 ? key : null;
 }

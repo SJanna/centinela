@@ -1,26 +1,363 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Centinela · sistema visual
+ * Papel cálido, tinta navy y un solo acento cobalto. Solo modo claro.
+ * Los nombres de los tokens generan las utilidades de Tailwind:
+ *   --color-paper → bg-paper, text-paper, border-paper…
+ *   --shadow-sheet → shadow-sheet · --radius-panel → rounded-panel · --text-h1 → text-h1
+ * Guía viva en /dev/ui.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* ── Superficies ── */
+  --color-paper: #f7f7f4;
+  --color-bed: #f4f6f7;
+  --color-surface-0: #fdfdfd;
+  --color-surface-1: #f7f7f7;
+  --color-surface-2: #f0f2f4;
+  --color-surface-3: #e9ecf2;
+  --color-control: #eaebef;
+  --color-seam: #e4e6ef; /* bordes de tarjetas y tablas */
+  --color-line: #dedfdc; /* separadores sobre papel */
+  --color-row-active: #f5f7fc;
+  --color-row-active-border: #e0e6f0;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* ── Tinta ── */
+  --color-ink: #191c1f;
+  --color-ink-2: #3a444c;
+  --color-ink-3: #8d969e;
+  --color-faint: #c9c9cd;
+  --color-navy: #1c253a; /* títulos */
+  --color-muted: #656975;
+  --color-label: #5c6474; /* antetítulos sobre hojas */
+
+  /* ── Acento (uno solo) ── */
+  --color-accent: #2a4bd0;
+  --color-accent-hover: #2342bd;
+  --color-accent-wash: #eceff9;
+  --color-accent-tint: #f3f5fd; /* opción elegida */
+  --color-lavender: #b9c8ff;
+
+  /* ── Noche (solo la traza de la decisión) y lima (solo chip del agente y pie) ── */
+  --color-night: #111720;
+  --color-night-2: #171e28;
+  --color-night-text: #e9edf1;
+  --color-night-muted: #b2bbc7;
+  --color-lime: #e8ffb7;
+  --color-lime-edge: #d3ef8f;
+
+  /* ── Estados de decisión ── */
+  --color-pay: #007456; /* PAGAR · "Pagada." */
+  --color-pay-wash: #dff3ee;
+  --color-pay-mark: #00a87e;
+  --color-hold: #bc303c; /* FRENAR · "Frenada." */
+  --color-hold-wash: #faeaeb;
+  --color-hold-mark: #e23b4a;
+  --color-escalate: #9d5201; /* ESCALAR · "Escalada." */
+  --color-escalate-wash: #fbefe1;
+  --color-escalate-mark: #ec7e01;
+  --color-processing: #3162c2; /* "Revisando…" */
+  --color-processing-wash: #e9eef9;
+  --color-processing-mark: #376cd5;
+  --color-suspicious: #8a1c24; /* instrucción sospechosa */
+  --color-suspicious-marker: #fff1b8;
+  --color-suspicious-wave: #e23b4a;
+  --color-suspicious-solid: #b3413b;
+
+  /* Alias semánticos para usos que no son decisiones (avisos, errores). */
+  --color-success: #007456;
+  --color-success-wash: #dff3ee;
+  --color-success-mark: #00a87e;
+  --color-warning: #9d5201;
+  --color-warning-wash: #fbefe1;
+  --color-warning-mark: #ec7e01;
+  --color-danger: #bc303c;
+  --color-danger-wash: #faeaeb;
+  --color-danger-mark: #e23b4a;
+  --color-info: #3162c2;
+  --color-info-wash: #e9eef9;
+  --color-info-mark: #376cd5;
+
+  /* ── Gráficos ── */
+  --color-chart-1: #a8b6fb;
+  --color-chart-2: #818cf9;
+  --color-chart-3: #6468f0;
+  --color-chart-4: #4f46e5;
+  --color-chart-5: #443bc9;
+  --color-chart-neutral: #737c84;
+
+  /* ── Tipografía ── */
+  --font-weight-book: 450;
+
+  /* 44px; en contenedores estrechos (@container) baja hasta 34px. */
+  --text-display: clamp(2.125rem, 9cqi, 2.75rem);
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 450;
+  --text-h1: 1.875rem; /* 30 */
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.035em;
+  --text-h1--font-weight: 450;
+  --text-h2: 1.25rem; /* 20 */
+  --text-h2--line-height: 1.25;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 450;
+  --text-h3: 0.9375rem; /* 15 */
+  --text-h3--line-height: 1.4;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 500;
+  /* 32px; en tarjetas estrechas (@container) baja hasta 24px para que el monto no se salga. */
+  --text-kpi: clamp(1.5rem, 10cqi, 2rem);
+  --text-kpi--line-height: 1.1;
+  --text-kpi--letter-spacing: -0.045em;
+  --text-kpi--font-weight: 450;
+  --text-body: 0.875rem; /* 14 */
+  --text-body--line-height: 1.55;
+  --text-small: 0.8125rem; /* 13 */
+  --text-small--line-height: 1.5;
+  --text-caption: 0.75rem; /* 12 */
+  --text-caption--line-height: 1.45;
+  --text-eyebrow: 0.6875rem; /* 11 */
+  --text-eyebrow--line-height: 1.3;
+  --text-eyebrow--letter-spacing: 0.1em;
+  --text-eyebrow--font-weight: 500;
+
+  /* ── Radios (nunca más de 20) ── */
+  --radius-chip: 6px;
+  --radius-row: 12px;
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-pill: 9999px;
+
+  /* ── Sombras largas y difusas ── */
+  --shadow-sheet: 0 2px 3px #1c253a05, 0 22px 55px -28px #3948613b;
+  --shadow-receipt: 0 1px 3px #26364a08, 0 18px 40px -20px #26364a59;
+  --shadow-lift: 0 1px 2px #1c253a08, 12px 20px 30px -18px #1c253a3d, 30px 45px 55px -36px #1c253a45;
+  --shadow-pop: 0 2px 6px -2px #1116221a, 0 28px 64px -16px #11162242;
+  --shadow-drop: 0 12px 28px -8px #1116223d;
+  --shadow-modal: inset 0 0 0 1px #e4e6ef, 0 26px 64px -16px #1116224d;
+  --shadow-hairline: 0 1px 2px #1c253a0f;
+
+  /* ── Movimiento ── */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-strong: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --animate-breathe: breathe 2.6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-grow-x: grow-x 0.8s var(--ease-strong) both;
+  --animate-rise: rise 0.18s var(--ease-out) both;
+  --animate-processing: processing 1.4s ease-in-out infinite;
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(0.82);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes processing {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Las fuentes las define next/font en <html> (layout.tsx). */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-serif: var(--font-playfair), Georgia, "Times New Roman", serif;
+}
+
+@layer base {
+  html {
+    /* El fondo va en <html> y no en <body>: así el grano (body::before, z-index -1) queda sobre el papel. */
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color-scheme: light;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  /* Grano del papel: ruido SVG muy suave, fijo, sin interceptar el puntero. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.1;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.23 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-navy);
+    font-weight: 450;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--color-lavender);
+    color: var(--color-navy);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Destino de los superíndices (¹²³) al navegar con #nota-n. */
+  :target {
+    scroll-margin-top: 96px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ── Utilidades propias ── */
+
+/* Antetítulo: 11px, mayúsculas, 500, +0.1em, en muted. */
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Cifras: tabulares y con tracking de monto. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+@utility figure {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.035em;
+}
+
+/* Hoja: tarjeta blanca con borde de 1px blanco y sombra larga. */
+@utility sheet {
+  background-image: linear-gradient(120deg, #ffffff, #fafbfc);
+  border: 1px solid #ffffff;
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Estudio: fondo de degradado mate sobre el que se apoya una hoja. */
+@utility studio {
+  background-color: #e5e8ef;
+  background-image:
+    radial-gradient(120% 90% at 8% 5%, #f9f9f5 0%, transparent 55%),
+    linear-gradient(130deg, #e4e8e7, #e5e8ef 80%, #dce1e9);
+}
+
+@utility studio-sage {
+  background-color: #e0e9e4;
+  background-image: linear-gradient(128deg, #eaf0ea 14%, #e0e9e4 63%, #cbdad3);
+}
+
+/* Brillo de fondo del sistema "beacon". */
+@utility field-glow {
+  background-image:
+    radial-gradient(60% 50% at -6% -14%, #eef1fc 0%, transparent 70%),
+    radial-gradient(50% 45% at 104% 2%, #f0f2fb 0%, transparent 70%),
+    radial-gradient(60% 50% at 52% 118%, #f2f3fa 0%, transparent 70%);
+}
+
+/*
+ * Vidrio oscuro: reservado para la traza de la decisión.
+ * El brief pide rgba(15,20,28,.84) sobre fondo oscuro; sobre papel eso se ve gris carbón,
+ * así que aquí va más opaco para que lea como "noche".
+ */
+@utility glass-night {
+  background-color: rgb(15 20 28 / 0.93);
+  backdrop-filter: blur(28px) saturate(0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(0.45);
+  border: 1px solid rgb(183 195 211 / 0.19);
+  box-shadow:
+    0 24px 80px -32px rgb(4 14 28 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  color: var(--color-night-text);
+}
+
+/* Fragmento sospechoso: marcador amarillo con subrayado ondulado rojo. */
+@utility marker-suspicious {
+  color: var(--color-suspicious);
+  background-image: linear-gradient(var(--color-suspicious-marker), var(--color-suspicious-marker));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--color-suspicious-wave);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Barra de desplazamiento discreta para paneles con scroll propio. */
+@utility scrollbar-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-faint) transparent;
 }
