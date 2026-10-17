@@ -30,19 +30,21 @@ Abre http://localhost:3000 y pulsa **Probar con ejemplos → Reproducir escenari
 
 ## Banco de pruebas
 
-41 facturas de una empresa ficticia (Andes Labs Inc.), con casos normales y trampa, en [dataset/casos.csv](dataset/casos.csv). Las etiquetas (decisión esperada) las fijan personas.
+41 facturas de una empresa ficticia (Andes Labs Inc.), con casos normales y trampa, en [dataset/casos.csv](dataset/casos.csv). 13 de ellas forman un set reservado que no se usó para ajustar nada.
 
-```bash
-npm run eval
-```
-
-Corre los 41 casos con lectura simulada y escribe [eval/reports/latest.md](eval/reports/latest.md). Falla si hay un solo pago indebido.
+**Resultado con Claude real** (Sonnet 5.5 + Haiku 5.5, 17 de octubre de 2026): **40 de 41 correctas, 0 pagos indebidos, 13 de 13 en el set reservado**. Costo de la corrida completa: USD 0,84 (unos 2 centavos por factura). El único fallo fue una escalada de más: en un chat, una lectura incluyó la letra del tipo de comprobante en el número de factura («E 0003-00000871») y la otra no; al no coincidir, el agente escaló en vez de pagar. Reporte completo: [eval/reports/live.md](eval/reports/live.md).
 
 ```bash
 npm run eval:live
 ```
 
-Igual, pero con los modelos reales (necesita `ANTHROPIC_API_KEY`). Mide la calidad de lectura. Costo estimado: menos de USD 2 por corrida completa; las lecturas quedan en caché en `dataset/reading-cache/` y repetir cuesta 0.
+Lee las 41 facturas con los modelos reales (necesita `ANTHROPIC_API_KEY`) y escribe `eval/reports/latest.md`. Falla si hay un solo pago indebido.
+
+```bash
+npm run eval
+```
+
+La misma evaluación con lectura simulada (los datos exactos de cada factura): prueba la lógica de decisión sin costo. Es la que corre la CI.
 
 ## Pruebas
 

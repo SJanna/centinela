@@ -2,16 +2,11 @@
 
 En orden de prioridad.
 
-## 1. Clave de Anthropic y evaluación con lectura real
+## 1. ~~Clave de Anthropic y evaluación con lectura real~~ (hecho el 17 de octubre)
 
-Todo lo medido hasta ahora usa **lectura simulada**: prueba la lógica de decisión, no la calidad de lectura de los modelos. Sin clave no se pudo correr la lectura real.
+`npm run eval:live`: 40 de 41 correctas, 0 pagos indebidos, 13 de 13 en el set reservado, USD 0,84. Reporte en [eval/reports/live.md](../eval/reports/live.md). La primera corrida destapó que la API rechazaba el esquema de salida (más de 16 campos opcionales); se corrigió con el formato de cable de `src/extract/wire.ts`.
 
-1. Crea `.env.local` con `ANTHROPIC_API_KEY=...`.
-2. Ejecuta `npm run eval:live` (costo estimado: menos de USD 2; las lecturas quedan en `dataset/reading-cache/`).
-3. Revisa `eval/reports/latest.md`:
-   - **Pagos indebidos** debe ser 0. Si no lo es, es el problema número uno.
-   - **Escaladas de más**: casos que debían pagarse o frenarse y se escalaron. La verificación de citas es estricta a propósito. Si escala demasiado, el ajuste está en `src/extract/assess.ts` y el prompt en `src/extract/prompt.ts` (sube `PROMPT_VERSION` al cambiarlo).
-4. Haz commit de `dataset/reading-cache/` para que la CI pueda correr `npm run eval:cache` sin costo.
+Mejora opcional: B05 escala de más porque una lectura incluye la letra del tipo de comprobante argentino («E 0003-00000871») en el número de factura. Se arregla aclarándolo en el prompt (`src/extract/prompt.ts`, subir a v4) y volviendo a correr `eval:live` (~USD 0,85).
 
 ## 2. Revisar las etiquetas y «lo acordado»
 
