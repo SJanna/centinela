@@ -200,6 +200,20 @@ describe("conexión compartida y funciones sueltas", () => {
     expect(await repo.getCompany()).toEqual(company);
   });
 
+  it("tras un recargado en caliente con otro esquema, migra la conexión abierta en vez de abrir otra", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("PGLITE_DIR", "memory");
+    const handle = await getDbHandle();
+    // Como si la conexión la hubiera abierto una versión anterior del código, sin claves de pago.
+    await handle.db.execute(sql.raw("DROP INDEX decisions_pay_file_key_uq"));
+    (globalThis as { __centinelaStoreSchema?: string }).__centinelaStoreSchema = "esquema anterior";
+    const again = await getDbHandle();
+    expect(again).toBe(handle);
+    const idx = await rows<{ n: number }>(handle, sql`SELECT count(*)::int AS n FROM pg_indexes WHERE indexname = 'decisions_pay_file_key_uq'`);
+    expect(idx[0].n).toBe(1);
+    expect(await getDbHandle()).toBe(handle);
+  });
+
   it("si abrir falla, no deja guardada la conexión rota", async () => {
     vi.stubEnv("DATABASE_URL", "");
     // Un archivo (no una carpeta) como PGLITE_DIR hace fallar la apertura.

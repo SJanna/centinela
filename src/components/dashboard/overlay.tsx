@@ -162,6 +162,8 @@ interface ConfirmDialogProps {
   busyLabel?: string;
   cancelLabel?: string;
   busy?: boolean;
+  /** La acción borra datos: el botón de confirmar va en rojo lavado. */
+  destructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -175,6 +177,7 @@ export function ConfirmDialog({
   busyLabel,
   cancelLabel = "Cancelar",
   busy = false,
+  destructive = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -226,7 +229,7 @@ export function ConfirmDialog({
               <Button variant="ghost" size="sm" onClick={close} disabled={busy} data-autofocus>
                 {cancelLabel}
               </Button>
-              <Button size="sm" onClick={onConfirm} disabled={busy}>
+              <Button size="sm" variant={destructive ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
                 {busy && busyLabel ? busyLabel : confirmLabel}
               </Button>
             </div>

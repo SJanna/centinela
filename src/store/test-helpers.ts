@@ -100,6 +100,10 @@ export interface RecordSpec {
   total?: number | null;
   currency?: string | null;
   amountUsd?: number | null;
+  /**
+   * Por defecto cada registro tiene su propio acuerdo (`a-<proveedor>-<id>`): así varios PAGAR de
+   * prueba no chocan entre sí por la protección contra el pago doble (mismo acuerdo y periodo).
+   */
   agreementId?: string | null;
   agreementPeriod?: string | null;
   /** Estado de comprobaciones distinto de "pass". */
@@ -155,7 +159,7 @@ export function makeRecord(spec: RecordSpec): DecisionRecord {
       summary: `Resumen de ${spec.id}`,
       humanAction: outcome === "ESCALAR" ? "Revisar" : null,
       vendorId,
-      agreementId: spec.agreementId === undefined ? (vendorId ? `a-${vendorId}` : null) : spec.agreementId,
+      agreementId: spec.agreementId === undefined ? (vendorId ? `a-${vendorId}-${spec.id}` : null) : spec.agreementId,
       agreementPeriod: spec.agreementPeriod === undefined ? "2026-10" : spec.agreementPeriod,
       amountUsd: spec.amountUsd === undefined ? 1000 : spec.amountUsd,
       guard: outcome === "PAGAR" ? { approved: true, violations: [] } : null,
@@ -262,4 +266,15 @@ export async function openFakeNeonDb(): Promise<DbHandle> {
   const pg = (await (await getTemplate()).clone()) as PGlite;
   const handle = await openDb({ kind: "neon", client: createFakeNeonClient(pg) });
   return { ...handle, close: async () => pg.close() };
+}
+
+/**
+ * Dos conexiones sobre la MISMA base en memoria, como dos instancias de la aplicación: una por el
+ * camino PGlite y otra por el camino Neon HTTP (simulado). `close()` cierra la base.
+ */
+export async function openTwoInstances(): Promise<{ a: DbHandle; b: DbHandle; close(): Promise<void> }> {
+  const pg = (await (await getTemplate()).clone()) as PGlite;
+  const a = await openDb({ kind: "pglite", client: pg });
+  const b = await openDb({ kind: "neon", client: createFakeNeonClient(pg) });
+  return { a, b, close: async () => pg.close() };
 }

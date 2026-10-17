@@ -304,27 +304,6 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   EUR: ["€", "euro"],
 };
 
-function isDigit(ch: string | undefined): boolean {
-  return ch !== undefined && ch >= "0" && ch <= "9";
-}
-
-/**
- * ¿Aparece `needle` en `haystack` (ambos canónicos) sin partir un número? Una cita «USD 240» no
- * vale dentro de «USD 2.400,00» (canónico «usd240000»): si la cita empieza o termina en dígito,
- * el carácter vecino en el texto no puede ser otro dígito.
- */
-function includesWithoutSplittingNumbers(haystack: string, needle: string): boolean {
-  if (needle.length === 0) return false;
-  const checkStart = isDigit(needle[0]);
-  const checkEnd = isDigit(needle[needle.length - 1]);
-  for (let i = haystack.indexOf(needle); i !== -1; i = haystack.indexOf(needle, i + 1)) {
-    if (checkStart && isDigit(haystack[i - 1])) continue;
-    if (checkEnd && isDigit(haystack[i + needle.length])) continue;
-    return true;
-  }
-  return false;
-}
-
 /**
  * Números escritos en el texto: «2.400,00», «1,200.00», «12'000.000», «12 000 000», «4760000».
  * El segundo patrón une grupos de miles separados por espacio; el primero no (columnas de tablas).
@@ -356,14 +335,33 @@ function amountAppears(value: number, text: string): boolean {
   return false;
 }
 
-function valueFound(field: CriticalField, value: string | number | null, doc: SearchableText): boolean {
-  if (value == null) return false;
+/**
+ * ¿El código de moneda aparece como palabra («USD 1.200», «(COP)», «USD1200»)? No vale dentro de
+ * otra palabra ni uniendo palabras: «plus Delivery» no contiene USD y «copia» no contiene COP.
+ */
+function currencyCodeAppears(code: string, lowerText: string): boolean {
+  if (!/^[a-z]{3}$/.test(code)) return false;
+  return new RegExp(`(?:^|[^a-z])${code}(?![a-z])`).test(lowerText);
+}
+
+/**
+ * ¿El valor leído está en el texto del documento? Una cita que sí está en el texto no basta: el
+ * lector podría citar la línea correcta y devolver otro valor, o no citar nada.
+ */
+function valueFound(field: CriticalField, value: string | number, doc: SearchableText): boolean {
   if (typeof value === "number") return Number.isFinite(value) && amountAppears(value, doc.normalized);
+  if (field === "currency") {
+    const code = value.toLowerCase().replace(/\s+/g, "");
+    if (currencyCodeAppears(code, doc.lower)) return true;
+    const aliases = CURRENCY_ALIASES[code.toUpperCase()] ?? [];
+    return aliases.some((alias) => doc.collapsed.includes(alias));
+  }
   const canon = canonicalText(value);
   if (canon.length > 0 && doc.canonical.includes(canon)) return true;
-  if (field === "currency") {
-    const aliases = CURRENCY_ALIASES[value.toUpperCase().replace(/\s+/g, "")] ?? [];
-    return aliases.some((alias) => doc.collapsed.includes(alias));
+  // El nombre del proveedor puede venir sin la forma societaria que el lector agregó («Inc.», «S.A.S.»).
+  if (field === "vendorName") {
+    const base = canonicalText(normalizeName(value) ?? "");
+    return base.length > 0 && doc.canonical.includes(base);
   }
   return false;
 }
@@ -371,43 +369,117 @@ function valueFound(field: CriticalField, value: string | number | null, doc: Se
 interface SearchableText {
   /** NFKC: dígitos de ancho completo → ASCII; conserva separadores para leer números. */
   normalized: string;
+  /** NFKD, sin tildes y en minúsculas; conserva espacios y signos (para buscar palabras). */
+  lower: string;
   /** Solo letras y dígitos, sin tildes, en minúsculas. */
   canonical: string;
   /** Minúsculas sin tildes ni espacios (conserva símbolos como «r$» o «s/»). */
   collapsed: string;
 }
 
-function evidenceFound(field: CriticalField, evidence: string, doc: SearchableText): boolean {
-  const canon = canonicalText(evidence);
-  if (canon.length > 0) return includesWithoutSplittingNumbers(doc.canonical, canon);
-  // Una cita de puros símbolos («$», «€», «R$») solo respalda la moneda.
-  return field === "currency" && doc.collapsed.includes(collapsedLower(evidence));
+function searchable(text: string): SearchableText {
+  return {
+    normalized: text.normalize("NFKC"),
+    lower: text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
+    canonical: canonicalText(text),
+    collapsed: collapsedLower(text),
+  };
+}
+
+function isDigit(ch: string | undefined): boolean {
+  return ch !== undefined && ch >= "0" && ch <= "9";
 }
 
 /**
- * Campos críticos cuya cita no aparece en el texto plano del documento (comparación tolerante a
- * mayúsculas, tildes, espacios, saltos de línea y separadores, pero sin partir números: «USD 240» no
- * está en «USD 2.400,00»). Si la cita no aparece pero el valor sí, no se marca; un monto se busca
- * leyendo los números del texto en sus formatos habituales, no como subcadena de dígitos. Solo aplica cuando hay texto plano y el documento no es una imagen; tampoco cuando
- * trae alguna imagen adjunta (p. ej. un correo con una foto), porque lo leído en la imagen nunca está
- * en el texto plano y daría falsos positivos.
+ * ¿Aparece `needle` en `haystack` (ambos canónicos) sin partir un número? Una cita «USD 240» no
+ * vale dentro de «USD 2.400,00» (canónico «usd240000»): si la cita empieza o termina en dígito,
+ * el carácter vecino en el texto no puede ser otro dígito.
+ */
+function includesWithoutSplittingNumbers(haystack: string, needle: string): boolean {
+  if (needle.length === 0) return false;
+  const checkStart = isDigit(needle[0]);
+  const checkEnd = isDigit(needle[needle.length - 1]);
+  for (let i = haystack.indexOf(needle); i !== -1; i = haystack.indexOf(needle, i + 1)) {
+    if (checkStart && isDigit(haystack[i - 1])) continue;
+    if (checkEnd && isDigit(haystack[i + needle.length])) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * ¿La cita del lector respalda el valor? Solo si la cita está en el texto (sin partir números) Y el
+ * valor está en la cita: citar la línea correcta y devolver otro valor no cuenta. Sirve para textos
+ * de PDF con espacios entre letras o dígitos («2 . 4 0 0 , 0 0»), donde el número no se lee entero
+ * pero la cita sí aparece. Una cita hecha solo de símbolos («$», «R$») respalda únicamente la moneda.
+ */
+function quoteBacksValue(field: CriticalField, value: string | number, evidence: string | null, doc: SearchableText): boolean {
+  const ev = evidence?.trim() ?? "";
+  if (ev.length === 0) return false;
+  const canon = canonicalText(ev);
+  if (canon.length === 0) return field === "currency" && doc.collapsed.includes(collapsedLower(ev));
+  if (!includesWithoutSplittingNumbers(doc.canonical, canon)) return false;
+  const quote = searchable(ev);
+  if (valueFound(field, value, quote)) return true;
+  return field === "currency" && typeof value === "string" && symbolQuoteBacksCurrency(value.toUpperCase().replace(/\s+/g, ""), quote);
+}
+
+/**
+ * Símbolos con que se escribe cada moneda, del más largo al más corto: «US$» y «R$» se reconocen
+ * antes que «$», que puede ser de dólares o de pesos.
+ */
+const CURRENCY_SYMBOLS: readonly [string, readonly string[]][] = [
+  ["clp$", ["CLP"]],
+  ["col$", ["COP"]],
+  ["us$", ["USD"]],
+  ["u$s", ["USD"]],
+  ["mx$", ["MXN"]],
+  ["ar$", ["ARS"]],
+  ["r$", ["BRL"]],
+  ["s/", ["PEN"]],
+  ["€", ["EUR"]],
+  ["$", ["USD", "COP", "MXN", "CLP", "ARS"]],
+];
+
+/**
+ * Una cita con un símbolo de moneda («$ 12.000.000») respalda una moneda que se escribe con ese
+ * símbolo, siempre que la cita no nombre otra moneda: «$» respalda COP, pero «Total MXN $ 1.200»
+ * no respalda USD.
+ */
+function symbolQuoteBacksCurrency(code: string, quote: SearchableText): boolean {
+  let rest = quote.collapsed;
+  const possible = new Set<string>();
+  for (const [symbol, codes] of CURRENCY_SYMBOLS) {
+    if (!rest.includes(symbol)) continue;
+    codes.forEach((c) => possible.add(c));
+    rest = rest.split(symbol).join("");
+  }
+  if (!possible.has(code)) return false;
+  return !Object.keys(CURRENCY_ALIASES).some((other) => other !== code && currencyCodeAppears(other.toLowerCase(), quote.lower));
+}
+
+/**
+ * Campos críticos cuyo VALOR no está respaldado por el texto plano del documento: ni el valor
+ * aparece en el texto (comparación tolerante a mayúsculas, tildes, espacios, saltos de línea y
+ * separadores; un monto se busca leyendo los números del texto en sus formatos habituales, no como
+ * subcadena de dígitos: «240» no está en «2.400,00»), ni la cita del lector lo contiene. Que la cita
+ * exista no basta: un lector engañado puede citar la línea correcta y devolver otro valor, o no
+ * citar nada. Un campo sin valor no se marca (eso es LEC-1, dato ausente).
+ * Solo aplica cuando hay texto plano y el documento no es una imagen; tampoco cuando trae alguna
+ * imagen adjunta (p. ej. un correo con una foto), porque lo leído en la imagen nunca está en el
+ * texto plano y daría falsos positivos.
  */
 export function findEvidenceNotFound(doc: NormalizedDoc, extraction: Extraction): CriticalField[] {
   if (doc.plainText == null || doc.kind === "image" || doc.plainText.trim() === "") return [];
   if (doc.parts.some((part) => part.type === "image")) return [];
-  const text: SearchableText = {
-    normalized: doc.plainText.normalize("NFKC"),
-    canonical: canonicalText(doc.plainText),
-    collapsed: collapsedLower(doc.plainText),
-  };
+  const text = searchable(doc.plainText);
   const notFound: CriticalField[] = [];
 
   for (const field of CRITICAL_FIELDS) {
     const f = criticalField(extraction, field);
-    const evidence = f.evidence?.trim();
-    if (!evidence) continue;
-    if (evidenceFound(field, evidence, text)) continue;
+    if (f.value == null) continue;
     if (valueFound(field, f.value, text)) continue;
+    if (quoteBacksValue(field, f.value, f.evidence, text)) continue;
     notFound.push(field);
   }
   return notFound;

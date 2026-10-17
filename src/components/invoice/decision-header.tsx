@@ -1,5 +1,4 @@
 import { ShieldAlert } from "lucide-react";
-import Link from "next/link";
 import { Fragment } from "react";
 import {
   Avatar,
@@ -18,9 +17,11 @@ import {
 } from "@/components/ui";
 import { CHECK_BY_CODE, CHECK_CATALOG } from "@/core/checks";
 import type { CheckResult, Decision, DecisionRecord } from "@/core/schemas";
+import { BackLink } from "./back-link";
 import { CheckMark } from "./check-mark";
 import {
   CHECK_ANCHOR_PREFIX,
+  displayExplanation,
   displayVendorName,
   effectOf,
   noteNumbering,
@@ -32,34 +33,21 @@ import {
 import { DetailActions } from "./detail-actions";
 import { formatDateTimeUtc, formatNumber, READING_MODE_TEXT, readingsLine } from "./format";
 import { linkInvoiceIds, type InvoiceRefs } from "./invoice-links";
-
-function Breadcrumbs({ current }: { current: string }) {
-  return (
-    <nav aria-label="Migas" className="flex min-w-0 items-center gap-2 text-small text-ink-2">
-      <Link href="/" className="transition-colors duration-150 hover:text-navy">
-        Resumen
-      </Link>
-      <span aria-hidden className="text-faint">
-        /
-      </span>
-      <Link href="/facturas" className="transition-colors duration-150 hover:text-navy">
-        Facturas
-      </Link>
-      <span aria-hidden className="text-faint">
-        /
-      </span>
-      <Mono className="truncate text-navy" title={current}>
-        <span aria-current="page">{current}</span>
-      </Mono>
-    </nav>
-  );
-}
+import { MaskedAccount } from "./reading-table";
 
 /**
  * Notas del porqué, numeradas como los superíndices de la frase: cada comprobación que no se cumple
  * con su explicación y sus valores. Las que no se pudieron evaluar van juntas en una línea.
  */
-function ReasonNotes({ decision, refs }: { decision: Decision; refs: InvoiceRefs }) {
+function ReasonNotes({
+  decision,
+  refs,
+  suspiciousTexts,
+}: {
+  decision: Decision;
+  refs: InvoiceRefs;
+  suspiciousTexts: readonly string[];
+}) {
   const checks = decision.checks ?? [];
   const numbering = noteNumbering(decision);
   const byNumber = (a: CheckResult, b: CheckResult) => (numbering.get(a.code) ?? 0) - (numbering.get(b.code) ?? 0);
@@ -94,7 +82,9 @@ function ReasonNotes({ decision, refs }: { decision: Decision; refs: InvoiceRefs
                     <Mono className="text-caption whitespace-nowrap text-ink-3">{c.code}</Mono>
                   </p>
                   {inSummary(c) ? null : (
-                    <p className="mt-0.5 line-clamp-3 text-small text-pretty text-ink-2">{linkInvoiceIds(c.explanation, refs)}</p>
+                    <p className="mt-0.5 line-clamp-3 text-small text-pretty text-ink-2">
+                      {linkInvoiceIds(displayExplanation(c, suspiciousTexts), refs)}
+                    </p>
                   )}
                 </div>
               </li>
@@ -150,6 +140,35 @@ function GroupStrip({ checks }: { checks: readonly CheckResult[] }) {
   );
 }
 
+/**
+ * Acción sugerida. La plantilla del motor encadena una frase por cada comprobación que no se cumple;
+ * si hay más de una, se muestran como pasos.
+ */
+function HumanAction({ text }: { text: string }) {
+  const steps = text.split(/(?<=\.)\s+(?=[A-ZÁÉÍÓÚÑ¿])/).filter((s) => s.trim() !== "");
+  if (steps.length <= 1) {
+    return (
+      <p className="mt-1 text-small text-ink-2">
+        <span className="text-muted">Acción sugerida: </span>
+        {text}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-1 text-small text-ink-2">
+      <p className="text-muted">Acciones sugeridas:</p>
+      <ol className="mt-1 space-y-1">
+        {steps.map((step, i) => (
+          <li key={i} className="grid grid-cols-[14px_minmax(0,1fr)] gap-x-1.5">
+            <span className="tnum text-caption leading-[inherit] text-escalate">{i + 1}.</span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /** Aviso según la decisión: pendiente de una persona, guardia, pago aprobado o freno. */
 function OutcomeNotice({ record }: { record: DecisionRecord }) {
   const d = record.decision;
@@ -175,10 +194,7 @@ function OutcomeNotice({ record }: { record: DecisionRecord }) {
         ) : null}
         <div className="rounded-row bg-escalate-wash/70 p-4 ring-1 ring-[#f3dcc0] ring-inset">
           <p className="text-small font-medium text-escalate">Pendiente de una persona.</p>
-          <p className="mt-1 text-small text-ink-2">
-            <span className="text-muted">Acción sugerida: </span>
-            {d.humanAction ?? "Revisar las comprobaciones que no se cumplen."}
-          </p>
+          <HumanAction text={d.humanAction ?? "Revisar las comprobaciones que no se cumplen."} />
         </div>
       </div>
     );
@@ -205,6 +221,65 @@ function OutcomeNotice({ record }: { record: DecisionRecord }) {
   );
 }
 
+/**
+ * A dónde iría el dinero: la cuenta que pide la factura frente a la registrada en la ficha. Es lo
+ * primero que mira quien aprueba un pago, y lo que una factura fraudulenta intenta cambiar.
+ */
+function PaymentDestination({ record }: { record: DecisionRecord }) {
+  const data = record.reading?.data ?? null;
+  const vendor = matchedVendor(record);
+  const prv2 = (record.decision.checks ?? []).find((c) => c.code === "PRV-2");
+  const account = data?.accountNumber ?? null;
+  const registered = vendor?.account.accountNumber ?? null;
+  const pays = record.decision.outcome === "PAGAR";
+
+  let status: { text: string; className: string } | null = null;
+  if (account && prv2?.status === "pass") status = { text: "Es la registrada.", className: "text-pay" };
+  else if (account && prv2?.status === "fail") {
+    status = { text: "No es la registrada.", className: prv2.outcomeIfFail === "FRENAR" ? "text-hold" : "text-escalate" };
+  } else if (account && prv2) {
+    status = { text: vendor ? "No se pudo comparar." : "Proveedor sin ficha: no hay cuenta con qué comparar.", className: "text-escalate" };
+  }
+
+  return (
+    <div className="space-y-2">
+      <Eyebrow>{pays ? "Se pagaría a" : "Destino que pide la factura"}</Eyebrow>
+      <dl className="divide-y divide-seam text-small">
+        <div className="grid grid-cols-[minmax(0,40%)_1fr] items-baseline gap-3 py-2">
+          <dt className="text-caption text-muted">Beneficiario</dt>
+          <dd className="min-w-0 break-words text-ink">{data?.beneficiaryName ?? <span className="text-ink-3">No se leyó</span>}</dd>
+        </div>
+        {data?.bankName ? (
+          <div className="grid grid-cols-[minmax(0,40%)_1fr] items-baseline gap-3 py-2">
+            <dt className="text-caption text-muted">Banco</dt>
+            <dd className="min-w-0 break-words text-ink">{data.bankName}</dd>
+          </div>
+        ) : null}
+        <div className="grid grid-cols-[minmax(0,40%)_1fr] items-baseline gap-3 py-2">
+          <dt className="text-caption text-muted">Cuenta en la factura</dt>
+          <dd className="min-w-0 text-ink">
+            {account ? <MaskedAccount value={account} /> : <span className="text-escalate">No se leyó</span>}
+            {status && prv2 ? (
+              <span className={cn("mt-1 flex items-center gap-1.5 text-caption font-medium", status.className)}>
+                <CheckMark check={prv2} size={14} animate={false} />
+                {status.text}
+              </span>
+            ) : null}
+          </dd>
+        </div>
+        {registered && prv2?.status !== "pass" ? (
+          <div className="grid grid-cols-[minmax(0,40%)_1fr] items-baseline gap-3 py-2">
+            <dt className="text-caption text-muted">Cuenta registrada</dt>
+            <dd className="min-w-0 text-ink">
+              <MaskedAccount value={registered} />
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
 export function DecisionHeader({ record, refs = {} }: { record: DecisionRecord; refs?: InvoiceRefs }) {
   const d = record.decision;
   const data = record.reading?.data ?? null;
@@ -214,7 +289,8 @@ export function DecisionHeader({ record, refs = {} }: { record: DecisionRecord; 
   const invoiceNumber = data?.invoiceNumber ?? null;
   const currency = data?.currency ?? null;
   const fx = currency ? record.companySnapshot?.rules?.fxToUsd?.[currency] : undefined;
-  const suspicious = uniqueSuspicious(record).length > 0;
+  const suspiciousTexts = uniqueSuspicious(record).map((x) => x.text);
+  const suspicious = suspiciousTexts.length > 0;
   const parts = summaryWithNotes({ ...d, checks: d.checks ?? [] });
   const readings = readingsLine(record);
   const mode = READING_MODE_TEXT[record.readingMode] ?? { label: record.readingMode, help: "" };
@@ -223,7 +299,7 @@ export function DecisionHeader({ record, refs = {} }: { record: DecisionRecord; 
   return (
     <section aria-labelledby="factura-titulo" className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <Breadcrumbs current={invoiceNumber ?? record.filename} />
+        <BackLink />
         <DetailActions record={record} />
       </div>
 
@@ -292,7 +368,7 @@ export function DecisionHeader({ record, refs = {} }: { record: DecisionRecord; 
           </p>
 
           {failed.length > 0 ? (
-            <ReasonNotes decision={d} refs={refs} />
+            <ReasonNotes decision={d} refs={refs} suspiciousTexts={suspiciousTexts} />
           ) : (
             <div className="space-y-2">
               <GroupStrip checks={d.checks ?? []} />
@@ -335,8 +411,12 @@ export function DecisionHeader({ record, refs = {} }: { record: DecisionRecord; 
             </div>
           </dl>
         </div>
-        <div className="border-t border-seam p-6 @3xl:border-t-0 @3xl:border-l">
-          <OutcomeNotice record={record} />
+        <div className="@container border-t border-seam p-6 @3xl:border-t-0 @3xl:border-l">
+          {/* En una columna (ventanas angostas) el aviso y el destino van lado a lado. */}
+          <div className="grid gap-5 @lg:grid-cols-2 @lg:items-start @lg:gap-6">
+            <OutcomeNotice record={record} />
+            <PaymentDestination record={record} />
+          </div>
         </div>
       </Sheet>
     </section>

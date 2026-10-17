@@ -111,6 +111,24 @@ export function displayVendorName(record: DecisionRecord): string | null {
   return matchedVendor(record)?.name ?? record.reading?.data?.vendorName ?? null;
 }
 
+/**
+ * Explicación que se muestra para una comprobación. Es la del registro, salvo en «Sin instrucciones
+ * escondidas» cuando no se cumple: el lector y la regla de texto suelen reportar el mismo fragmento con
+ * motivos distintos y la plantilla del motor lo repite, recortado. Aquí se cita cada fragmento una
+ * vez, con la misma plantilla fija. El registro (y su exportación) no cambia.
+ */
+export function displayExplanation(check: CheckResult, suspiciousTexts: readonly string[]): string {
+  if (check.code !== "LEC-4" || check.status !== "fail" || suspiciousTexts.length === 0) return check.explanation;
+  const quotes = suspiciousTexts.map((t) => `«${clip(t.replace(/\s+/g, " ").trim(), 140)}»`).join("; ");
+  return suspiciousTexts.length === 1
+    ? `El documento contiene texto que intenta dar órdenes: ${quotes}. Centinela no lo siguió.`
+    : `El documento contiene ${suspiciousTexts.length} textos que intentan dar órdenes: ${quotes}. Centinela no los siguió.`;
+}
+
+function clip(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
 /** Instrucciones sospechosas únicas (modelo y heurística pueden repetir el mismo texto). */
 export function uniqueSuspicious(record: DecisionRecord): { text: string; reason: string; sources: string[] }[] {
   const list = record.reading?.signals?.suspiciousInstructions ?? [];

@@ -21,7 +21,8 @@ export function PageHeader({ eyebrow, title, description, actions, className }: 
         <h1 className="text-h1 text-navy">{title}</h1>
         {description ? <p className="max-w-[62ch] text-body text-ink-2">{description}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      {/* Sin shrink-0: en pantallas angostas las acciones envuelven en vez de desbordar. */}
+      {actions ? <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }

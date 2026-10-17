@@ -25,6 +25,8 @@ import {
   formatCents,
   formatQuantity,
   guardAccount,
+  guardBankCodeConflict,
+  guardBankNameConflict,
   guardCents,
   guardCurrency,
   guardDate,
@@ -35,6 +37,7 @@ import {
   guardPeriod,
   guardStoredCents,
   guardTaxId,
+  dayAfter,
   monthOfDay,
   roundHalfAwayFromZero,
   sameTaxId,
@@ -164,13 +167,13 @@ function evaluate(input: EngineInput, ctx: DecisionContext, decision: Decision):
   const rules = readRules(ctx.company, v);
 
   // G2 · lectura sólida
-  const invoice = checkReading(input.reading, today, v);
+  const invoice = checkReading(input.reading, nowDays, v);
 
   // G3 · proveedor
   const vendor = invoice ? checkVendor(invoice, ctx.company.vendors, decision, v) : null;
 
   // G4 · cuenta destino
-  if (invoice && vendor) checkAccount(invoice, vendor, v);
+  if (invoice && vendor) checkAccount(invoice, vendor, input.reading, v);
   else skipped = true;
 
   // G5 · acuerdo vigente, moneda y monto
@@ -260,7 +263,10 @@ function readRules(company: Company, v: Violations): RulesCents | null {
   if (thresholdCents === null || thresholdCents < 0) bad.push("umbral de aprobación");
   if (periodLimitCents === null || periodLimitCents < 0) bad.push("límite mensual");
   if (initialFundCents === null || initialFundCents < 0) bad.push("fondo inicial");
-  if (typeof tolerancePct !== "number" || !Number.isFinite(tolerancePct) || tolerancePct < 0) bad.push("tolerancia");
+  // Más de 100 % deja de ser «lo pactado»: un acuerdo de 1.000 aceptaría cualquier factura de 0 a más de 2.000.
+  if (typeof tolerancePct !== "number" || !Number.isFinite(tolerancePct) || tolerancePct < 0 || tolerancePct > 100) {
+    bad.push("tolerancia");
+  }
   if (r?.fxToUsd === null || typeof r?.fxToUsd !== "object") bad.push("tasas de cambio");
   if (bad.length > 0 || thresholdCents === null || periodLimitCents === null || initialFundCents === null) {
     v.add(`las reglas de la empresa no son válidas (${bad.join(", ")})`);
@@ -315,7 +321,8 @@ function dataValue(d: InvoiceData, field: Critical): string | number | null {
   return d[field] ?? null;
 }
 
-function checkReading(reading: ReadingAssessment, today: string | null, v: Violations): GuardInvoice | null {
+function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: Violations): GuardInvoice | null {
+  const today = nowDays?.[0] ?? null;
   const data = reading?.data ?? null;
   const signals = reading?.signals;
 
@@ -453,6 +460,14 @@ function checkReading(reading: ReadingAssessment, today: string | null, v: Viola
   const referenceDay = issueDay ?? today;
   const period = servicePeriod ?? (referenceDay ? monthOfDay(referenceDay) : null);
 
+  // Nada del futuro: ni una emisión posterior a hoy ni un mes que todavía no empieza (se pagaría un
+  // servicio no prestado). Hoy = el día más tardío de `now` (escrito o UTC) más uno, por zona horaria.
+  const latest = nowDays && nowDays.length > 0 ? dayAfter(nowDays.reduce((a, b) => (a > b ? a : b))) : null;
+  if (latest !== null) {
+    if (issueDay !== null && issueDay > latest) v.add(`la fecha de emisión (${issueDay}) es posterior a hoy`);
+    if (period !== null && period > monthOfDay(latest)) v.add(`el periodo cobrado (${period}) todavía no empieza`);
+  }
+
   return {
     data,
     vendorNameKey,
@@ -498,13 +513,26 @@ function checkVendor(invoice: GuardInvoice, vendors: readonly Vendor[], decision
 
 // ───────────────────────── G4 · Cuenta destino ─────────────────────────
 
-function checkAccount(invoice: GuardInvoice, vendor: Vendor, v: Violations): void {
+function checkAccount(invoice: GuardInvoice, vendor: Vendor, reading: ReadingAssessment, v: Violations): void {
   const registered = guardAccount(vendor.account?.accountNumber);
   if (registered === null) {
     v.add(`la cuenta registrada de ${vendor.id} no tiene un formato válido`);
   } else if (registered !== invoice.account) {
     // Solo los últimos 4 caracteres: el texto de la violación se muestra en la pantalla.
     v.add(`la cuenta destino (terminada en ${invoice.account.slice(-4)}) no es la registrada del proveedor (terminada en ${registered.slice(-4)})`);
+  }
+  // El mismo número en otro banco es otra cuenta: banco y código SWIFT/de ruteo de los datos y de
+  // las dos lecturas, contra los registrados.
+  const stated: { bank: unknown; code: unknown }[] = [{ bank: invoice.data.bankName, code: invoice.data.routingOrSwift }];
+  for (const r of [reading?.primary, reading?.secondary]) {
+    if (r?.ok === true) stated.push({ bank: r.extraction.payment?.bankName?.value, code: r.extraction.payment?.routingOrSwift?.value });
+  }
+  const otherBank = stated.find(
+    (x) => guardBankNameConflict(x.bank, vendor.account?.bankName) || guardBankCodeConflict(x.code, vendor.account?.routingOrSwift),
+  );
+  if (otherBank) {
+    const what = [otherBank.bank, otherBank.code].filter((x) => typeof x === "string" && x.trim() !== "").map((x) => shown(x, 40));
+    v.add(`la factura ubica la cuenta en otro banco (${what.join(", ")}), no en el registrado del proveedor`);
   }
 }
 
@@ -646,7 +674,18 @@ function checkAgreement(
       );
     }
   }
-  return fitting;
+  // Para los duplicados cuentan también los acuerdos que ya no (o todavía no) están vigentes en la
+  // fecha de emisión pero cubren el mes cobrado y con los que la factura cuadra: un acuerdo renovado
+  // a mitad de mes no paga otra vez el mes que ya se pagó con el anterior.
+  const period = invoice.period;
+  const alsoFitting = agreements.filter(
+    (a) =>
+      !fitting.includes(a) &&
+      coversPeriod(a, period) &&
+      guardCurrency(a.currency) === invoice.currency &&
+      amountProblems(a, invoice, rules.tolerancePct).length === 0,
+  );
+  return [...fitting, ...alsoFitting];
 }
 
 // ───────────────────────── G6 · Monto en USD ─────────────────────────

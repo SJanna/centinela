@@ -392,15 +392,14 @@ function AgreementEditor({ index, agreement: a, currencies, errors, idBase, onCh
         </button>
       </div>
       <div className="space-y-4 p-5">
-        <div role="radiogroup" aria-label="Tipo de acuerdo" className="inline-flex rounded-pill bg-surface-2 p-1">
+        <div role="group" aria-label="Tipo de acuerdo" className="inline-flex rounded-pill bg-surface-2 p-1">
           {KINDS.map((kind) => {
             const active = a.kind === kind;
             return (
               <button
                 key={kind}
                 type="button"
-                role="radio"
-                aria-checked={active}
+                aria-pressed={active}
                 onClick={() => onChange({ kind })}
                 className={cn(
                   "h-7 rounded-pill px-3 text-caption font-medium transition-[background-color,color,box-shadow] duration-150",

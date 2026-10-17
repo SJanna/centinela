@@ -4,7 +4,7 @@
 import { CHECK_BY_CODE, CHECK_CATALOG } from "@/core/checks";
 import type { CheckCode, Outcome } from "@/core/schemas";
 import { moneyParts } from "@/components/ui/money";
-import type { DecisionSummary, VendorCountries } from "./types";
+import type { DecisionSummary, Stats, VendorCountries } from "./types";
 
 /** Lo que falló, dicho corto, por comprobación. Solo depende del código: no es texto de un modelo. */
 const FAILED_REASON: Record<CheckCode, string> = {
@@ -131,10 +131,18 @@ export function vendorCountriesOf(
   return map;
 }
 
-/** País del proveedor según la ficha de la empresa (null si no está registrado). */
-export function countryOf(vendorName: string | null, countries: VendorCountries): string | null {
-  if (!vendorName) return null;
-  return countries[vendorName.trim().toLowerCase()] ?? null;
+/**
+ * País del proveedor: el que guardó la decisión (copia de la ficha al decidir); si no lo trae,
+ * el de la ficha actual por nombre o alias. null si el proveedor no está registrado.
+ */
+export function countryOf(
+  d: Pick<DecisionSummary, "vendorCountry" | "vendorName">,
+  countries: VendorCountries,
+): string | null {
+  const saved = d.vendorCountry?.trim().toUpperCase();
+  if (saved) return saved;
+  if (!d.vendorName) return null;
+  return countries[d.vendorName.trim().toLowerCase()] ?? null;
 }
 
 /** "hace 3 min" · "hace 2 h" · "hace 4 d". Sin depender de la zona horaria. */
@@ -183,6 +191,19 @@ export function monthName(period: string): string {
 /** "1 factura" · "3 facturas". */
 export function invoicesLabel(n: number): string {
   return n === 1 ? "1 factura" : `${n} facturas`;
+}
+
+/**
+ * Frase bajo el título del resumen: cómo se repartieron las decisiones y, si hubo pagos, la garantía
+ * que los respalda (15 comprobaciones en verde y la guardia de src/guard, por construcción).
+ */
+export function overviewLine(stats: Pick<Stats, "total" | "byOutcome">): string {
+  if (stats.total === 0) return "Todavía no hay facturas revisadas.";
+  const { PAGAR, FRENAR, ESCALAR } = stats.byOutcome;
+  const split = `${PAGAR} ${PAGAR === 1 ? "pagada" : "pagadas"}, ${FRENAR} ${FRENAR === 1 ? "frenada" : "frenadas"} y ${ESCALAR} ${ESCALAR === 1 ? "escalada" : "escaladas"} a una persona.`;
+  if (PAGAR === 0) return `${split} Ningún pago todavía.`;
+  const n = CHECK_CATALOG.length;
+  return `${split} ${PAGAR === 1 ? "El pago pasó" : "Cada pago pasó"} las ${n} comprobaciones y una segunda revisión independiente.`;
 }
 
 /** Suma en USD de las decisiones de un resultado (las que tienen monto). */

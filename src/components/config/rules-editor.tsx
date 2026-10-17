@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Eyebrow, Mono } from "@/components/ui/typography";
 import { requestJson } from "./api";
+import { DecisionRuleCard } from "./check-catalog";
 import { FieldError, Notice, controlClasses } from "./fields";
 import { CURRENCY_COUNTRY, CURRENCY_NAME, formatAmount, formatAmountExact, formatNumber, parseDecimal } from "./format";
 import { PillInput } from "./pill-input";
@@ -104,13 +105,20 @@ function fxRowsOf(fx: Rules["fxToUsd"]): FxRow[] {
 
 function parseRule(spec: RuleSpec, raw: string): { value: number | null; error: string | null } {
   const value = parseDecimal(raw, { grouping: spec.unit === "usd" });
-  if (value == null) return { value: null, error: spec.unit === "usd" ? "Escribe un monto en USD." : "Escribe un porcentaje." };
+  if (value == null)
+    return {
+      value: null,
+      error: spec.unit === "usd" ? "Escribe un monto en USD." : "Escribe un porcentaje.",
+    };
   if (value < 0) return { value: null, error: "No puede ser negativo." };
   if (spec.unit === "pct" && value > 100) return { value: null, error: "Usa un porcentaje entre 0 y 100." };
   return { value, error: null };
 }
 
-function parseRate(raw: string): { value: number | null; error: string | null } {
+function parseRate(raw: string): {
+  value: number | null;
+  error: string | null;
+} {
   const value = parseDecimal(raw, { grouping: false });
   if (value == null) return { value: null, error: "Escribe la tasa." };
   if (value <= 0) return { value: null, error: "La tasa debe ser mayor que 0." };
@@ -127,11 +135,17 @@ function ruleHint(spec: RuleSpec, value: number | null, ctx: RulesContext): stri
       const total = ctx.decisionAmountsUsd.length;
       if (total === 0) return "Por encima de este monto decide una persona. Aún no hay facturas registradas.";
       const above = ctx.decisionAmountsUsd.filter((a) => a > value).length;
-      return `${above} de ${total} ${total === 1 ? "factura registrada supera" : "facturas registradas superan"} este monto.`;
+      if (above === 0) return `Ninguna de las ${total} facturas registradas supera este monto.`;
+      if (above === total)
+        return total === 1
+          ? "La factura registrada supera este monto."
+          : `Las ${total} facturas registradas superan este monto.`;
+      return `${above} de ${total} facturas registradas ${above === 1 ? "supera" : "superan"} este monto.`;
     }
     case "periodLimitUsd": {
       const left = value - ctx.monthSpentUsd;
-      if (left < 0) return `Pagado en ${ctx.monthLabel}: ${usd(ctx.monthSpentUsd)}. Ya supera este límite: los próximos pagos del mes se escalan.`;
+      if (left < 0)
+        return `Pagado en ${ctx.monthLabel}: ${usd(ctx.monthSpentUsd)}. Ya supera este límite: los próximos pagos del mes se escalan.`;
       return `Pagado en ${ctx.monthLabel}: ${usd(ctx.monthSpentUsd)}. Quedan ${usd(left)} este mes.`;
     }
     case "initialFundUsd": {
@@ -201,7 +215,10 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
   function formatOnBlur(spec: RuleSpec, raw: string) {
     const { value, error } = parseRule(spec, raw);
     if (error || value == null) return;
-    setValues((v) => ({ ...v, [spec.key]: formatNumber(value, spec.unit === "pct" ? 4 : 2) }));
+    setValues((v) => ({
+      ...v,
+      [spec.key]: formatNumber(value, spec.unit === "pct" ? 4 : 2),
+    }));
   }
 
   function addCurrency() {
@@ -210,7 +227,14 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
     if (fx.some((r) => r.code === code)) return setAddError(`${code} ya está en la tabla.`);
     const rate = parseRate(newRate);
     if (rate.error || rate.value == null) return setAddError(rate.error);
-    setFx((rows) => [...rows, { key: `${code}-${Date.now()}`, code, rate: formatNumber(rate.value as number, 10) }]);
+    setFx((rows) => [
+      ...rows,
+      {
+        key: `${code}-${Date.now()}`,
+        code,
+        rate: formatNumber(rate.value as number, 10),
+      },
+    ]);
     setNewCode("");
     setNewRate("");
     setAddError(null);
@@ -228,101 +252,123 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
     };
     setSaving(true);
     setServerError(null);
-    const result = await requestJson<{ company: { rules: Rules } }>("/api/company/rules", { method: "PUT", body: next });
+    const result = await requestJson<{ company: { rules: Rules } }>("/api/company/rules", {
+      method: "PUT",
+      body: next,
+    });
     setSaving(false);
     if (!result.ok) {
       setServerError(result.error);
-      toast({ tone: "ERROR", title: "No se guardaron las reglas.", description: result.error });
+      toast({
+        tone: "ERROR",
+        title: "No se guardaron las reglas.",
+        description: result.error,
+      });
       return;
     }
     const saved = result.data.company.rules;
     setBaseline(saved);
     resetTo(saved);
-    toast({ tone: "NEUTRAL", title: "Reglas guardadas.", description: "Aplican a las próximas facturas." });
+    toast({
+      tone: "NEUTRAL",
+      title: "Reglas guardadas.",
+      description: "Aplican a las próximas facturas.",
+    });
     router.refresh();
   }
 
   return (
     <form onSubmit={save} noValidate aria-describedby={`${uid}-note`}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        {/* ── Reglas en frases ── */}
-        <Sheet padding="none" aria-labelledby={`${uid}-limits`}>
-          <header className="flex items-end justify-between gap-4 px-4 pt-6 pb-4 sm:px-6">
-            <div className="space-y-1">
-              <Eyebrow>Límites y tolerancia</Eyebrow>
-              <h2 id={`${uid}-limits`} className="text-h2">
-                Lo que la empresa decide.
-              </h2>
-            </div>
-            <p className="hidden text-caption text-muted sm:block">Montos en USD. Edita la cifra en la frase.</p>
-          </header>
-          <ol className="border-t border-seam">
-            {RULES.map((spec) => {
-              const state = parsed[spec.key];
-              const changed = changedKeys.includes(spec.key);
-              const inputId = `${uid}-${spec.key}`;
-              const errorId = `${inputId}-error`;
-              return (
-                <li
-                  key={spec.key}
-                  id={`regla-${spec.n}`}
-                  className={cn(
-                    "relative scroll-mt-28 grid grid-cols-[1.5rem_minmax(0,1fr)] target:bg-accent-tint/60 gap-x-3 border-b border-seam px-4 py-5 last:border-b-0 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:px-6",
-                    "transition-colors duration-150",
-                    changed && "bg-accent-tint/40",
-                  )}
-                >
-                  {changed ? <span aria-hidden className="absolute inset-y-3 left-0 w-[2px] rounded-full bg-accent" /> : null}
-                  <Mono className="pt-[5px] text-small text-ink-3">{spec.n}</Mono>
-                  <div className="min-w-0">
-                    <p className="text-h2 leading-[1.6] text-navy">
-                      {spec.before}
-                      <PillInput
-                        id={inputId}
-                        value={values[spec.key]}
-                        onChange={(v) => setValues((prev) => ({ ...prev, [spec.key]: v }))}
-                        onBlur={(v) => formatOnBlur(spec, v)}
-                        prefix={spec.unit === "usd" ? "USD" : undefined}
-                        suffix={spec.unit === "pct" ? "%" : undefined}
-                        label={`${spec.before} … ${spec.after}`.replace(" .", "")}
-                        changed={changed}
-                        invalid={Boolean(state.error)}
-                        errorId={errorId}
-                        className={spec.after === "." ? "mr-[0.06em]" : undefined}
-                      />
-                      {spec.after === "." ? "." : ` ${spec.after}`}
-                    </p>
-                    {state.error ? (
-                      <FieldError id={errorId} className="mt-1.5">
-                        {state.error}
-                      </FieldError>
-                    ) : (
-                      <p className="mt-1 text-small text-ink-2">{ruleHint(spec, state.value, context)}</p>
+        {/* ── Reglas en frases y cómo se combinan ── */}
+        <div className="min-w-0 space-y-6">
+          <Sheet padding="none" aria-labelledby={`${uid}-limits`}>
+            <header className="flex items-end justify-between gap-4 px-4 pt-6 pb-4 sm:px-6">
+              <div className="space-y-1">
+                <Eyebrow>Límites y tolerancia</Eyebrow>
+                <h2 id={`${uid}-limits`} className="text-h2">
+                  Lo que la empresa decide.
+                </h2>
+              </div>
+              <p className="hidden text-caption text-muted sm:block">Montos en USD. Edita la cifra en la frase.</p>
+            </header>
+            <ol className="border-t border-seam">
+              {RULES.map((spec) => {
+                const state = parsed[spec.key];
+                const changed = changedKeys.includes(spec.key);
+                const inputId = `${uid}-${spec.key}`;
+                const errorId = `${inputId}-error`;
+                return (
+                  <li
+                    key={spec.key}
+                    id={`regla-${spec.n}`}
+                    className={cn(
+                      "relative scroll-mt-28 grid grid-cols-[1.5rem_minmax(0,1fr)] target:bg-accent-tint/60 gap-x-3 border-b border-seam px-4 py-5 last:border-b-0 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:px-6",
+                      "transition-colors duration-150",
+                      changed && "bg-accent-tint/40",
                     )}
-                    {changed && !state.error ? (
-                      <p className="mt-1 text-caption text-muted">
-                        Antes:{" "}
-                        <span className="tnum">
-                          {spec.unit === "usd" ? formatAmount(baseline[spec.key], "USD") : `${formatNumber(baseline[spec.key], 4)} %`}
-                        </span>
-                      </p>
+                  >
+                    {changed ? (
+                      <span aria-hidden className="absolute inset-y-3 left-0 w-[2px] rounded-full bg-accent" />
                     ) : null}
-                  </div>
-                  <div className="col-start-2 mt-3 sm:col-start-3 sm:mt-[5px]">
-                    <Tooltip content={`Se revisa en ${spec.code}: ${spec.codeTitle.toLowerCase()}.`} side="top" align="end">
-                      <span
-                        tabIndex={0}
-                        className="inline-flex h-6 cursor-help items-center rounded-chip bg-surface-2 px-2 font-mono text-caption tracking-[-0.01em] text-ink-2"
+                    <Mono className="pt-[5px] text-small text-ink-3">{spec.n}</Mono>
+                    <div className="min-w-0">
+                      <p className="text-h2 leading-[1.6] text-navy">
+                        {spec.before}
+                        <PillInput
+                          id={inputId}
+                          value={values[spec.key]}
+                          onChange={(v) => setValues((prev) => ({ ...prev, [spec.key]: v }))}
+                          onBlur={(v) => formatOnBlur(spec, v)}
+                          prefix={spec.unit === "usd" ? "USD" : undefined}
+                          suffix={spec.unit === "pct" ? "%" : undefined}
+                          label={`${spec.before} … ${spec.after}`.replace(" .", "")}
+                          changed={changed}
+                          invalid={Boolean(state.error)}
+                          errorId={errorId}
+                          className={spec.after === "." ? "mr-[0.06em]" : undefined}
+                        />
+                        {spec.after === "." ? "." : ` ${spec.after}`}
+                      </p>
+                      {state.error ? (
+                        <FieldError id={errorId} className="mt-1.5">
+                          {state.error}
+                        </FieldError>
+                      ) : (
+                        <p className="mt-1 text-small text-ink-2">{ruleHint(spec, state.value, context)}</p>
+                      )}
+                      {changed && !state.error ? (
+                        <p className="mt-1 text-caption text-muted">
+                          Antes:{" "}
+                          <span className="tnum">
+                            {spec.unit === "usd"
+                              ? formatAmount(baseline[spec.key], "USD")
+                              : `${formatNumber(baseline[spec.key], 4)} %`}
+                          </span>
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="col-start-2 mt-3 sm:col-start-3 sm:mt-[5px]">
+                      <Tooltip
+                        content={`Se revisa en ${spec.code}: ${spec.codeTitle.toLowerCase()}.`}
+                        side="top"
+                        align="end"
                       >
-                        {spec.code}
-                      </span>
-                    </Tooltip>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </Sheet>
+                        <span
+                          tabIndex={0}
+                          className="inline-flex h-6 cursor-help items-center rounded-chip bg-surface-2 px-2 font-mono text-caption tracking-[-0.01em] text-ink-2"
+                        >
+                          {spec.code}
+                        </span>
+                      </Tooltip>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </Sheet>
+          <DecisionRuleCard />
+        </div>
 
         {/* ── Tasas de cambio ── */}
         <Card padding="none" aria-labelledby={`${uid}-fx`} as="section">
@@ -356,7 +402,9 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
                     <CountryFlag country={CURRENCY_COUNTRY[row.code]} size={20} labelled={false} />
                     <div className="min-w-0">
                       <p className="flex items-center gap-2 leading-tight">
-                        <span className="font-mono text-[13px] font-medium tracking-[-0.01em] text-navy">{row.code}</span>
+                        <span className="font-mono text-[13px] font-medium tracking-[-0.01em] text-navy">
+                          {row.code}
+                        </span>
                         {changed ? (
                           <span className="rounded-pill bg-accent-wash px-1.5 text-[10.5px] leading-[16px] font-medium text-accent">
                             {isNew ? "Nueva" : "Cambiada"}
@@ -387,7 +435,10 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
                       }}
                       className={controlClasses(
                         Boolean(row.error),
-                        cn("tnum h-9 text-right font-mono text-[13px]", changed && !row.error && "border-accent/60 bg-accent-tint"),
+                        cn(
+                          "tnum h-9 text-right font-mono text-[13px]",
+                          changed && !row.error && "border-accent/60 bg-accent-tint",
+                        ),
                       )}
                     />
                     {isBase ? (
@@ -490,8 +541,11 @@ export function RulesEditor({ rules, context }: { rules: Rules; context: RulesCo
           <div className="min-w-0 space-y-0.5">
             {dirty ? (
               <p className="flex items-center gap-2 text-small font-medium text-navy" role="status">
-                <span aria-hidden className="size-1.5 rounded-full bg-accent" />
+                <span aria-hidden className={cn("size-1.5 rounded-full", invalid ? "bg-hold-mark" : "bg-accent")} />
                 {changeCount === 1 ? "1 cambio sin guardar." : `${changeCount} cambios sin guardar.`}
+                {invalid ? (
+                  <span className="font-normal text-hold">Corrige la cifra marcada en rojo para guardar.</span>
+                ) : null}
               </p>
             ) : null}
             <p id={`${uid}-note`} className="text-small text-ink-2">

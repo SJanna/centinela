@@ -5,7 +5,8 @@
 import { describe, expect, it } from "vitest";
 import type { Agreement, Rules, Vendor } from "../core/schemas";
 import { decide, isAgreementValidOn, selectAgreement } from "./index";
-import { ACME, acmeInvoice, check, context, engineInput, nopalInvoice, paid, reading } from "./test-fixtures";
+import { bankNamesMayMatch, compareRoutingCodes } from "./facts";
+import { ACME, acmeInvoice, check, context, engineInput, nopalInvoice, NOW, paid, reading } from "./test-fixtures";
 
 describe("DUP-1 · la huella se compara igual en ambos lados", () => {
   it("frena si el historial guardó la misma huella con espacios (antes solo se recortaba la entrada)", () => {
@@ -164,6 +165,106 @@ describe("LEC-2 · no pasa sin una segunda lectura, aunque la señal venga vací
     const secondary = { ok: false as const, readerId: "secondary", model: "m", promptVersion: "t1", error: "api_error" as const, message: "x" };
     const d = decide({ invoiceId: "X", fileHash: "f".repeat(64), reading: { ...base, secondary } }, context());
     expect(check(d, "LEC-2").status).toBe("fail");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+});
+
+// ───────────────────────── Revisión adversarial ─────────────────────────
+
+describe("revisión adversarial · tolerancia absurda", () => {
+  it("ACU-3 con tolerancia de 1000 % queda sin evaluar (antes aceptaba COP 19.000.000 contra 12.000.000)", () => {
+    const d = decide(engineInput(acmeInvoice({ total: 19_000_000, subtotal: 19_000_000 })), context({ rules: { amountTolerancePct: 1000 } }));
+    expect(check(d, "ACU-3").status).toBe("not_evaluable");
+    expect(check(d, "ACU-3").explanation).toContain("entre 0 y 100");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("100 % todavía es una tolerancia válida", () => {
+    const d = decide(engineInput(acmeInvoice()), context({ rules: { amountTolerancePct: 100 } }));
+    expect(check(d, "ACU-3").status).toBe("pass");
+  });
+});
+
+describe("revisión adversarial · facturas del futuro (ACU-1)", () => {
+  it("emisión posterior a hoy: falla", () => {
+    const d = decide(engineInput(acmeInvoice({ issueDate: "2027-03-01", servicePeriod: "2027-03" })), context());
+    const c = check(d, "ACU-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("es posterior a hoy");
+    expect(d.agreementId).toBeNull();
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("emisión de hoy por un mes que todavía no empieza: falla", () => {
+    const d = decide(engineInput(acmeInvoice({ servicePeriod: "2027-01" })), context());
+    const c = check(d, "ACU-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("enero de 2027, todavía no empieza");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("un día de margen por zona horaria; el 31 de octubre en -05:00 ya es 1 de noviembre en UTC", () => {
+    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "2026-10-21" }), NOW).status).toBe("selected");
+    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "2026-10-22" }), NOW).status).toBe("future_date");
+    const nov = acmeInvoice({ issueDate: "2026-11-01", servicePeriod: "2026-11" });
+    expect(selectAgreement(ACME, nov, "2026-10-31T20:00:00-05:00").status).toBe("selected");
+    expect(selectAgreement(ACME, nov, "2026-10-29T20:00:00-05:00").status).toBe("future_date");
+    const novFromOct = acmeInvoice({ issueDate: "2026-10-29", servicePeriod: "2026-11" });
+    expect(selectAgreement(ACME, novFromOct, "2026-10-29T20:00:00-05:00").status).toBe("future_period");
+  });
+
+  it("sin `now` no se revisa (compatibilidad con quien llama sin fecha)", () => {
+    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "2027-03-01", servicePeriod: "2027-03" })).status).toBe("selected");
+  });
+});
+
+describe("revisión adversarial · el mismo número de cuenta en otro banco (PRV-2)", () => {
+  it("otro banco y otro SWIFT: falla", () => {
+    const d = decide(engineInput(acmeInvoice({ bankName: "Banco Pirata", routingOrSwift: "PIRACOBB" })), context());
+    const c = check(d, "PRV-2");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("el mismo número en otro banco es otra cuenta");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("el banco registrado escrito de otra forma pasa", () => {
+    for (const [bankName, routingOrSwift] of [
+      ["BANCOLOMBIA S.A.", "COLOCOBMXXX"],
+      ["Bancolombia", null],
+      [null, "COLOCOBM"],
+    ] as const) {
+      expect(check(decide(engineInput(acmeInvoice({ bankName, routingOrSwift })), context()), "PRV-2").status).toBe("pass");
+    }
+  });
+
+  it("compareRoutingCodes y bankNamesMayMatch", () => {
+    expect(compareRoutingCodes("SVBKUS6SXXX", "SVBKUS6S")).toBe("same");
+    expect(compareRoutingCodes("PIRAUS33", "SVBKUS6S")).toBe("different");
+    expect(compareRoutingCodes("026009593", "121140399")).toBe("different");
+    expect(compareRoutingCodes("SVBKUS6S", "121140399")).toBe("unknown");
+    expect(compareRoutingCodes(null, "121140399")).toBe("unknown");
+    expect(bankNamesMayMatch("Banco de Crédito del Perú", "BCP")).toBe(true);
+    expect(bankNamesMayMatch("SVB", "Silicon Valley Bank")).toBe(true);
+    expect(bankNamesMayMatch("Banco Pirata Internacional", "Silicon Valley Bank")).toBe(false);
+    expect(bankNamesMayMatch("Interbank", "BCP")).toBe(false);
+  });
+});
+
+describe("revisión adversarial · acuerdo renovado a mitad de mes (DUP-3)", () => {
+  it("el mes pagado con el acuerdo anterior no se paga otra vez con el nuevo", () => {
+    const renewed: Vendor = {
+      ...ACME,
+      agreements: [
+        { ...ACME.agreements[0], validTo: "2026-10-10" },
+        { ...ACME.agreements[0], id: "a-acme-2", description: "Renovado", validFrom: "2026-10-11", validTo: null },
+      ],
+    };
+    const history = [paid({ vendorId: "v-acme", invoiceNumber: "FE-0900", agreementId: "a-acme-mensual", agreementPeriod: "2026-10", amountUsd: 3000 })];
+    const d = decide(engineInput(acmeInvoice({ issueDate: "2026-10-15" })), context({ vendors: [renewed], history }));
+    expect(d.agreementId).toBe("a-acme-2");
+    const c = check(d, "DUP-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("también cuadra");
     expect(d.outcome).toBe("ESCALAR");
   });
 });

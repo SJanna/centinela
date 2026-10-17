@@ -13,6 +13,22 @@
 
 La pantalla envía las facturas **una por una**, en orden (el fondo, el límite mensual y los duplicados dependen del historial).
 
+## Pago doble entre instancias
+
+`processInvoice` procesa de a una factura **por proceso** (candado en memoria). En Vercel puede haber dos procesos, y cada uno decide sobre el historial que leyó. Para que dos procesos no paguen lo mismo, cada decisión PAGAR guarda tres claves en `decisions`, con índice **único** cada una (los `null` no chocan):
+
+| Columna | Valor | Comprobación que espeja |
+|---|---|---|
+| `pay_file_key` | huella del archivo | DUP-1 |
+| `pay_invoice_key` | proveedor + número de factura normalizado (alfanumérico en mayúsculas, sin tildes, sin ceros a la izquierda en cada tramo numérico, ancho completo convertido) | DUP-2 |
+| `pay_period_key` | acuerdo + periodo, o acuerdo + `once` si el acuerdo es de pago único | DUP-3 |
+
+FRENAR y ESCALAR no llevan claves. Si el insert choca, `appendDecision` lanza `DuplicatePaymentError` y no guarda nada; `processInvoice` vuelve a decidir **una vez** con el historial fresco (ya incluye el pago del otro proceso: el motor frena por duplicado). Si vuelve a chocar, registra ESCALAR y marca como no evaluable la comprobación DUP de esa clave, con la explicación.
+
+`ensureSchema` migra bases anteriores: agrega las columnas, rellena las de los PAGAR ya guardados (si dos comparten una clave, solo la recibe el primero) y después crea los índices. El disparador que hace inmutable el registro solo deja rellenar claves vacías de un PAGAR dentro de esa transacción.
+
+**Qué no cubre.** El límite del mes (LIM-2) y el fondo (FON-1) suman pagos distintos, así que no se pueden expresar como clave única: entre instancias siguen dependiendo del candado por proceso. Dos procesos podrían aprobar a la vez dos facturas distintas que juntas superen el límite o el fondo. La interfaz sube de a una factura, lo que reduce ese caso a dos pestañas o dos personas subiendo al mismo tiempo.
+
 ## Comprobaciones
 
 Ver `src/core/checks.ts`. Regla: alguna FRENAR → FRENAR; si no, alguna ESCALAR → ESCALAR; si no, PAGAR.

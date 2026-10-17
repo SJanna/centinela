@@ -24,7 +24,7 @@ const STEP_AT = [0, 380, 760] as const;
 const MAX_WAITING_SHOWN = 2;
 
 export const SIMULATED_NOTE =
-  "Modo simulado: solo las facturas de ejemplo tienen lectura. Con una clave de Anthropic, Centinela lee cualquier factura.";
+  "Modo simulado: solo se leen las facturas de ejemplo. Con una clave de Anthropic, Centinela lee cualquier factura.";
 
 const DROP_HINT = "PDF, PNG, JPG, correo (.eml) o texto (.txt) · hasta 4 MB por factura";
 
@@ -155,6 +155,7 @@ function PlaybackCard({ playback, onStop, onClose }: { playback: Playback; onSto
   const running = playback.status === "running";
   const pct = playback.total > 0 ? (playback.done / playback.total) * 100 : 0;
   const all = playback.mismatches.length === 0 && playback.done === playback.total;
+  const wrongPayments = playback.mismatches.filter((m) => m.got === "PAGAR" && m.expected !== "PAGAR").length;
   return (
     <div className="rounded-row border border-seam bg-surface-0 p-3.5 shadow-hairline" aria-live="polite">
       <div className="flex items-start justify-between gap-3">
@@ -196,7 +197,15 @@ function PlaybackCard({ playback, onStop, onClose }: { playback: Playback; onSto
           <span className="tnum font-medium text-navy">
             {playback.matches} de {playback.done}
           </span>{" "}
-          {playback.matches === 1 ? "coincide" : "coinciden"} con lo esperado.
+          {playback.matches === 1 ? "coincide" : "coinciden"} con lo esperado.{" "}
+          {/* Lo que más importa: una factura que una persona marcó para frenar o escalar y salió pagada. */}
+          {wrongPayments === 0 ? (
+            <span className="font-medium text-pay">Ningún pago indebido.</span>
+          ) : (
+            <span className="font-medium text-hold">
+              {wrongPayments === 1 ? "1 pago indebido." : `${wrongPayments} pagos indebidos.`}
+            </span>
+          )}
         </p>
       ) : null}
       {playback.mismatches.length > 0 ? (

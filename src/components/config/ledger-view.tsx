@@ -28,11 +28,18 @@ function fold(text: string | null | undefined): string {
     .toLowerCase();
 }
 
+/** Pie del registro cuando todas las decisiones se tomaron con la misma forma de lectura. */
+const READING_NOTE: Record<DecisionSummary["readingMode"], string> = {
+  live: "Todas con lectura real: dos modelos leyeron cada factura por separado.",
+  cache: "Todas con lecturas reales guardadas antes para el mismo archivo.",
+  simulated: "Todas con lectura simulada: la de referencia del set de ejemplo, para probar las reglas.",
+};
+
 const SINGULAR: Record<LedgerFilter, string> = { todas: "", pagadas: "pagada ", frenadas: "frenada ", escaladas: "escalada " };
 
 /**
  * El motivo sin la parte que repite la decisión (el chip ya la dice):
- * "Se escala a una persona: no cumple «X»." → "No cumple «X»." El texto completo va en el tooltip.
+ * "Se escala a una persona: no cumple «X»." → "No cumple «X»." Si es largo, completo en el tooltip.
  */
 function motiveOf(d: DecisionSummary): string {
   // Las referencias internas ("(factura inv_…, decisión: Pagar)") quedan en el tooltip, no en la tabla.
@@ -47,9 +54,24 @@ function motiveOf(d: DecisionSummary): string {
   return rest.charAt(0).toUpperCase() + rest.slice(1);
 }
 
+/** Largo a partir del cual el motivo puede no caber en dos líneas (columna angosta, ~280px). */
+const MOTIVE_TIP_AFTER = 80;
+
 /** "LEC-1 · Datos completos y legibles", una por línea: para el title de los códigos. */
-function failedChecksTitle(codes: DecisionSummary["failedChecks"]): string {
-  return ["No pasaron:", ...codes.map((c) => `${c} · ${CHECK_BY_CODE[c]?.title ?? ""}`)].join("\n");
+function FailedChecksTip({ codes }: { codes: DecisionSummary["failedChecks"] }) {
+  return (
+    <span className="block space-y-1">
+      <span className="block font-medium text-navy">
+        {codes.length === 1 ? "No pasó esta comprobación:" : `No pasaron ${codes.length} comprobaciones:`}
+      </span>
+      {codes.map((c) => (
+        <span key={c} className="flex gap-2">
+          <span className="w-11 shrink-0 font-mono text-[11.5px] text-ink-3">{c}</span>
+          <span>{CHECK_BY_CODE[c]?.title ?? c}</span>
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function FileKindIcon({ filename }: { filename: string }) {
@@ -61,14 +83,25 @@ function FileKindIcon({ filename }: { filename: string }) {
   return <FileText {...props} />;
 }
 
-function ExportButtons() {
+function ExportButtons({ count }: { count: number }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState<"json" | "csv" | null>(null);
   async function run(format: "json" | "csv") {
     setBusy(format);
     const r = await downloadFrom(`/api/export?format=${format}`, `centinela-registro.${format}`);
     setBusy(null);
-    if (!r.ok) toast({ tone: "ERROR", title: "No se exportó el registro.", description: r.error });
+    if (!r.ok) {
+      toast({ tone: "ERROR", title: "No se exportó el registro.", description: r.error });
+      return;
+    }
+    toast({
+      tone: "NEUTRAL",
+      title: "Registro exportado.",
+      description:
+        format === "csv"
+          ? `CSV con ${count === 1 ? "1 decisión" : `${count} decisiones`}: una fila por factura, con su motivo.`
+          : `JSON con ${count === 1 ? "1 decisión" : `${count} decisiones`} completas: lecturas, comprobaciones y reglas usadas.`,
+    });
   }
   return (
     <>
@@ -96,25 +129,38 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
   const [query, setQuery] = useState(initialQuery);
   const deferredQuery = useDeferredValue(query);
 
+  // Primero la búsqueda; los conteos de los filtros cuentan lo que coincide con ella.
+  const matching = useMemo(() => {
+    const q = fold(deferredQuery.trim());
+    if (!q) return decisions;
+    return decisions.filter(
+      (d) =>
+        fold(d.vendorName).includes(q) ||
+        fold(d.invoiceNumber).includes(q) ||
+        fold(d.filename).includes(q) ||
+        fold(d.summary).includes(q) ||
+        d.failedChecks.some((c) => fold(c).includes(q)),
+    );
+  }, [decisions, deferredQuery]);
+
   const counts = useMemo(() => {
-    const c: Record<LedgerFilter, number> = { todas: decisions.length, pagadas: 0, frenadas: 0, escaladas: 0 };
-    for (const d of decisions) {
+    const c: Record<LedgerFilter, number> = { todas: matching.length, pagadas: 0, frenadas: 0, escaladas: 0 };
+    for (const d of matching) {
       if (d.outcome === "PAGAR") c.pagadas += 1;
       else if (d.outcome === "FRENAR") c.frenadas += 1;
       else c.escaladas += 1;
     }
     return c;
-  }, [decisions]);
+  }, [matching]);
 
   const rows = useMemo(() => {
     const outcome = LEDGER_FILTERS.find((f) => f.key === filter)?.outcome ?? null;
-    const q = fold(deferredQuery.trim());
-    return decisions.filter((d) => {
-      if (outcome && d.outcome !== outcome) return false;
-      if (!q) return true;
-      return fold(d.vendorName).includes(q) || fold(d.invoiceNumber).includes(q) || fold(d.filename).includes(q);
-    });
-  }, [decisions, filter, deferredQuery]);
+    return outcome ? matching.filter((d) => d.outcome === outcome) : matching;
+  }, [matching, filter]);
+
+  // Una sola forma de lectura en todo el registro (lo normal en la demo): va en el pie, no en una columna.
+  const readingModes = useMemo(() => [...new Set(decisions.map((d) => d.readingMode))], [decisions]);
+  const showReadingColumn = readingModes.length > 1;
 
   function syncUrl(nextFilter: LedgerFilter, nextQuery: string) {
     const params = new URLSearchParams();
@@ -142,7 +188,7 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
         eyebrow={companyName}
         title="Registro de decisiones."
         description="Cada factura que leyó Centinela, con lo que decidió y por qué. Nada se borra ni se reescribe."
-        actions={decisions.length > 0 ? <ExportButtons /> : null}
+        actions={decisions.length > 0 ? <ExportButtons count={decisions.length} /> : null}
       />
 
       {decisions.length === 0 ? (
@@ -161,15 +207,14 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
         <>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="scrollbar-quiet -mx-1 max-w-[calc(100%+0.5rem)] overflow-x-auto px-1 py-0.5">
-              <div role="radiogroup" aria-label="Filtrar por decisión" className="inline-flex rounded-pill bg-control/70 p-1">
+              <div role="group" aria-label="Filtrar por decisión" className="inline-flex rounded-pill bg-control/70 p-1">
                 {LEDGER_FILTERS.map((f) => {
                   const active = filter === f.key;
                   return (
                     <button
                       key={f.key}
                       type="button"
-                      role="radio"
-                      aria-checked={active}
+                      aria-pressed={active}
                       onClick={() => changeFilter(f.key)}
                       className={cn(
                         "inline-flex h-8 shrink-0 items-center gap-2 rounded-pill px-3.5 text-small font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150",
@@ -192,17 +237,17 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                 })}
               </div>
             </div>
-            <div className="relative w-full sm:w-[340px]">
+            <div className="relative w-full sm:w-[380px]">
               <Search aria-hidden size={15} strokeWidth={1.5} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-3" />
               <label htmlFor="registro-buscar" className="sr-only">
-                Buscar por proveedor, número o archivo
+                Buscar por proveedor, número, archivo o motivo
               </label>
               <input
                 id="registro-buscar"
                 type="search"
                 value={query}
                 onChange={(e) => changeQuery(e.target.value)}
-                placeholder="Buscar proveedor, número o archivo"
+                placeholder="Buscar proveedor, número, archivo o motivo"
                 autoComplete="off"
                 className="h-10 w-full rounded-pill border border-seam bg-surface-0 pr-9 pl-9 text-small text-ink shadow-hairline transition-[border-color,box-shadow] duration-150 placeholder:text-ink-3 hover:border-[#d5d9e5] focus:border-accent focus:ring-[3px] focus:ring-accent-wash focus:outline-none focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
               />
@@ -225,7 +270,7 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                 title="Nada coincide."
                 description={
                   query.trim()
-                    ? `Ninguna decisión ${SINGULAR[filter]}tiene «${query.trim()}» en el proveedor, el número o el archivo.`
+                    ? `Ninguna decisión ${SINGULAR[filter]}tiene «${query.trim()}» en el proveedor, el número, el archivo o el motivo.`
                     : `Todavía no hay facturas ${filter}.`
                 }
                 action={
@@ -248,14 +293,13 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
               <table className="w-full table-fixed border-collapse text-left text-small max-lg:min-w-[700px]">
                 <thead>
                   <tr className="text-caption text-muted">
-                    <Th className="w-[96px] pl-5">Fecha y hora</Th>
-                    <Th className="w-[176px] xl:w-[196px]">Proveedor y número</Th>
-                    <Th className="hidden w-[120px] xl:table-cell">Archivo</Th>
-                    <Th className="w-[136px] text-right">Monto</Th>
-                    <Th className="hidden w-[100px] text-right xl:table-cell">≈ USD</Th>
-                    <Th className="w-[112px]">Decisión</Th>
-                    <Th className="pr-5 xl:pr-3">Motivo</Th>
-                    <Th className="hidden w-[84px] pr-5 xl:table-cell">Lectura</Th>
+                    <Th className="hidden w-[104px] pl-5 xl:table-cell">Fecha y hora</Th>
+                    <Th className="w-[188px] pl-5 xl:w-[200px] xl:pl-3">Proveedor y número</Th>
+                    <Th className="hidden w-[112px] xl:table-cell">Archivo</Th>
+                    <Th className="w-[132px] text-right">Monto</Th>
+                    <Th className="w-[116px]">Decisión</Th>
+                    <Th className={cn("pr-5", showReadingColumn && "xl:pr-3")}>Motivo</Th>
+                    {showReadingColumn ? <Th className="hidden w-[84px] pr-5 xl:table-cell">Lectura</Th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -263,6 +307,7 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                     const when = formatDateTime(d.decidedAt);
                     const href = decisionHref(d);
                     const tipSide = i === 0 ? "bottom" : "top";
+                    const motive = motiveOf(d);
                     return (
                       <tr
                         key={d.id}
@@ -273,13 +318,13 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                         }}
                         className="group h-16 cursor-pointer border-t border-seam align-middle transition-colors duration-150 hover:bg-row-active"
                       >
-                        <td className="py-3 pr-3 pl-5 whitespace-nowrap">
+                        <td className="hidden py-3 pr-3 pl-5 whitespace-nowrap xl:table-cell">
                           <span className="block text-ink-2">{when.date}</span>
                           <Mono className="text-caption text-ink-3" title={d.decidedAt}>
                             {when.time}
                           </Mono>
                         </td>
-                        <td className="px-3 py-3">
+                        <td className="py-3 pr-3 pl-5 xl:pl-3">
                           <Link
                             href={href}
                             className="block truncate font-medium text-navy outline-offset-2 hover:text-accent focus-visible:text-accent"
@@ -305,29 +350,29 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                           ) : (
                             <Money amount={d.total} display="none" size="sm" className="text-navy" />
                           )}
-                          {/* Sin la columna ≈ USD, el equivalente va bajo el monto. */}
+                          {/* El equivalente en USD (con el que se comparan los límites), solo si la factura viene en otra moneda. */}
                           {d.amountUsd != null && d.currency !== "USD" ? (
-                            <span className="tnum block text-caption text-ink-3 xl:hidden">≈ {formatMoneyText(d.amountUsd, "USD")}</span>
+                            <span className="tnum mt-0.5 block text-caption text-ink-3">≈ {formatMoneyText(d.amountUsd, "USD")}</span>
                           ) : null}
-                        </td>
-                        <td className="hidden px-3 py-3 text-right whitespace-nowrap xl:table-cell">
-                          <Money amount={d.amountUsd} display="none" size="sm" className="text-ink-2" />
                         </td>
                         <td className="px-3 py-3">
                           <DecisionChip status={d.outcome} />
+                          {/* Sin la columna Fecha (pantallas medianas), la fecha va bajo la decisión. */}
+                          <span className="mt-1 block text-caption whitespace-nowrap text-ink-3 xl:hidden" title={`${when.date} · ${when.time}`}>
+                            {when.date.replace(/\s\d{4}$/, "")} · <span className="tnum">{when.time}</span>
+                          </span>
                         </td>
-                        <td className="py-3 pr-5 pl-3 xl:pr-3">
-                          <Tooltip
-                            content={<span className="whitespace-normal">{d.summary}</span>}
-                            side={tipSide}
-                            align="end"
-                            maxWidth={380}
-                            className="w-full"
-                          >
-                            <span tabIndex={0} className="line-clamp-2 min-w-0 text-ink-2 outline-offset-2">
-                              {motiveOf(d)}
-                            </span>
-                          </Tooltip>
+                        <td className={cn("py-3 pr-5 pl-3", showReadingColumn && "xl:pr-3")}>
+                          {motive.length > MOTIVE_TIP_AFTER ? (
+                            // Puede quedar cortado en dos líneas: el texto completo va en el tooltip.
+                            <Tooltip content={motive} side={tipSide} align="end" maxWidth={380} className="w-full">
+                              <span tabIndex={0} className="line-clamp-2 min-w-0 cursor-help text-ink-2 outline-offset-2">
+                                {motive}
+                              </span>
+                            </Tooltip>
+                          ) : (
+                            <span className="line-clamp-2 min-w-0 text-ink-2">{motive}</span>
+                          )}
                           {d.hasSuspiciousText || d.guardOverride || d.failedChecks.length > 0 ? (
                             <span className="mt-1 flex min-w-0 items-center gap-1.5">
                               {d.hasSuspiciousText ? (
@@ -339,20 +384,27 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                                 </Badge>
                               ) : null}
                               {d.failedChecks.length > 0 ? (
-                                <Mono className="min-w-0 truncate text-[11px] text-ink-3" title={failedChecksTitle(d.failedChecks)}>
-                                  {d.failedChecks.join(" · ")}
-                                </Mono>
+                                <Tooltip content={<FailedChecksTip codes={d.failedChecks} />} side={tipSide} align="end" className="min-w-0">
+                                  <span
+                                    tabIndex={0}
+                                    className="min-w-0 cursor-help truncate rounded-sm font-mono text-[11px] tracking-[-0.01em] text-ink-3 hover:text-ink-2"
+                                  >
+                                    {d.failedChecks.join(" · ")}
+                                  </span>
+                                </Tooltip>
                               ) : null}
                             </span>
                           ) : null}
                         </td>
-                        <td className="hidden py-3 pr-5 pl-3 whitespace-nowrap xl:table-cell">
-                          <Tooltip content={<span className="whitespace-normal">{READING_MODE_HELP[d.readingMode]}</span>} side={tipSide} align="end">
-                            <span tabIndex={0} className="cursor-help text-caption text-ink-3 decoration-faint decoration-dotted underline-offset-2 hover:underline">
-                              {READING_MODE_SHORT[d.readingMode]}
-                            </span>
-                          </Tooltip>
-                        </td>
+                        {showReadingColumn ? (
+                          <td className="hidden py-3 pr-5 pl-3 whitespace-nowrap xl:table-cell">
+                            <Tooltip content={READING_MODE_HELP[d.readingMode]} side={tipSide} align="end">
+                              <span tabIndex={0} className="cursor-help text-caption text-ink-3 decoration-faint decoration-dotted underline-offset-2 hover:underline">
+                                {READING_MODE_SHORT[d.readingMode]}
+                              </span>
+                            </Tooltip>
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })}
@@ -366,6 +418,7 @@ export function LedgerView({ companyName, decisions, initialFilter, initialQuery
                 ? `${decisions.length} ${decisions.length === 1 ? "decisión" : "decisiones"}, de la más reciente a la más antigua.`
                 : `${rows.length} de ${decisions.length} decisiones.`}{" "}
               Horas de Bogotá.
+              {readingModes.length === 1 ? ` ${READING_NOTE[readingModes[0]]}` : null}
             </p>
           ) : null}
         </>

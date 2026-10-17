@@ -4,6 +4,7 @@
  */
 export { processInvoice, withProcessingLock, APP_VERSION, type ProcessInput, type ProcessOptions } from "./process";
 export { applyGuard, decideWithGuard } from "./guard-apply";
+export { escalateDuplicatePayment } from "./duplicate-payment";
 export { getReaders, withReadTimeout, LIVE_READ_TIMEOUT_MS, PRIMARY_READER_ID, SECONDARY_READER_ID, type ReaderPair } from "./readers";
 export { readingMode, getAppStatus, modelsFor, isAccessProtected, type AppStatus, type ReadingMode } from "./status";
 export { ensureCompany } from "./company";

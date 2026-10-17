@@ -17,7 +17,7 @@ import { Eyebrow } from "@/components/ui/typography";
 import { fetchSampleFile, fetchSamples, fetchStats, resetDemo, uploadInvoice } from "./api";
 import { Board, ViewToggle } from "./board";
 import { FirstUse } from "./first-use";
-import { decisionToast, monthLabel, SCENARIO_LABEL, vendorCountriesOf } from "./format";
+import { decisionToast, monthLabel, overviewLine, SCENARIO_LABEL, vendorCountriesOf } from "./format";
 import { Intake } from "./intake";
 import { KpiBand } from "./kpi-band";
 import { ConfirmDialog } from "./overlay";
@@ -139,7 +139,6 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
     window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
   }, [playback]);
 
-  const decisions = useMemo(() => items.map((i) => i.decision), [items]);
   const busy = queue.some((i) => i.status !== "error");
   const pendingIds = useMemo(
     () =>
@@ -395,6 +394,7 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
           ),
           confirmLabel: "Reiniciar y reproducir",
           busyLabel: "Reiniciando…",
+          destructive: false,
         }
       : {
           title: "Reiniciar la demo.",
@@ -403,6 +403,7 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
           ),
           confirmLabel: "Reiniciar",
           busyLabel: "Reiniciando…",
+          destructive: true,
         };
 
   const resetButton = (
@@ -423,7 +424,8 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
           El header no tiene sitio para las tres en pantallas estrechas: reiniciar y ejemplos van junto al
           tablero bajo 1280 px, y en el móvil se sube desde la zona de arrastre o el primer uso.
         */}
-        <span className="hidden xl:contents">{resetButton}</span>
+        {/* En el primer uso no hay nada que reiniciar. */}
+        {showFirstUse ? null : <span className="hidden xl:contents">{resetButton}</span>}
         <span className="hidden xl:contents">{examplesButton}</span>
         <span className="hidden md:contents">
           <Button size="sm" arrow="external" onClick={openPicker}>
@@ -461,8 +463,9 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
               <h1 className="text-h1 text-navy">
                 {stats.total === 1 ? "1 factura revisada." : `${stats.total} facturas revisadas.`}
               </h1>
+              <p className="text-body text-pretty text-ink-2">{overviewLine(stats)}</p>
             </div>
-            <KpiBand stats={stats} decisions={decisions} />
+            <KpiBand stats={stats} />
           </div>
 
           <section aria-labelledby="titulo-facturas">
@@ -520,7 +523,11 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
         results={sampleResults}
         pendingIds={pendingIds}
         busy={busy || confirmBusy}
-        onPlay={(scenario, list) => askConfirm({ kind: "scenario", scenario, samples: list })}
+        onPlay={(scenario, list) => {
+          // Sin facturas no hay nada que borrar: se reproduce sin preguntar (el primer clic de la demo).
+          if (items.length === 0 && queue.length === 0) void confirmScenario(scenario, list);
+          else askConfirm({ kind: "scenario", scenario, samples: list });
+        }}
         onUpload={uploadSample}
       />
 
@@ -531,6 +538,7 @@ export function Dashboard({ initialStats, initialDecisions, vendorCountries, rea
         confirmLabel={confirmCopy.confirmLabel}
         busyLabel={confirmCopy.busyLabel}
         busy={confirmBusy}
+        destructive={confirmCopy.destructive}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           if (confirm.kind === "scenario") void confirmScenario(confirm.scenario, confirm.samples);

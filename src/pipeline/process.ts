@@ -5,14 +5,19 @@
  * Las facturas se procesan DE A UNA por proceso (candado en memoria): el fondo, el límite del mes y
  * los duplicados dependen del historial, así que dos facturas simultáneas no pueden decidirse sobre
  * el mismo historial.
+ *
+ * Entre procesos (p. ej. dos instancias en Vercel) el candado no alcanza: la base rechaza un segundo
+ * pago equivalente (claves de pago con índice único, ver src/store/payment-keys.ts) y aquí se vuelve
+ * a decidir una vez con el historial fresco. El límite del mes y el fondo NO tienen esa protección.
  */
 import { AsyncLocalStorage } from "node:async_hooks";
 import packageJson from "../../package.json";
-import type { DecisionRecord, ReaderResult } from "../core/schemas";
+import type { Decision, DecisionRecord, ReaderResult } from "../core/schemas";
 import { normalizeFile } from "../ingest";
 import { PROMPT_VERSION, readInvoice } from "../extract";
-import { appendDecision, getHistory, saveInvoice } from "../store";
+import { appendDecision, getHistory, isDuplicatePaymentError, saveInvoice } from "../store";
 import { ensureCompany } from "./company";
+import { escalateDuplicatePayment } from "./duplicate-payment";
 import { decideWithGuard } from "./guard-apply";
 import { getReaders, type ReaderPair } from "./readers";
 import { readingMode, type ReadingMode } from "./status";
@@ -110,6 +115,10 @@ function recordReadingMode(mode: ReadingMode, primary: ReaderResult, secondary: 
 
 /**
  * Procesa una factura y registra la decisión. Devuelve el registro guardado.
+ *
+ * Si la base rechaza el PAGAR porque otra instancia ya registró un pago equivalente
+ * (DuplicatePaymentError), decide UNA vez más con el historial fresco (que ya incluye ese pago: el
+ * motor frena por duplicado). Si la base vuelve a rechazarlo, registra ESCALAR con la explicación.
  * @throws IngestError (mensaje en español) si el archivo no se puede leer; en ese caso no se guarda nada.
  */
 export function processInvoice(input: ProcessInput, opts: ProcessOptions = {}): Promise<DecisionRecord> {
@@ -131,14 +140,13 @@ async function processUnlocked(input: ProcessInput, opts: ProcessOptions): Promi
   const reading = await readInvoice(doc, readers);
 
   const company = await ensureCompany();
-  const history = await getHistory();
   const now = opts.now ?? new Date().toISOString();
-
   const engineInput = { invoiceId, fileHash: doc.fileHash, reading };
-  const decision = decideWithGuard(engineInput, { company, history, now });
+  const decideNow = async (): Promise<Decision> => decideWithGuard(engineInput, { company, history: await getHistory(), now });
 
-  const record: DecisionRecord = {
-    id: `dec_${shortId()}`,
+  const id = `dec_${shortId()}`;
+  const recordFor = (decision: Decision): DecisionRecord => ({
+    id,
     invoiceId,
     decidedAt: now,
     filename: doc.filename,
@@ -152,8 +160,25 @@ async function processUnlocked(input: ProcessInput, opts: ProcessOptions): Promi
       models: uniqueModels([reading.primary, reading.secondary], [readers.primary.model, readers.secondary.model]),
     },
     readingMode: recordReadingMode(mode, reading.primary, reading.secondary),
-  };
+  });
 
-  await appendDecision(record);
-  return record;
+  // Un rechazo por pago doble no guarda nada, así que el mismo id sirve para el siguiente intento.
+  const first = recordFor(await decideNow());
+  try {
+    await appendDecision(first);
+    return first;
+  } catch (err) {
+    if (!isDuplicatePaymentError(err)) throw err;
+  }
+
+  const retry = recordFor(await decideNow());
+  try {
+    await appendDecision(retry);
+    return retry;
+  } catch (err) {
+    if (!isDuplicatePaymentError(err)) throw err;
+    const escalated = recordFor(escalateDuplicatePayment(retry.decision, err));
+    await appendDecision(escalated);
+    return escalated;
+  }
 }

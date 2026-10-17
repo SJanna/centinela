@@ -14,7 +14,7 @@ const READING_COPY: Record<ReadingMode, { label: string; help: string }> = {
   },
 };
 
-/** Chip del modo de lectura, con explicación al pasar el cursor. */
+/** Chip del modo de lectura, con explicación al pasar el cursor. Bajo 768px queda solo el icono. */
 export function ReadingModeChip({ mode }: { mode: ReadingMode }) {
   const copy = READING_COPY[mode];
   const Icon = mode === "live" ? ScanText : FlaskConical;
@@ -24,19 +24,20 @@ export function ReadingModeChip({ mode }: { mode: ReadingMode }) {
         tabIndex={0}
         className={cn(
           "inline-flex h-7 cursor-help items-center gap-1.5 rounded-pill px-2.5 text-caption font-medium whitespace-nowrap text-ink-2",
+          "max-md:w-7 max-md:justify-center max-md:px-0",
           mode === "live"
             ? "bg-surface-0/80 ring-1 ring-seam ring-inset"
             : "border border-dashed border-faint bg-transparent",
         )}
       >
-        <Icon aria-hidden size={13} strokeWidth={1.5} className="text-ink-3" />
-        {copy.label}
+        <Icon aria-hidden size={13} strokeWidth={1.5} className="shrink-0 text-ink-3" />
+        <span className="max-md:sr-only">{copy.label}</span>
       </span>
     </Tooltip>
   );
 }
 
-/** Chip lima "Agente IA" con un punto que respira. Uno de los dos usos del lima. */
+/** Chip lima "Agente IA" con un punto que respira. Uno de los dos usos del lima. Bajo 768px queda solo el punto. */
 export function AgentChip() {
   return (
     <Tooltip
@@ -46,13 +47,13 @@ export function AgentChip() {
     >
       <span
         tabIndex={0}
-        className="inline-flex h-7 cursor-help items-center gap-2 rounded-pill bg-lime pr-3 pl-2.5 text-caption font-medium whitespace-nowrap text-night ring-1 ring-lime-edge ring-inset"
+        className="inline-flex h-7 cursor-help items-center gap-2 rounded-pill bg-lime pr-3 pl-2.5 text-caption font-medium whitespace-nowrap text-night ring-1 ring-lime-edge ring-inset max-md:w-7 max-md:justify-center max-md:px-0"
       >
         <span aria-hidden className="relative inline-flex size-1.5">
           <span className="absolute -inset-[3px] animate-breathe rounded-full bg-[#5d7f16]/25" />
           <span className="relative inline-block size-1.5 rounded-full bg-[#4a6a0f]" />
         </span>
-        Agente IA
+        <span className="max-md:sr-only">Agente IA</span>
       </span>
     </Tooltip>
   );

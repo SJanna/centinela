@@ -30,6 +30,70 @@ export function guardAccount(raw: string | null | undefined): string | null {
   return /^[A-Z0-9]+$/.test(compact) ? compact : null;
 }
 
+// ───────────────────────── Banco de la cuenta ─────────────────────────
+
+type BankCodeKind = "swift" | "aba" | "otro";
+
+function bankCodeKind(code: string): BankCodeKind {
+  if (/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(code)) return "swift";
+  if (/^[0-9]{9}$/.test(code)) return "aba";
+  return "otro";
+}
+
+/**
+ * ¿El código SWIFT/de ruteo de la factura contradice el registrado? Solo se comparan códigos del
+ * mismo tipo (SWIFT con SWIFT, ABA con ABA): un SWIFT es del mismo banco si coinciden sus 8 primeros
+ * caracteres (la sucursal no cambia el banco). Si falta alguno o son de tipos distintos, no hay
+ * contradicción que probar (decide el nombre del banco). Un código con caracteres raros sí la hay.
+ */
+export function guardBankCodeConflict(invoiceCode: unknown, registeredCode: unknown): boolean {
+  if (typeof invoiceCode !== "string" || typeof registeredCode !== "string") return false;
+  const a = invoiceCode.toUpperCase().replace(SEPARATOR_CHARS, "");
+  const b = registeredCode.toUpperCase().replace(SEPARATOR_CHARS, "");
+  if (a.length === 0 || b.length === 0) return false;
+  if (!/^[A-Z0-9]+$/.test(a)) return true;
+  if (a === b) return false;
+  const kind = bankCodeKind(a);
+  if (kind !== bankCodeKind(b)) return false;
+  return kind === "swift" ? a.slice(0, 8) !== b.slice(0, 8) : true;
+}
+
+/** Palabras que no identifican a un banco. */
+const BANK_FILLER = new Set([
+  "banco", "bank", "bco", "banca", "de", "del", "la", "el", "los", "las", "the", "of", "and", "y", "e", "do", "da",
+  "dos", "das", "sa", "na", "n", "a", "s", "ltd", "ltda", "plc", "inc", "corp", "co", "company", "trust",
+  "nacional", "national", "grupo", "group", "financiero", "financial", "multiple", "institucion",
+]);
+const BANK_CONNECTORS = new Set(["de", "del", "la", "el", "los", "las", "the", "of", "and", "y", "e", "do", "da", "dos", "das"]);
+
+function bankTokens(raw: string): string[] {
+  const cleaned = stripDiacritics(raw).toLowerCase().replace(/\./g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  return cleaned.length > 0 ? cleaned.split(" ") : [];
+}
+
+/**
+ * ¿El nombre de banco de la factura contradice el registrado? No, si comparten una palabra que
+ * identifica al banco, si una contiene a la otra al quitar espacios o si una es la sigla de la otra
+ * («SVB» / «Silicon Valley Bank»). Tolerante a propósito (el banco se escribe de muchas formas);
+ * sí contradice «Banco Pirata Internacional» frente a «Silicon Valley Bank». Si falta alguno, no.
+ */
+export function guardBankNameConflict(invoiceBank: unknown, registeredBank: unknown): boolean {
+  if (typeof invoiceBank !== "string" || typeof registeredBank !== "string") return false;
+  const all = [bankTokens(invoiceBank), bankTokens(registeredBank)];
+  if (all[0].length === 0 || all[1].length === 0) return false;
+  const [a, b] = all.map((t) => t.filter((w) => !BANK_FILLER.has(w)));
+  if (a.length === 0 || b.length === 0) return all[0].join("") !== all[1].join("");
+  const setB = new Set(b);
+  if (a.some((w) => setB.has(w))) return false;
+  const joinedA = a.join("");
+  const joinedB = b.join("");
+  if (joinedA.includes(joinedB) || joinedB.includes(joinedA)) return false;
+  const initials = (t: string[]) => t.filter((w) => !BANK_CONNECTORS.has(w)).map((w) => w.charAt(0)).join("");
+  if (a.length === 1 && initials(all[1]) === a[0]) return false;
+  if (b.length === 1 && initials(all[0]) === b[0]) return false;
+  return true;
+}
+
 // ───────────────────────── Identificación tributaria ─────────────────────────
 
 export interface TaxId {
@@ -284,6 +348,16 @@ export function guardPeriod(raw: string | null | undefined): string | null {
   if (/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) return v;
   const day = guardDate(v);
   return day ? day.slice(0, 7) : null;
+}
+
+/** "2026-10-31" → "2026-11-01". La entrada debe ser una fecha ya validada. */
+export function dayAfter(day: string): string {
+  const year = Number(day.slice(0, 4));
+  const month = Number(day.slice(5, 7));
+  const d = Number(day.slice(8, 10));
+  if (d < daysInMonth(year, month)) return `${day.slice(0, 8)}${String(d + 1).padStart(2, "0")}`;
+  if (month < 12) return `${day.slice(0, 5)}${String(month + 1).padStart(2, "0")}-01`;
+  return `${String(year + 1).padStart(4, "0")}-01-01`;
 }
 
 /** "2026-10-20" → "2026-10". La entrada debe ser una fecha ya validada. */

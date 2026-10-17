@@ -127,7 +127,8 @@ describe("revisión · el periodo facturado debe estar dentro de la vigencia del
 
   it("factura emitida en vigencia por un periodo posterior al fin del acuerdo", () => {
     const input = makeInput(cloudOctober({ issueDate: "2026-10-05", servicePeriod: "2027-03" }));
-    const r = guardPayment(input, makeCtx({ company }), makeDecision(input, { ...cloudDecision, agreementPeriod: "2027-03" }));
+    // «Hoy» después del periodo: si no, también sería un cobro por adelantado.
+    const r = guardPayment(input, makeCtx({ company, now: "2027-04-01T12:00:00Z" }), makeDecision(input, { ...cloudDecision, agreementPeriod: "2027-03" }));
     expectOnly(r, "el periodo 2027-03 está fuera de la vigencia del acuerdo");
   });
 
@@ -141,7 +142,7 @@ describe("revisión · el periodo facturado debe estar dentro de la vigencia del
     const first = makeInput(cloudOctober({ issueDate: "2026-03-01", servicePeriod: "2026-03" }));
     expectApproved(guardPayment(first, makeCtx({ company }), makeDecision(first, { ...cloudDecision, agreementPeriod: "2026-03" })));
     const last = makeInput(cloudOctober({ issueDate: "2026-10-31", servicePeriod: "2026-10" }));
-    expectApproved(guardPayment(last, makeCtx({ company }), makeDecision(last, cloudDecision)));
+    expectApproved(guardPayment(last, makeCtx({ company, now: "2026-11-05T12:00:00Z" }), makeDecision(last, cloudDecision)));
   });
 });
 
@@ -150,12 +151,14 @@ describe("revisión · el periodo facturado debe estar dentro de la vigencia del
 describe("revisión · bordes de la vigencia por fecha de emisión", () => {
   it("el día de inicio y el día de fin están dentro; el día siguiente al fin no", () => {
     const company = withAgreement("v-cloudmetrics", { validFrom: "2026-10-01", validTo: "2026-10-31" });
+    // «Hoy» después de las fechas de prueba: si no, una emisión del 31 sería una factura futura.
+    const now = "2026-11-05T12:00:00Z";
     const from = makeInput(cloudOctober({ issueDate: "2026-10-01" }));
-    expectApproved(guardPayment(from, makeCtx({ company }), makeDecision(from, cloudDecision)));
+    expectApproved(guardPayment(from, makeCtx({ company, now }), makeDecision(from, cloudDecision)));
     const to = makeInput(cloudOctober({ issueDate: "2026-10-31" }));
-    expectApproved(guardPayment(to, makeCtx({ company }), makeDecision(to, cloudDecision)));
+    expectApproved(guardPayment(to, makeCtx({ company, now }), makeDecision(to, cloudDecision)));
     const after = makeInput(cloudOctober({ issueDate: "2026-11-01", servicePeriod: "2026-11" }));
-    expectOnly(guardPayment(after, makeCtx({ company }), makeDecision(after, { ...cloudDecision, agreementPeriod: "2026-11" })), "no hay acuerdo vigente");
+    expectOnly(guardPayment(after, makeCtx({ company, now }), makeDecision(after, { ...cloudDecision, agreementPeriod: "2026-11" })), "no hay acuerdo vigente");
   });
 });
 

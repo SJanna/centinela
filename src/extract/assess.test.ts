@@ -12,7 +12,7 @@ import {
   readInvoice,
   toInvoiceData,
 } from "./assess";
-import { failResult, fakeReader, field, makeDoc, makeExtraction, okResult } from "./test-utils";
+import { failResult, fakeReader, field, makeDoc, makeExtraction, okResult, SAMPLE_INVOICE_TEXT } from "./test-utils";
 
 function withPayment(e: Extraction, accountNumber: Extraction["payment"]["accountNumber"]): Extraction {
   return { ...e, payment: { ...e.payment, accountNumber } };
@@ -348,7 +348,7 @@ describe("findEvidenceNotFound (citas)", () => {
     expect(findEvidenceNotFound(makeDoc(), e)).toEqual(["total", "accountNumber"]);
   });
 
-  it("no aplica a imágenes, a documentos sin texto plano, ni a campos sin cita", () => {
+  it("no aplica a imágenes ni a documentos sin texto plano", () => {
     const fake = makeExtraction({ total: field(9999, "inventado") });
     expect(findEvidenceNotFound(makeDoc({ kind: "image", plainText: "algo" }), fake)).toEqual([]);
     const emailWithPhoto = makeDoc({
@@ -362,7 +362,47 @@ describe("findEvidenceNotFound (citas)", () => {
     expect(findEvidenceNotFound(emailWithPhoto, fake)).toEqual([]);
     expect(findEvidenceNotFound(makeDoc({ plainText: null }), fake)).toEqual([]);
     expect(findEvidenceNotFound(makeDoc({ plainText: "   " }), fake)).toEqual([]);
-    expect(findEvidenceNotFound(makeDoc(), makeExtraction({ total: field(9999, null) }))).toEqual([]);
+  });
+
+  it("un valor sin cita también se busca en el texto (sin cita no se salta la comprobación)", () => {
+    expect(findEvidenceNotFound(makeDoc(), makeExtraction({ total: field(9999, null) }))).toEqual(["total"]);
+    expect(findEvidenceNotFound(makeDoc(), makeExtraction({ total: field(2400, null) }))).toEqual([]);
+  });
+
+  it("una cita que sí está en el texto no respalda un valor distinto", () => {
+    const e = withPayment(
+      makeExtraction({
+        invoiceNumber: field("DS-0459", "FACTURA DE VENTA N.º DS-0458"),
+        total: field(24000, "Total a pagar: USD 2.400,00"),
+        currency: field("EUR", "Total a pagar: USD 2.400,00"),
+      }),
+      field("0012-3456-79", "Cuenta corriente 0012-3456-78"),
+    );
+    expect(findEvidenceNotFound(makeDoc(), e)).toEqual(["invoiceNumber", "currency", "total", "accountNumber"]);
+  });
+
+  it("una cita con «$» respalda pesos o dólares si no nombra otra moneda; «R$» no respalda USD", () => {
+    const plainText = "Cuenta de cobro CC-1\nCamila Restrepo\nTotal: $ 12.000.000\nCuenta 4512-0098-7731";
+    const e = withPayment(
+      makeExtraction({
+        vendorName: field("Camila Restrepo"),
+        invoiceNumber: field("CC-1"),
+        currency: field("COP", "Total: $ 12.000.000"),
+        total: field(12_000_000, "Total: $ 12.000.000"),
+      }),
+      field("4512-0098-7731"),
+    );
+    expect(findEvidenceNotFound(makeDoc({ plainText }), e)).toEqual([]);
+    const brl = makeDoc({ plainText: plainText.replace("$ 12.000.000", "R$ 12.000.000") });
+    const asUsd = { ...e, currency: field("USD", "Total: R$ 12.000.000") };
+    expect(findEvidenceNotFound(brl, asUsd)).toEqual(["currency"]);
+    const mxn = makeDoc({ plainText: plainText.replace("$ 12.000.000", "MXN $ 12.000.000") });
+    expect(findEvidenceNotFound(mxn, { ...e, currency: field("USD", "Total: MXN $ 12.000.000") })).toEqual(["currency"]);
+  });
+
+  it("la moneda se busca como palabra: «plus Delivery» no contiene USD", () => {
+    const plainText = SAMPLE_INVOICE_TEXT.replace(/USD/g, "MXN").concat("\nBonus Delivery incluido");
+    expect(findEvidenceNotFound(makeDoc({ plainText }), makeExtraction({ currency: field("USD", null) }))).toEqual(["currency"]);
   });
 
   it("propiedad: cualquier reformateo con espacios y saltos de línea encuentra la cita", () => {

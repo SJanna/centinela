@@ -10,6 +10,7 @@ import { ChatView, EmailView, Highlighted, TextView } from "./document-views";
 import { CHECK_FIELDS, type FieldKey } from "./fields";
 import { formatInteger } from "./format";
 import { PdfSheet } from "./pdf-sheet";
+import { ScanLine } from "./scan-line";
 
 interface Preview {
   kind: DocKind;
@@ -205,6 +206,7 @@ function DocBody({ tab, state, kind, meta, plainText, fileUrl, filename, needles
   const firstMark = useRef<HTMLElement | null>(null);
   // Si PDF.js no puede dibujar el PDF, se usa el visor del navegador.
   const [pdfFallback, setPdfFallback] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const onPdfFail = useCallback(() => setPdfFallback(true), []);
 
   // Al abrir "Texto extraído", lleva la vista al primer fragmento sospechoso (p. ej. texto oculto al final del PDF).
@@ -309,13 +311,25 @@ function DocBody({ tab, state, kind, meta, plainText, fileUrl, filename, needles
   } else if (kind === "image") {
     content = (
       <div className="studio grid h-full place-items-center overflow-auto p-6 scrollbar-quiet">
-        <a href={fileUrl} target="_blank" rel="noreferrer" className="block max-h-full" title="Abrir la imagen en tamaño completo">
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="relative block max-h-full rounded-[6px]"
+          title="Abrir la imagen en tamaño completo"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element -- archivo subido servido por la API, sin optimizar */}
           <img
             src={fileUrl}
             alt={`Factura ${filename}`}
+            ref={(el) => {
+              // Si ya estaba en caché, el evento load pudo ocurrir antes de hidratar.
+              if (el?.complete && el.naturalWidth > 0) setImageLoaded(true);
+            }}
+            onLoad={() => setImageLoaded(true)}
             className="max-h-[calc(min(76vh,780px)-48px)] w-auto rounded-[6px] bg-white shadow-receipt"
           />
+          {imageLoaded ? <ScanLine /> : null}
         </a>
       </div>
     );

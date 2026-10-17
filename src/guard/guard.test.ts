@@ -566,7 +566,7 @@ describe("G9 · duplicados", () => {
     const input = makeInput(cloudOctober({ invoiceNumber: "cm 10021", servicePeriod: "2026-11" }));
     const history = [entry({ vendorId: "v-cloudmetrics", invoiceNumber: "CM-010021", agreementId: "a-cloudmetrics-saas", agreementPeriod: "2026-10", amountUsd: 1200 })];
     const d = makeDecision(input, { ...cloudDecision, agreementPeriod: "2026-11" });
-    expectOnly(guardPayment(input, makeCtx({ history }), d), "ya se pagó una factura de este proveedor con el número cm 10021");
+    expectOnly(guardPayment(input, makeCtx({ history, now: "2026-11-05T12:00:00Z" }), d), "ya se pagó una factura de este proveedor con el número cm 10021");
   });
 
   it("mismo número escrito con dígitos de ancho completo (CM-１００２１) también es duplicado", () => {
@@ -591,7 +591,10 @@ describe("G9 · duplicados", () => {
   it("H13: la cotización única ya se pagó", () => {
     const input = makeInput(bufeteQuote({ invoiceNumber: "BA-0452", issueDate: "2026-11-02" }));
     const history = [entry({ vendorId: "v-bufete", invoiceNumber: "BA-0451", agreementId: "a-bufete-cotizacion", agreementPeriod: "2026-10", amountUsd: 4500 })];
-    expectOnly(guardPayment(input, makeCtx({ history }), makeDecision(input, bufeteDecision)), "el acuerdo único a-bufete-cotizacion ya se pagó");
+    expectOnly(
+      guardPayment(input, makeCtx({ history, now: "2026-11-05T12:00:00Z" }), makeDecision(input, bufeteDecision)),
+      "el acuerdo único a-bufete-cotizacion ya se pagó",
+    );
   });
 
   it("un pago anterior escalado o frenado no cuenta como duplicado de número ni de periodo", () => {

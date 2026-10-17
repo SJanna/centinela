@@ -133,7 +133,7 @@ export function ImportVendors({ titleId, currentCount, onClose, onImported }: Im
       </header>
 
       <div className="space-y-4 px-6 pb-5">
-        <div role="tablist" aria-label="Origen" className="inline-flex rounded-pill bg-surface-2 p-1">
+        <div role="group" aria-label="De dónde sale el JSON" className="inline-flex rounded-pill bg-surface-2 p-1">
           {(
             [
               ["file", "Archivo"],
@@ -143,8 +143,7 @@ export function ImportVendors({ titleId, currentCount, onClose, onImported }: Im
             <button
               key={key}
               type="button"
-              role="tab"
-              aria-selected={source === key}
+              aria-pressed={source === key}
               onClick={() => {
                 setSource(key);
                 setParsed(null);

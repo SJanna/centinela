@@ -170,32 +170,3 @@ export function CloseButton({ onClick, label = "Cerrar" }: { onClick: () => void
     </button>
   );
 }
-
-/** Botón de acción destructiva: misma píldora que Button, en rojo de "Frenar". */
-export function DangerButton({
-  children,
-  onClick,
-  disabled,
-  size = "md",
-}: {
-  children: ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  size?: "md" | "sm";
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center gap-2 rounded-pill bg-hold font-medium whitespace-nowrap text-white",
-        "shadow-[0_1px_2px_#1c253a1f,inset_0_1px_0_#ffffff26] transition-[background-color,translate] duration-[180ms] ease-out",
-        "hover:bg-[#a52a35] active:translate-y-px disabled:pointer-events-none disabled:opacity-45",
-        size === "md" ? "h-10 px-5 text-body" : "h-8 px-3.5 text-small",
-      )}
-    >
-      {children}
-    </button>
-  );
-}

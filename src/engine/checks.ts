@@ -18,9 +18,13 @@ import {
   type InvoiceData,
   type ReaderResult,
   type ReadingSignals,
+  type Vendor,
 } from "../core/schemas";
 import {
+  agreementCoversPeriod,
+  bankNamesMayMatch,
   calendarDate,
+  compareRoutingCodes,
   describeValidity,
   isFiniteNumber,
   instantMonths,
@@ -208,19 +212,34 @@ const RULE_LABELS: Record<NumericRule, string> = {
 };
 
 /**
- * Valor de una regla numérica, o una evaluación sin datos si no es un número finito y no negativo.
- * Un NaN o un undefined (p. ej. al mezclar reglas) haría que «monto > umbral» diera false y se pagara
- * sin límite.
+ * Máximo de la tolerancia del monto (en %). Con más de 100 % un acuerdo de USD 1.000 aceptaría
+ * cualquier factura de 0 a más del doble: deja de ser «lo pactado». La pantalla y la API usan el mismo tope.
+ */
+export const MAX_AMOUNT_TOLERANCE_PCT = 100;
+
+const RULE_RANGE_TEXT: Record<NumericRule, string> = {
+  approvalThresholdUsd: "cero o más",
+  periodLimitUsd: "cero o más",
+  initialFundUsd: "cero o más",
+  amountTolerancePct: `entre 0 y ${MAX_AMOUNT_TOLERANCE_PCT}`,
+};
+
+/**
+ * Valor de una regla numérica, o una evaluación sin datos si no es un número finito y no negativo
+ * (la tolerancia, además, no puede pasar de MAX_AMOUNT_TOLERANCE_PCT). Un NaN o un undefined (p. ej.
+ * al mezclar reglas) haría que «monto > umbral» diera false y se pagara sin límite; una tolerancia
+ * de 1000 % haría «pactado» cualquier monto.
  */
 function ruleValue(ctx: DecisionContext, rule: NumericRule): { ok: true; value: number } | { ok: false; result: Evaluation } {
   const value: unknown = ctx.company.rules[rule];
   // Un valor negativo tampoco es válido: una tolerancia negativa, por ejemplo, no tiene sentido.
-  if (isFiniteNumber(value) && value >= 0) return { ok: true, value };
+  const inRange = isFiniteNumber(value) && value >= 0 && (rule !== "amountTolerancePct" || value <= MAX_AMOUNT_TOLERANCE_PCT);
+  if (inRange) return { ok: true, value };
   const label = RULE_LABELS[rule];
   return {
     ok: false,
     result: notEvaluable(
-      `La regla «${label}» no tiene un valor numérico válido (cero o más) en la configuración de la empresa; no se puede evaluar esta comprobación.`,
+      `La regla «${label}» no tiene un valor numérico válido (${RULE_RANGE_TEXT[rule]}) en la configuración de la empresa; no se puede evaluar esta comprobación.`,
       `Revisar la configuración de reglas de la empresa: «${label}» no tiene un valor válido.`,
       { rule, ruleValue: String(value) },
     ),
@@ -490,14 +509,21 @@ const dup2: Evaluator = (f) => {
   });
 };
 
-/** Otros acuerdos vigentes que cubren el periodo con los que la factura también cuadra (misma moneda, monto dentro de lo pactado). */
+/**
+ * Otros acuerdos del proveedor cuya vigencia cubre el periodo facturado y con los que la factura
+ * también cuadra (misma moneda, monto dentro de lo pactado). No hace falta que estén vigentes en la
+ * fecha de emisión: si un acuerdo se renovó a mitad de mes, el mes ya pagado con el anterior no se
+ * vuelve a pagar con el nuevo.
+ */
 function otherFittingAgreements(f: Facts, chosen: Agreement, ctx: DecisionContext): Agreement[] {
   const data = f.data;
   const cur = f.currency;
   const sel = f.selection;
   if (data == null || cur == null || sel == null || !isFiniteNumber(data.total)) return [];
   const total = data.total;
-  return sel.candidates.filter(
+  const billed = sel.billedPeriod;
+  const pool = billed == null ? sel.candidates : (f.vendor?.agreements ?? []).filter((a) => agreementCoversPeriod(a, billed));
+  return pool.filter(
     (other) =>
       other.id !== chosen.id &&
       normalizeCurrency(other.currency) === cur &&
@@ -661,6 +687,29 @@ function isPlainAccountText(raw: unknown): boolean {
   return typeof raw === "string" && /^[A-Za-z0-9\s\-‐-―./_]*$/.test(raw);
 }
 
+/**
+ * Banco o código SWIFT/de ruteo que la factura (o alguna de las dos lecturas) da para la cuenta y que
+ * no es el registrado, como texto para la explicación; null si no nombra otro banco. Un dato ausente
+ * en la factura o en la ficha no se compara.
+ */
+function otherBankStated(input: EngineInput, data: InvoiceData, registered: Vendor["account"]): string | null {
+  const stated = [
+    { bank: data.bankName, routing: data.routingOrSwift },
+    ...okExtractions(input).map((e) => ({ bank: e.payment?.bankName?.value, routing: e.payment?.routingOrSwift?.value })),
+  ];
+  for (const { bank, routing } of stated) {
+    const routingDiffers = compareRoutingCodes(routing, registered.routingOrSwift) === "different";
+    const bankDiffers = !bankNamesMayMatch(bank, registered.bankName);
+    if (routingDiffers || bankDiffers) {
+      return [bank, routing]
+        .filter((x): x is string => typeof x === "string" && x.trim() !== "")
+        .map((x) => `«${truncate(x.trim(), 60)}»`)
+        .join(", ");
+    }
+  }
+  return null;
+}
+
 const prv2: Evaluator = (f, input) => {
   if (f.data == null) return derived(NO_DATA);
   const vendor = f.vendor;
@@ -699,6 +748,17 @@ const prv2: Evaluator = (f, input) => {
     );
   }
   if (invoiceAccount === registered) {
+    // El mismo número en otro banco es otra cuenta: si la factura (o alguna lectura) nombra otro
+    // banco u otro código SWIFT/de ruteo que el registrado, no se da por buena.
+    const other = otherBankStated(input, f.data, vendor.account);
+    if (other != null) {
+      const registeredBank = [vendor.account.bankName, vendor.account.routingOrSwift].filter((x) => x != null && String(x).trim() !== "").join(", ");
+      return fail(
+        `El número de la cuenta destino (terminada en ${a}) coincide con el registrado para ${vendor.name}, pero la factura lo ubica en otro banco (${other}) y la cuenta registrada es de ${registeredBank || "otro banco"}: el mismo número en otro banco es otra cuenta.`,
+        "Confirmar el banco y la cuenta destino con el proveedor por un canal conocido, no por el que llegó la factura.",
+        { ...params, match: false, otherBank: true },
+      );
+    }
     return pass(`La cuenta destino (terminada en ${a}) es la registrada para ${vendor.name}.`, {
       ...params,
       match: true,
@@ -725,7 +785,7 @@ function referenceText(date: string, source: "issue_date" | "now" | null): strin
 
 const ACTION_DATE = "Confirmar la fecha de emisión de la factura para revisar la vigencia del acuerdo.";
 
-const acu1: Evaluator = (f) => {
+const acu1: Evaluator = (f, _input, ctx) => {
   if (f.data == null) return derived(NO_DATA);
   const vendor = f.vendor;
   const sel = f.selection;
@@ -799,6 +859,24 @@ const acu1: Evaluator = (f) => {
           closestValidFrom: c?.validFrom ?? null,
           closestValidTo: c?.validTo ?? null,
         },
+      );
+    }
+    case "future_date": {
+      const today = isoDateOf(ctx.now);
+      const todayText = today != null ? ` (hoy es ${formatDate(today)})` : "";
+      return fail(
+        `La fecha de emisión de la factura, ${formatDate(sel.referenceDate ?? "")}, es posterior a hoy${todayText}: una factura no se emite en el futuro, así que no se puede confirmar qué acuerdo estaba vigente.`,
+        "Confirmar con el proveedor la fecha de emisión: la factura está fechada en el futuro.",
+        { ...params, today },
+      );
+    }
+    case "future_period": {
+      const today = isoDateOf(ctx.now);
+      const todayText = today != null ? ` (hoy es ${formatDate(today)})` : "";
+      return fail(
+        `El periodo facturado, ${formatPeriod(sel.billedPeriod ?? "")}, todavía no empieza${todayText}: no se paga por adelantado un servicio que aún no se presta.`,
+        "Confirmar con el proveedor si es un cobro anticipado; si corresponde, aprobarlo a mano.",
+        { ...params, today },
       );
     }
     case "selected": {

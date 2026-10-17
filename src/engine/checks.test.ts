@@ -454,15 +454,17 @@ describe("ACU-1 · acuerdo vigente", () => {
     expect(d.agreementId).toBeNull();
     expect(d.outcome).toBe("ESCALAR");
   });
+  // Con «hoy» después de las fechas de la factura: si no, ACU-1 fallaría por factura futura.
+  const LATER = "2027-02-01T12:00:00Z";
   it("falla si el periodo facturado es posterior al fin de la vigencia", () => {
-    const d = decide(engineInput(bufeteInvoice({ issueDate: "2026-12-20", servicePeriod: "2027-01" })), context());
+    const d = decide(engineInput(bufeteInvoice({ issueDate: "2026-12-20", servicePeriod: "2027-01" })), context({ now: LATER }));
     expect(check(d, "ACU-1").status).toBe("fail");
     expect(check(d, "ACU-1").explanation).toContain("enero de 2027");
   });
   it("pasa si el periodo facturado se cruza con la vigencia en algún día (meses de borde)", () => {
     const v = { ...context().company.vendors[2], agreements: [{ ...context().company.vendors[2].agreements[0], validFrom: "2026-10-15", validTo: "2026-12-10" }] };
     const at = (servicePeriod: string) =>
-      check(decide(engineInput(bufeteInvoice({ issueDate: "2026-11-02", servicePeriod })), context({ vendors: [v] })), "ACU-1").status;
+      check(decide(engineInput(bufeteInvoice({ issueDate: "2026-11-02", servicePeriod })), context({ vendors: [v], now: LATER })), "ACU-1").status;
     expect(at("2026-10")).toBe("pass");
     expect(at("2026-12")).toBe("pass");
     expect(at("2026-09")).toBe("fail");

@@ -12,8 +12,16 @@ import { SIMULATED_NOTE } from "./intake";
 
 const STEPS = [
   { n: "01", title: "Lee.", body: "Dos lecturas independientes de cada factura: PDF, foto, correo o chat." },
-  { n: "02", title: "Comprueba.", body: "15 comprobaciones fijas: lectura, duplicados, proveedor, acuerdo, límites y fondo." },
-  { n: "03", title: "Decide.", body: "Pagar, frenar o escalar a una persona. Cada decisión queda con su porqué." },
+  {
+    n: "02",
+    title: "Comprueba.",
+    body: "15 comprobaciones fijas, escritas en código: lectura, duplicados, proveedor, acuerdo, límites y fondo.",
+  },
+  {
+    n: "03",
+    title: "Decide.",
+    body: "Pagar, frenar o escalar a una persona, con su porqué. Una guardia independiente confirma cada pago.",
+  },
 ] as const;
 
 interface FirstUseProps {
@@ -28,6 +36,8 @@ export function FirstUse({ simulated, onTryExamples, onUpload }: FirstUseProps) 
       <EmptyState
         variant="first-use"
         headingLevel={1}
+        // Bajo 1280 px la cinta se corre a la derecha: si no, sus líneas cruzan por detrás del texto.
+        className="max-xl:[&>div[aria-hidden]]:w-[52%]"
         eyebrow="Agente de pagos"
         description="Centinela lee las facturas de tus proveedores y decide, con las reglas de tu empresa, si se pagan, se frenan o las revisa una persona. No mueve dinero."
         action={

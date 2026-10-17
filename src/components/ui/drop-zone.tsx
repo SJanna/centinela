@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
-import { ACCEPT_ATTRIBUTE, MAX_FILE_BYTES, formatBytes } from "@/ingest/limits";
+import { ACCEPT_ATTRIBUTE } from "@/ingest/limits";
 import { cn } from "./cn";
 
 interface DropZoneProps {
@@ -19,11 +19,23 @@ interface DropZoneProps {
   forceDragging?: boolean;
   /** Texto cuando está deshabilitada, p. ej. "Revisando una factura. Espera a que termine." */
   disabledHint?: ReactNode;
+  /** Alto mínimo (px si es número, o cualquier medida CSS). Por defecto 176px. */
+  minHeight?: number | string;
+  /**
+   * Clases extra. Alto mínimo, separación y relleno por defecto ceden ante las de aquí sin `!`
+   * (p. ej. `min-h-[136px] gap-3 py-5`, también con variantes como `max-xl:`).
+   */
   className?: string;
 }
 
-// Espacios de no separación: "hasta 15,0 MB" no se corta en dos líneas.
-const DEFAULT_HINT = `PDF, imagen, correo (.eml) o texto · hasta\u00a0${formatBytes(MAX_FILE_BYTES).replace(" ", "\u00a0")}`;
+/**
+ * Límite de POST /api/invoices (4 MB por archivo, por el límite del cuerpo de las funciones de Vercel).
+ * Espacios de no separación: "hasta 4 MB por factura" no se corta en dos líneas.
+ */
+export const DROP_ZONE_DEFAULT_HINT = "PDF, imagen, correo (.eml) o texto · hasta\u00a04\u00a0MB por\u00a0factura";
+
+// Valores por defecto con especificidad 0 (`:where`): cualquier clase de `className` les gana.
+const DEFAULT_SIZING = "[:where(&)]:min-h-[176px] [:where(&)]:gap-4 [:where(&)]:px-6 [:where(&)]:py-8";
 
 /**
  * Zona para soltar facturas. Borde punteado de 1.5px, radio 20.
@@ -35,9 +47,10 @@ export function DropZone({
   multiple = true,
   accept = ACCEPT_ATTRIBUTE,
   title = "Suelta aquí las facturas.",
-  hint = DEFAULT_HINT,
+  hint = DROP_ZONE_DEFAULT_HINT,
   forceDragging = false,
   disabledHint,
+  minHeight,
   className,
 }: DropZoneProps) {
   const [dragging, setDragging] = useState(false);
@@ -84,8 +97,10 @@ export function DropZone({
       onDrop={handleDrop}
       data-state={disabled ? "disabled" : active ? "dragging" : "idle"}
       aria-disabled={disabled || undefined}
+      style={minHeight !== undefined ? { minHeight } : undefined}
       className={cn(
-        "group/drop relative flex min-h-[176px] flex-col items-center justify-center gap-4 rounded-panel border-[1.5px] border-dashed px-6 py-8 text-center",
+        "group/drop relative flex flex-col items-center justify-center rounded-panel border-[1.5px] border-dashed text-center",
+        DEFAULT_SIZING,
         "transition-[background-color,border-color] duration-[180ms] ease-out",
         "has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-accent",
         disabled

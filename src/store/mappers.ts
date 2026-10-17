@@ -12,6 +12,10 @@ export interface DecisionSummary {
   outcome: Outcome;
   /** Nombre en la ficha (copia de la empresa al decidir) si hay proveedor; si no, el leído. */
   vendorName: string | null;
+  /** Proveedor de la ficha identificado por el motor, o null. */
+  vendorId: string | null;
+  /** País del proveedor en la copia de la empresa al decidir (p. ej. "CO"), o null. */
+  vendorCountry: string | null;
   invoiceNumber: string | null;
   total: number | null;
   currency: string | null;
@@ -44,9 +48,11 @@ export function toHistoryEntry(record: DecisionRecord): HistoryEntry {
 export function toDecisionSummary(record: DecisionRecord): DecisionSummary {
   const d = record.decision;
   const data = record.reading?.data ?? null;
-  const vendorFromFile = d.vendorId
-    ? (record.companySnapshot?.vendors ?? []).find((v) => v.id === d.vendorId)?.name ?? null
-    : null;
+  const vendorId = typeof d.vendorId === "string" && d.vendorId.length > 0 ? d.vendorId : null;
+  const snapshotVendors = Array.isArray(record.companySnapshot?.vendors) ? record.companySnapshot.vendors : [];
+  const vendor = vendorId ? snapshotVendors.find((v) => v?.id === vendorId) ?? null : null;
+  const vendorFromFile = typeof vendor?.name === "string" ? vendor.name : null;
+  const vendorCountry = typeof vendor?.country === "string" && vendor.country.trim().length > 0 ? vendor.country.trim() : null;
   return {
     id: record.id,
     invoiceId: record.invoiceId,
@@ -54,6 +60,8 @@ export function toDecisionSummary(record: DecisionRecord): DecisionSummary {
     decidedAt: record.decidedAt,
     outcome: d.outcome,
     vendorName: vendorFromFile ?? data?.vendorName ?? null,
+    vendorId,
+    vendorCountry,
     invoiceNumber: data?.invoiceNumber ?? null,
     total: data?.total ?? null,
     currency: data?.currency ?? null,

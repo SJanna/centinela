@@ -48,7 +48,11 @@ export function InvoiceDetail({ record, refs = {} }: { record: DecisionRecord; r
           </div>
           <div className="contents @4xl:block @4xl:min-w-0 @4xl:space-y-6">
             <div className="order-2 min-w-0">
-              <ChecksPanel decision={{ ...record.decision, checks: record.decision.checks ?? [] }} refs={refs} />
+              <ChecksPanel
+                decision={{ ...record.decision, checks: record.decision.checks ?? [] }}
+                refs={refs}
+                suspiciousTexts={suspicious.map((s) => s.text)}
+              />
             </div>
             <div className="order-5 min-w-0">
               <DecisionTrace record={record} />

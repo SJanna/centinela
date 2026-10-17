@@ -21,15 +21,17 @@ interface CheckMarkProps {
   check: Pick<CheckResult, "status" | "outcomeIfFail">;
   animate?: boolean;
   delay?: number;
+  /** Diámetro en px (20 por defecto). */
+  size?: number;
   className?: string;
 }
 
-export function CheckMark({ check, animate = true, delay = 0, className }: CheckMarkProps) {
+export function CheckMark({ check, animate = true, delay = 0, size, className }: CheckMarkProps) {
   if (check.status === "pass") {
-    return <CheckIcon status="pass" animate={animate} delay={delay} label={LABEL.pass} className={className} />;
+    return <CheckIcon status="pass" animate={animate} delay={delay} size={size} label={LABEL.pass} className={className} />;
   }
   if (check.status === "not_evaluable") {
-    return <CheckIcon status="warn" animate={animate} delay={delay} label={LABEL.notEvaluable} className={className} />;
+    return <CheckIcon status="warn" animate={animate} delay={delay} size={size} label={LABEL.notEvaluable} className={className} />;
   }
   const escalates = check.outcomeIfFail === "ESCALAR";
   return (
@@ -37,6 +39,7 @@ export function CheckMark({ check, animate = true, delay = 0, className }: Check
       status="fail"
       animate={animate}
       delay={delay}
+      size={size}
       label={escalates ? LABEL.failEscalate : LABEL.failHold}
       className={[escalates ? ESCALATE_FAIL : "", className ?? ""].join(" ").trim()}
     />

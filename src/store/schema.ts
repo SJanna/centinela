@@ -5,7 +5,7 @@
  * Las fechas se guardan como timestamptz pero los repositorios leen siempre la fecha ISO
  * original desde el JSON (p. ej. `record.decidedAt`): las columnas sirven para ordenar.
  */
-import { bigint, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import type { Extraction, Rules, Vendor, DecisionRecord, Outcome } from "../core/schemas";
 
 const tsz = (name: string) => timestamp(name, { withTimezone: true, mode: "string" });
@@ -44,6 +44,9 @@ export const invoices = pgTable(
 /**
  * Registro de decisiones. Solo se inserta: un disparador en la base rechaza UPDATE y DELETE
  * (el reinicio usa TRUNCATE). `seq` desempata decisiones con la misma `decided_at`.
+ *
+ * `pay_*_key`: claves de pago (ver `payment-keys.ts`), solo en las decisiones PAGAR. Sus índices
+ * únicos impiden que dos instancias registren el mismo pago (los null no chocan).
  */
 export const decisions = pgTable(
   "decisions",
@@ -54,8 +57,20 @@ export const decisions = pgTable(
     decidedAt: tsz("decided_at").notNull(),
     outcome: text("outcome").$type<Outcome>().notNull(),
     record: jsonb("record").$type<DecisionRecord>().notNull(),
+    /** Huella del archivo pagado. */
+    payFileKey: text("pay_file_key"),
+    /** Proveedor + número de factura normalizado. */
+    payInvoiceKey: text("pay_invoice_key"),
+    /** Acuerdo + periodo (o + "once" si el acuerdo es de pago único). */
+    payPeriodKey: text("pay_period_key"),
   },
-  (t) => [index("decisions_decided_at_idx").on(t.decidedAt, t.seq), index("decisions_invoice_id_idx").on(t.invoiceId)],
+  (t) => [
+    index("decisions_decided_at_idx").on(t.decidedAt, t.seq),
+    index("decisions_invoice_id_idx").on(t.invoiceId),
+    uniqueIndex("decisions_pay_file_key_uq").on(t.payFileKey),
+    uniqueIndex("decisions_pay_invoice_key_uq").on(t.payInvoiceKey),
+    uniqueIndex("decisions_pay_period_key_uq").on(t.payPeriodKey),
+  ],
 );
 
 /** Caché de lecturas del modelo (clave = sha256(fileHash + readerId + model + promptVersion)). */

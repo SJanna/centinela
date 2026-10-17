@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { cn, SkeletonText } from "@/components/ui";
 import type { SuspiciousNeedle } from "./doc-text";
 import { joinPageText, locate, type FoundMark, type PageRect, type PageText, type PageTextItem } from "./pdf-layout";
+import { ScanLine } from "./scan-line";
 
 type PdfDocument = Awaited<ReturnType<typeof import("unpdf").getDocumentProxy>>;
 type PdfPage = Awaited<ReturnType<PdfDocument["getPage"]>>;
@@ -227,6 +228,7 @@ function SheetPage({ loaded, index, cssWidth, filename, needles, evidence, onFai
           painted ? "opacity-100" : "opacity-0",
         )}
       />
+      {painted && index === 0 ? <ScanLine /> : null}
       {/* Citas de los datos leídos (hover bidireccional). */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <AnimatePresence>

@@ -7,14 +7,13 @@ import { formatBytes } from "@/ingest/limits";
 import { processInvoice } from "@/pipeline";
 import { toDecisionSummary } from "@/store";
 import { jsonError, json, serverError } from "../_lib/http";
+import { MAX_UPLOAD_BYTES } from "../_lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 /** La lectura con modelos puede tardar (dos lecturas en paralelo, más la cola de facturas). */
 export const maxDuration = 60;
 
-/** Máximo del archivo subido (límite del cuerpo de las funciones de Vercel: 4,5 MB). */
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 /** Margen para las cabeceras multipart al revisar Content-Length antes de leer el cuerpo. */
 const MULTIPART_OVERHEAD = 64 * 1024;
 

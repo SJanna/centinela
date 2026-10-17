@@ -128,11 +128,10 @@ export function ReadingTable({ reading }: { reading: ReadingAssessment }) {
       <div className="overflow-x-auto scrollbar-quiet">
         <table className="w-full min-w-[560px] table-fixed text-left text-small">
           <colgroup>
-            <col className="w-[22%]" />
             <col className="w-[23%]" />
             <col className="w-[24%]" />
-            <col className="w-[19%]" />
-            <col className="w-[12%]" />
+            <col className="w-[26%]" />
+            <col className="w-[27%]" />
           </colgroup>
           <thead>
             <tr className="border-y border-seam bg-surface-1/70 text-caption text-muted">
@@ -147,11 +146,9 @@ export function ReadingTable({ reading }: { reading: ReadingAssessment }) {
                 <span className="block">Lectura B</span>
                 <Mono className="block truncate text-[11px] font-normal text-ink-3">{readerCaption(b)}</Mono>
               </th>
-              <th scope="col" className="px-2 py-2.5 font-medium">
-                Evidencia
-              </th>
-              <th scope="col" className="py-2.5 pr-5 pl-1 text-right font-medium">
-                Legible
+              <th scope="col" className="py-2.5 pr-6 pl-2 font-medium">
+                <span className="block">Evidencia</span>
+                <span className="block text-[11px] font-normal text-ink-3">Cita del documento</span>
               </th>
             </tr>
           </thead>
@@ -183,7 +180,8 @@ export function ReadingTable({ reading }: { reading: ReadingAssessment }) {
                 >
                   <th scope="row" className="py-2.5 pr-2 pl-6 font-normal">
                     <span className={cn("block font-medium", isHighlighted ? "text-accent" : "text-navy")}>{row.label}</span>
-                    {row.match === "critical" ? <span className="text-[11px] text-ink-3">Dato crítico</span> : null}
+                    {row.match === "critical" ? <span className="block text-[11px] text-ink-3">Dato crítico</span> : null}
+                    {legible === false ? <span className="block text-[11px] font-medium text-escalate">Ilegible</span> : null}
                   </th>
                   <td className="px-2 py-2.5 break-words text-ink">{ca ? ca.value : <span className="text-caption text-ink-3">Falló</span>}</td>
                   <td className="px-2 py-2.5">
@@ -204,7 +202,7 @@ export function ReadingTable({ reading }: { reading: ReadingAssessment }) {
                       <span className="text-caption text-ink-3">{b ? "Falló" : "No disponible"}</span>
                     )}
                   </td>
-                  <td className="px-2 py-2.5 text-caption text-ink-2">
+                  <td className="py-2.5 pr-6 pl-2 text-caption text-ink-2">
                     {evidence ? (
                       row.format === "account" ? (
                         <MaskedAccount value={evidence} className="text-caption" />
@@ -215,15 +213,6 @@ export function ReadingTable({ reading }: { reading: ReadingAssessment }) {
                       )
                     ) : (
                       <span className="text-ink-3">—</span>
-                    )}
-                  </td>
-                  <td className="py-2.5 pr-5 pl-1 text-right text-caption">
-                    {legible == null ? (
-                      <span className="text-ink-3">—</span>
-                    ) : legible ? (
-                      <span className="text-ink-2">Sí</span>
-                    ) : (
-                      <span className="font-medium text-escalate">No</span>
                     )}
                   </td>
                 </tr>

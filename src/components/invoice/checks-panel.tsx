@@ -6,7 +6,7 @@ import { cn, Mono, Sheet } from "@/components/ui";
 import { CHECK_CATALOG, type CheckDefinition } from "@/core/checks";
 import type { CheckCode, CheckResult, Decision } from "@/core/schemas";
 import { CheckMark } from "./check-mark";
-import { CHECK_ANCHOR_PREFIX, effectOf, noteNumbering } from "./decision-utils";
+import { CHECK_ANCHOR_PREFIX, displayExplanation, effectOf, noteNumbering } from "./decision-utils";
 import { useDetail } from "./detail-context";
 import { CHECK_FIELDS } from "./fields";
 import { linkInvoiceIds, type InvoiceRefs } from "./invoice-links";
@@ -27,9 +27,11 @@ function effectLabel(check: CheckResult): { text: string; className: string } | 
 interface ChecksPanelProps {
   decision: Pick<Decision, "summary" | "checks" | "outcome">;
   refs?: InvoiceRefs;
+  /** Fragmentos sospechosos únicos, para citarlos una vez en «Sin instrucciones escondidas». */
+  suspiciousTexts?: readonly string[];
 }
 
-export function ChecksPanel({ decision, refs = {} }: ChecksPanelProps) {
+export function ChecksPanel({ decision, refs = {}, suspiciousTexts = [] }: ChecksPanelProps) {
   const checks = decision.checks;
   const { activeCheck, setActiveCheck, activeField } = useDetail();
   const reduce = useReducedMotion();
@@ -59,7 +61,7 @@ export function ChecksPanel({ decision, refs = {} }: ChecksPanelProps) {
           </h2>
           <p className="text-small text-ink-2">
             <span className="tnum font-medium text-navy">{passCount}</span> de{" "}
-            <span className="tnum">{CHECK_CATALOG.length}</span> se cumplen. Las reglas son siempre las mismas.
+            <span className="tnum">{CHECK_CATALOG.length}</span> se cumplen. Son las mismas para todas las facturas.
           </p>
         </div>
         <div role="group" aria-label="Filtrar comprobaciones" className="inline-flex rounded-pill bg-control p-0.5 text-caption font-medium">
@@ -149,7 +151,9 @@ export function ChecksPanel({ decision, refs = {} }: ChecksPanelProps) {
                               </sup>
                             ) : null}
                           </p>
-                          <p className="mt-0.5 text-small text-pretty text-ink-2">{linkInvoiceIds(check.explanation, refs)}</p>
+                          <p className="mt-0.5 text-small text-pretty text-ink-2">
+                            {linkInvoiceIds(displayExplanation(check, suspiciousTexts), refs)}
+                          </p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-0.5 pt-0.5">
                           <Mono className="text-caption text-ink-3">{def.code}</Mono>

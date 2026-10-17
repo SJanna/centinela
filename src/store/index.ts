@@ -29,3 +29,10 @@ export {
   type Stats,
 } from "./repo";
 export { getDb, getDbHandle, openDb, resetDbForTests, configFromEnv, ensureSchema, type Db, type DbConfig, type DbHandle } from "./db";
+export {
+  DuplicatePaymentError,
+  isDuplicatePaymentError,
+  paymentKeysOf,
+  type PaymentKeyKind,
+  type PaymentKeys,
+} from "./payment-keys";

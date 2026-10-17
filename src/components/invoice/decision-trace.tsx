@@ -111,13 +111,14 @@ export function DecisionTrace({ record }: { record: DecisionRecord }) {
             <li className="grid grid-cols-[22px_minmax(0,1fr)] gap-x-2 border-t border-[#b7c3d3]/15 pt-3">
               <span className="text-night-muted">=</span>
               <p>
+                <span className="text-night-muted">resultado final · </span>
                 <span
                   className={cn(
                     "inline-flex items-center rounded-pill px-2 py-px font-sans text-caption font-medium ring-1 ring-inset",
                     OUTCOME_CLASS[outcome],
                   )}
                 >
-                  {outcome} · {DECISION_LABEL[outcome]}
+                  {DECISION_LABEL[outcome]}
                 </span>
                 {record.decision.guardOverride ? <span className="ml-2 text-night-muted">bajada por la guardia</span> : null}
               </p>

@@ -18,7 +18,10 @@ interface SegmentedBarProps {
   legend?: boolean;
   /** Cómo se escribe cada valor en la leyenda. */
   formatValue?: (value: number, total: number) => ReactNode;
-  /** Los segmentos crecen al aparecer (CSS; se desactiva con prefers-reduced-motion). */
+  /**
+   * Los segmentos crecen al aparecer y cambian de ancho con transición cuando cambian los valores
+   * (CSS; se desactiva con prefers-reduced-motion).
+   */
   animate?: boolean;
   /** Descripción para lectores de pantalla. */
   label: string;
@@ -52,9 +55,9 @@ export function SegmentedBar({
             <span
               key={s.key}
               className={cn(
-                "h-full origin-left first:rounded-l-pill last:rounded-r-pill",
+                "h-full min-w-0 origin-left first:rounded-l-pill last:rounded-r-pill",
                 TONE[s.tone].mark,
-                animate && "animate-grow-x",
+                animate && "animate-grow-x transition-[width] duration-500 ease-strong",
               )}
               style={{ width: `${(s.value / total) * 100}%`, animationDelay: animate ? `${i * 90}ms` : undefined }}
             />
@@ -126,7 +129,10 @@ export function UsageBar({ value, max, markers = [], tone = "NAVY", label, heigh
         style={{ height }}
       >
         <span
-          className={cn("absolute inset-y-0 left-0 origin-left animate-grow-x rounded-pill", fill)}
+          className={cn(
+            "absolute inset-y-0 left-0 origin-left animate-grow-x rounded-pill transition-[width] duration-500 ease-strong",
+            fill,
+          )}
           style={{ width: `${pct}%` }}
         />
         {markers.map((m, i) => {

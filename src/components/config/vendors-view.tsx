@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronRight, Download, Pencil, Plus, ShieldAlert, Trash2, Upload } from "lucide-react";
+import { ArrowRight, ChevronRight, Download, Pencil, Plus, ShieldAlert, Trash2, TriangleAlert, Upload } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useId, useMemo, useState } from "react";
 import type { Company, Vendor } from "@/core/schemas";
@@ -12,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/sheet";
 import { Badge, DecisionChip } from "@/components/ui/status";
 import { useToast } from "@/components/ui/toast";
+import { Tooltip } from "@/components/ui/tooltip";
 import { Eyebrow, Mono, maskAccount } from "@/components/ui/typography";
 import { requestJson, saveJson } from "./api";
 import { Notice } from "./fields";
@@ -26,14 +28,17 @@ import {
   vendorValidity,
 } from "./format";
 import { ImportVendors } from "./import-vendors";
-import { DangerButton, Modal, SidePanel } from "./overlay";
-import type { VendorActivity } from "./vendor-activity";
+import { decisionHref } from "./ledger-filters";
+import { Modal, SidePanel } from "./overlay";
+import type { AccountAlert, VendorActivity } from "./vendor-activity";
 import { VendorForm } from "./vendor-form";
 
 interface VendorsViewProps {
   companyName: string;
   vendors: Vendor[];
   activity: Record<string, VendorActivity>;
+  /** Facturas que pidieron pagar a otra cuenta, por id de proveedor. */
+  alerts: Record<string, AccountAlert[]>;
   /** Monedas con tasa de cambio. */
   currencies: string[];
   /** Tolerancia de las reglas (ACU-3), en porcentaje. */
@@ -52,6 +57,31 @@ function ValidityCell({ vendor, today }: { vendor: Vendor; today: string }) {
   return <span className="text-ink-2">{v.text}</span>;
 }
 
+/** "B10.pdf pidió pagar a •••• 7891 (la registrada termina en 8012). Se escaló el 17 oct 2026." */
+function alertSentence(a: AccountAlert): string {
+  const requested = a.requestedLast4 ? ` a la cuenta terminada en ${a.requestedLast4}` : " a otra cuenta";
+  const registered = a.registeredLast4 ? ` (la registrada termina en ${a.registeredLast4})` : "";
+  const verb = a.outcome === "FRENAR" ? "Se frenó" : a.outcome === "ESCALAR" ? "Se escaló" : "Se registró";
+  return `${a.filename} pidió pagar${requested}${registered}. ${verb} el ${formatDateTime(a.decidedAt).date}.`;
+}
+
+/** Aviso en la fila: alguna factura pidió pagar a una cuenta distinta de la registrada. */
+function AccountAlertBadge({ alerts }: { alerts: AccountAlert[] }) {
+  const tip =
+    alerts.length === 1
+      ? `${alertSentence(alerts[0])} Centinela no paga a una cuenta que no sea la registrada.`
+      : `${alerts.length} facturas pidieron pagar a otra cuenta. La última: ${alertSentence(alerts[0])}`;
+  return (
+    <Tooltip content={tip} side="top" align="start" maxWidth={300}>
+      <span tabIndex={0} className="mt-1 inline-flex cursor-help rounded-pill" onClick={(e) => e.stopPropagation()}>
+        <Badge tone="warning" icon={<TriangleAlert aria-hidden />} className="h-5 gap-1 px-2 text-[11px]">
+          {alerts.length === 1 ? "Pidió otra cuenta" : `${alerts.length} con otra cuenta`}
+        </Badge>
+      </span>
+    </Tooltip>
+  );
+}
+
 function ActivityCell({ activity }: { activity: VendorActivity | undefined }) {
   if (!activity || activity.invoices === 0) return <span className="text-ink-3">Sin facturas</span>;
   return (
@@ -67,7 +97,7 @@ function ActivityCell({ activity }: { activity: VendorActivity | undefined }) {
 }
 
 /** Ficha de proveedores: tabla con filas expandibles, panel para crear o editar, importar y exportar. */
-export function VendorsView({ companyName, vendors, activity, currencies, tolerancePct, today }: VendorsViewProps) {
+export function VendorsView({ companyName, vendors, activity, alerts, currencies, tolerancePct, today }: VendorsViewProps) {
   const router = useRouter();
   const { toast } = useToast();
   const uid = useId();
@@ -82,6 +112,7 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
   const takenIds = useMemo(() => vendors.map((v) => v.id), [vendors]);
   const activeCount = vendors.filter((v) => vendorValidity(v, today).state === "active").length;
   const withInvoices = vendors.filter((v) => (activity[v.id]?.invoices ?? 0) > 0).length;
+  const withAlerts = vendors.filter((v) => (alerts[v.id]?.length ?? 0) > 0).length;
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -106,7 +137,13 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
       });
       return;
     }
-    saveJson(r.data.company.vendors, `centinela-proveedores-${today}.json`);
+    const list = r.data.company.vendors;
+    saveJson(list, `centinela-proveedores-${today}.json`);
+    toast({
+      tone: "NEUTRAL",
+      title: "Proveedores exportados.",
+      description: `${list.length === 1 ? "1 proveedor" : `${list.length} proveedores`} con sus cuentas y acuerdos. Se puede volver a importar.`,
+    });
   }
 
   async function confirmDelete() {
@@ -163,6 +200,13 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
           <span className="tnum font-medium text-navy">{activeCount}</span> con acuerdo vigente
           <span className="text-faint"> · </span>
           <span className="tnum font-medium text-navy">{withInvoices}</span> con facturas
+          {withAlerts > 0 ? (
+            <>
+              <span className="text-faint"> · </span>
+              <span className="tnum font-medium text-warning">{withAlerts}</span>
+              <span className="text-warning"> con facturas a otra cuenta</span>
+            </>
+          ) : null}
         </p>
         <p className="flex items-center gap-1.5 text-caption text-muted">
           <ShieldAlert aria-hidden size={14} strokeWidth={1.5} className="text-ink-3" />
@@ -198,7 +242,7 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
                 <th scope="col" className="py-3 pr-3 font-medium">
                   Proveedor
                 </th>
-                <th scope="col" className="hidden px-2.5 py-3 font-medium xl:table-cell">
+                <th scope="col" className="hidden px-2.5 py-3 font-medium 2xl:table-cell">
                   ID tributario
                 </th>
                 <th scope="col" className="px-2.5 py-3 font-medium">
@@ -265,7 +309,7 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
                           </span>
                         </span>
                       </td>
-                      <td className="hidden px-2.5 py-2 xl:table-cell">
+                      <td className="hidden px-2.5 py-2 2xl:table-cell">
                         {v.taxId ? (
                           <Mono className="text-caption whitespace-nowrap text-ink-2">{v.taxId}</Mono>
                         ) : (
@@ -276,7 +320,8 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
                         <span className="block max-w-[136px] truncate text-ink-2" title={v.account.bankName}>
                           {v.account.bankName}
                         </span>
-                        <Mono className="text-caption text-ink-3">{maskAccount(v.account.accountNumber)}</Mono>
+                        <Mono className="block text-caption text-ink-3">{maskAccount(v.account.accountNumber)}</Mono>
+                        {alerts[v.id]?.length ? <AccountAlertBadge alerts={alerts[v.id]} /> : null}
                       </td>
                       <td className="px-2.5 py-2">
                         {first ? (
@@ -337,7 +382,13 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
                       <tr id={detailId} className="bg-row-active">
                         <td />
                         <td colSpan={7} className="pr-4 pb-5">
-                          <VendorDetail vendor={v} activity={act} today={today} tolerancePct={tolerancePct} />
+                          <VendorDetail
+                            vendor={v}
+                            activity={act}
+                            alerts={alerts[v.id] ?? []}
+                            today={today}
+                            tolerancePct={tolerancePct}
+                          />
                         </td>
                       </tr>
                     ) : null}
@@ -401,9 +452,9 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
               <Button variant="ghost" onClick={() => setDeleting(null)} data-autofocus>
                 Cancelar
               </Button>
-              <DangerButton onClick={confirmDelete} disabled={deleteBusy}>
+              <Button variant="danger" icon={<Trash2 />} onClick={confirmDelete} disabled={deleteBusy}>
                 {deleteBusy ? "Eliminando…" : "Eliminar proveedor"}
-              </DangerButton>
+              </Button>
             </footer>
           </div>
         ) : null}
@@ -440,16 +491,33 @@ export function VendorsView({ companyName, vendors, activity, currencies, tolera
 function VendorDetail({
   vendor: v,
   activity,
+  alerts,
   today,
   tolerancePct,
 }: {
   vendor: Vendor;
   activity: VendorActivity | undefined;
+  alerts: AccountAlert[];
   today: string;
   tolerancePct: number;
 }) {
   return (
     <div className="grid animate-rise gap-4 rounded-card border border-row-active-border bg-surface-0 p-5 shadow-hairline lg:grid-cols-[minmax(0,1fr)_280px]">
+      {alerts.length > 0 ? (
+        <Notice tone="warning" icon={<TriangleAlert />} title="Una factura pidió pagar a otra cuenta." className="lg:col-span-2">
+          <span className="block">
+            {alertSentence(alerts[0])} Centinela solo paga a la cuenta registrada. Si el proveedor cambió de banco,
+            confírmalo por un canal conocido antes de editar la ficha.
+          </span>
+          <Link
+            href={decisionHref({ id: alerts[0].decisionId })}
+            className="mt-1.5 inline-flex items-center gap-1 font-medium text-navy underline decoration-navy/25 underline-offset-[3px] hover:decoration-navy"
+          >
+            Ver la decisión
+            <ArrowRight aria-hidden size={13} strokeWidth={1.75} />
+          </Link>
+        </Notice>
+      ) : null}
       <div className="min-w-0">
         <Eyebrow className="mb-2">
           {v.agreements.length === 1 ? "Acuerdo" : `Acuerdos · ${v.agreements.length}`}
@@ -551,6 +619,13 @@ function VendorDetail({
               {activity.lastDecidedAt ? (
                 <p className="text-caption text-muted">Última: {formatDateTime(activity.lastDecidedAt).date}</p>
               ) : null}
+              <Link
+                href={`/registro?q=${encodeURIComponent(v.name)}`}
+                className="inline-flex items-center gap-1 text-caption font-medium text-accent underline decoration-accent/30 underline-offset-[3px] hover:decoration-accent"
+              >
+                Ver sus facturas en el registro
+                <ArrowRight aria-hidden size={12} strokeWidth={1.75} />
+              </Link>
             </div>
           ) : (
             <p className="text-caption text-ink-3">Sin facturas registradas.</p>

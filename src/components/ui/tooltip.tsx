@@ -32,6 +32,8 @@ const POSITION: Record<Side, Record<Align, string>> = {
 /**
  * Tooltip solo con CSS: aparece al pasar el cursor o al enfocar el disparador.
  * Funciona en componentes de servidor (no necesita JavaScript en el cliente).
+ * El globo siempre parte líneas (`whitespace-normal`), aunque el disparador esté en un contenedor
+ * con `whitespace-nowrap`.
  */
 export function Tooltip({ content, children, side = "top", align = "center", maxWidth = 260, className }: TooltipProps) {
   const id = useId();
@@ -51,7 +53,7 @@ export function Tooltip({ content, children, side = "top", align = "center", max
         id={id}
         style={{ maxWidth }}
         className={cn(
-          "pointer-events-none absolute z-50 w-max rounded-row bg-surface-0 px-3 py-2 text-left text-caption font-normal normal-case tracking-normal text-ink-2 shadow-pop ring-1 ring-seam",
+          "pointer-events-none absolute z-50 w-max rounded-row bg-surface-0 px-3 py-2 text-left text-caption font-normal whitespace-normal normal-case tracking-normal text-ink-2 shadow-pop ring-1 ring-seam",
           "invisible scale-[0.98] opacity-0 transition-[opacity,scale,visibility] duration-150 ease-out",
           "group-hover/tooltip:visible group-hover/tooltip:scale-100 group-hover/tooltip:opacity-100 group-hover/tooltip:delay-150",
           "group-focus-within/tooltip:visible group-focus-within/tooltip:scale-100 group-focus-within/tooltip:opacity-100",

@@ -1,11 +1,45 @@
 /**
- * Actividad de cada proveedor a partir del registro de decisiones (función pura, para el servidor).
- * El proveedor de cada decisión sale del historial (`HistoryEntry.vendorId`, unido por `invoiceId`).
+ * Actividad de cada proveedor a partir del registro de decisiones (funciones puras, para el servidor).
+ * El proveedor de cada decisión es el que identificó el motor (`DecisionSummary.vendorId`).
  * Si la decisión no identificó proveedor, o su id ya no está en la ficha, se empareja por nombre o alias.
  */
 import { normalizeName } from "@/core/normalize";
-import type { HistoryEntry, Outcome, Vendor } from "@/core/schemas";
+import type { DecisionRecord, Outcome, Vendor } from "@/core/schemas";
 import type { DecisionSummary } from "@/store/mappers";
+
+/** Una factura que pidió pagar a una cuenta distinta de la registrada (PRV-2 en `fail`). */
+export interface AccountAlert {
+  decisionId: string;
+  decidedAt: string;
+  filename: string;
+  /** Últimos 4 dígitos de la cuenta que pedía la factura, si se leyeron. */
+  requestedLast4: string | null;
+  /** Últimos 4 dígitos de la cuenta registrada al decidir. */
+  registeredLast4: string | null;
+  outcome: Outcome;
+}
+
+/** Facturas que pidieron pagar a otra cuenta, por id de proveedor (la más reciente primero). */
+export function accountAlerts(records: DecisionRecord[]): Record<string, AccountAlert[]> {
+  const out: Record<string, AccountAlert[]> = {};
+  for (const r of records) {
+    const check = r.decision.checks.find((c) => c.code === "PRV-2");
+    if (!check || check.status !== "fail") continue;
+    const vendorId = r.decision.vendorId ?? (typeof check.params.vendorId === "string" ? check.params.vendorId : null);
+    if (!vendorId) continue;
+    const last4 = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    (out[vendorId] ??= []).push({
+      decisionId: r.id,
+      decidedAt: r.decidedAt,
+      filename: r.filename,
+      requestedLast4: last4(check.params.invoiceAccountLast4),
+      registeredLast4: last4(check.params.registeredAccountLast4),
+      outcome: r.decision.outcome,
+    });
+  }
+  for (const list of Object.values(out)) list.sort((a, b) => b.decidedAt.localeCompare(a.decidedAt));
+  return out;
+}
 
 export interface VendorActivity {
   invoices: number;
@@ -23,14 +57,8 @@ export function emptyActivity(): VendorActivity {
 }
 
 /** Actividad por id de proveedor. Los proveedores sin decisiones no aparecen. */
-export function vendorActivity(
-  vendors: Vendor[],
-  decisions: DecisionSummary[],
-  history: Pick<HistoryEntry, "invoiceId" | "vendorId">[] = [],
-): Record<string, VendorActivity> {
+export function vendorActivity(vendors: Vendor[], decisions: DecisionSummary[]): Record<string, VendorActivity> {
   const known = new Set(vendors.map((v) => v.id));
-  const idByInvoice = new Map<string, string>();
-  for (const h of history) if (h.vendorId && known.has(h.vendorId)) idByInvoice.set(h.invoiceId, h.vendorId);
   const byName = new Map<string, string>();
   for (const v of vendors) {
     for (const name of [v.name, ...v.aliases]) {
@@ -42,7 +70,7 @@ export function vendorActivity(
   const paid: Record<string, Map<string, number>> = {};
   for (const d of decisions) {
     const key = normalizeName(d.vendorName);
-    const vendorId = idByInvoice.get(d.invoiceId) ?? (key ? byName.get(key) : undefined);
+    const vendorId = (d.vendorId && known.has(d.vendorId) ? d.vendorId : undefined) ?? (key ? byName.get(key) : undefined);
     if (!vendorId) continue;
     const a = (out[vendorId] ??= emptyActivity());
     a.invoices += 1;

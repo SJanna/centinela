@@ -293,6 +293,8 @@ describe.each([
         decidedAt: "2026-10-16T10:00:00Z",
         outcome: "ESCALAR",
         vendorName: "Proveedor v-dos",
+        vendorId: "v-dos",
+        vendorCountry: "CO",
         invoiceNumber: "F-9",
         total: 48000,
         currency: "COP",
@@ -304,6 +306,8 @@ describe.each([
         guardOverride: true,
       });
       expect(d2.vendorName).toBe("Desconocido S.A.");
+      expect(d2.vendorId).toBeNull();
+      expect(d2.vendorCountry).toBeNull();
       expect(d2.failedChecks).toEqual([]);
       expect(d2.hasSuspiciousText).toBe(false);
       expect(d3.vendorName).toBeNull();
@@ -327,6 +331,8 @@ describe.each([
         total: 0,
         byOutcome: { PAGAR: 0, FRENAR: 0, ESCALAR: 0 },
         paidUsd: 0,
+        heldUsd: 0,
+        escalatedUsd: 0,
         initialFundUsd: 0,
         fundAvailableUsd: 0,
         month: "2026-10",
@@ -347,19 +353,22 @@ describe.each([
       await add("f-oct", "2026-10-15T11:00:00.000Z", "FRENAR", 5000);
       await add("e-oct", "2026-10-15T12:00:00.000Z", "ESCALAR", 7000);
       await add("e-null", "2026-10-15T13:00:00.000Z", "ESCALAR", null);
+      await add("f-sep", "2026-09-10T13:00:00.000Z", "FRENAR", 0.15);
 
       const stats = await repo.getStats("2026-10-16T12:00:00.000Z");
       expect(stats).toEqual({
-        total: 6,
-        byOutcome: { PAGAR: 3, FRENAR: 1, ESCALAR: 2 },
+        total: 7,
+        byOutcome: { PAGAR: 3, FRENAR: 2, ESCALAR: 2 },
         paidUsd: 1000.4,
+        heldUsd: 5000.15,
+        escalatedUsd: 7000,
         initialFundUsd: 40000,
         fundAvailableUsd: 38999.6,
         month: "2026-10",
         monthSpentUsd: 0.3,
         periodLimitUsd: 25000,
         approvalThresholdUsd: 5000,
-        autonomyRate: 4 / 6,
+        autonomyRate: 5 / 7,
       });
       expect((await repo.getStats("2026-09-02")).monthSpentUsd).toBe(1000.1);
     });

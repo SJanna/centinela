@@ -14,11 +14,15 @@ import { cn } from "@/components/ui/cn";
 import { CountryChip, CountryFlag, COUNTRY_NAME } from "@/components/ui/country-flag";
 import { Money, moneyParts } from "@/components/ui/money";
 import { Badge, DecisionChip, SuspiciousBadge } from "@/components/ui/status";
+import { Tooltip } from "@/components/ui/tooltip";
 import { checkTitle, countryOf, reasonOf, relativeTime } from "./format";
 import type { BoardItem, VendorCountries } from "./types";
 
 /** Resorte de la caída: suave, sin rebote visible. */
 export const LAND_SPRING = { type: "spring", stiffness: 380, damping: 32 } as const;
+
+const SUSPICIOUS_NOTE = "La factura trae texto que intenta dar órdenes al agente. Centinela no lo siguió.";
+const GUARD_NOTE = "La guardia revisó el pago por su cuenta, no lo confirmó y lo pasó a una persona.";
 
 /** Escalonado de la primera aparición (ms por tarjeta, con tope). */
 const STAGGER_S = 0.035;
@@ -37,12 +41,28 @@ export function layoutIdOf(key: string, scope: string): string {
  * Códigos que explican la decisión, en superíndice (mono), el decisivo primero. Se pegan a la última
  * palabra del motivo y, si no caben, se cortan entre códigos (nunca dentro de "LEC-1").
  */
-function FailedCodes({ codes, max = 3, wrap = true }: { codes: CheckCode[]; max?: number; wrap?: boolean }) {
+function FailedCodes({
+  codes,
+  max = 3,
+  wrap = true,
+  className,
+}: {
+  codes: CheckCode[];
+  max?: number;
+  wrap?: boolean;
+  className?: string;
+}) {
   if (codes.length === 0) return null;
   const shown = codes.slice(0, max);
   const rest = codes.length - shown.length;
   return (
-    <sup className={cn("ml-[0.2em] font-mono text-[0.72em] font-medium tracking-[-0.01em] text-accent", !wrap && "whitespace-nowrap")}>
+    <sup
+      className={cn(
+        "ml-[0.2em] font-mono text-[0.72em] font-medium tracking-[-0.01em] text-accent",
+        !wrap && "whitespace-nowrap",
+        className,
+      )}
+    >
       {shown.map((code, i) => (
         <Fragment key={code}>
           {i > 0 ? (
@@ -86,9 +106,23 @@ function UsdHint({ amountUsd, currency, className }: { amountUsd: number | null;
   );
 }
 
-/** País y moneda; si el proveedor no está en la ficha, solo la moneda. */
+/**
+ * País y moneda; si el proveedor no está en la ficha, solo la moneda. En tarjetas estrechas
+ * (columnas a 1024 px) el país va con su código ("CO · COP") para que la hora quepa en la misma línea.
+ */
 function OriginChip({ country, currency }: { country: string | null; currency: string | null }) {
-  if (country) return <CountryChip country={country} currency={currency} />;
+  if (country) {
+    return (
+      <>
+        <span className="contents @max-[14.5rem]/card:hidden">
+          <CountryChip country={country} currency={currency} />
+        </span>
+        <span className="hidden @max-[14.5rem]/card:contents">
+          <CountryChip country={country} currency={currency} showName={false} />
+        </span>
+      </>
+    );
+  }
   if (!currency) return null;
   return (
     <span className="inline-flex h-6 shrink-0 items-center rounded-chip bg-surface-2 px-2 font-mono text-[11px] tracking-[0.02em] text-ink-2">
@@ -102,13 +136,17 @@ function Flags({ item }: { item: BoardItem }) {
   if (!d.hasSuspiciousText && !d.guardOverride) return null;
   return (
     <>
-      {d.hasSuspiciousText ? <SuspiciousBadge /> : null}
+      {d.hasSuspiciousText ? (
+        <Tooltip content={SUSPICIOUS_NOTE} side="top" align="start">
+          <SuspiciousBadge />
+        </Tooltip>
+      ) : null}
       {d.guardOverride ? (
-        <span title="La guardia revisó el pago por su cuenta, no lo aprobó y lo pasó a una persona.">
+        <Tooltip content={GUARD_NOTE} side="top" align="start">
           <Badge tone="info" icon={<ShieldAlert />}>
             Guardia
           </Badge>
-        </span>
+        </Tooltip>
       ) : null}
     </>
   );
@@ -126,7 +164,7 @@ interface CardProps {
 /** Tarjeta de una factura en su columna. Clic → detalle. */
 export function InvoiceCard({ item, scope, countries, now, index }: CardProps) {
   const d = item.decision;
-  const country = countryOf(d.vendorName, countries);
+  const country = countryOf(d, countries);
   const vendor = d.vendorName?.trim() || "Proveedor sin identificar";
   const reason = reasonOf(d);
   return (
@@ -145,7 +183,7 @@ export function InvoiceCard({ item, scope, countries, now, index }: CardProps) {
         href={`/facturas/${encodeURIComponent(d.id)}`}
         aria-label={`${vendor}, factura ${d.invoiceNumber ?? d.filename}. Ver la decisión.`}
         className={cn(
-          "group/card block rounded-row border border-seam bg-surface-0 p-3.5 shadow-hairline",
+          "group/card @container/card block rounded-row border border-seam bg-surface-0 p-3.5 shadow-hairline",
           "transition-[border-color,box-shadow,background-color] duration-[180ms] ease-out",
           "hover:border-row-active-border hover:bg-white hover:shadow-[0_1px_2px_#1c253a0f,0_14px_28px_-18px_#1c253a40]",
         )}
@@ -184,7 +222,7 @@ export function InvoiceCard({ item, scope, countries, now, index }: CardProps) {
 
         <p className="mt-2.5 border-t border-seam pt-2.5 text-small leading-snug text-ink-2" title={d.summary}>
           {reason.text}
-          <FailedCodes codes={reason.codes} />
+          <FailedCodes codes={reason.codes} max={2} />
         </p>
       </Link>
     </motion.li>
@@ -194,7 +232,7 @@ export function InvoiceCard({ item, scope, countries, now, index }: CardProps) {
 /** Fila de 64px para la vista de lista. */
 export function InvoiceRow({ item, scope, countries, now, index }: CardProps) {
   const d = item.decision;
-  const country = countryOf(d.vendorName, countries);
+  const country = countryOf(d, countries);
   const vendor = d.vendorName?.trim() || "Proveedor sin identificar";
   const reason = reasonOf(d);
   return (
@@ -212,7 +250,11 @@ export function InvoiceRow({ item, scope, countries, now, index }: CardProps) {
       <Link
         href={`/facturas/${encodeURIComponent(d.id)}`}
         aria-label={`${vendor}, factura ${d.invoiceNumber ?? d.filename}. Ver la decisión.`}
-        className="grid h-16 grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_8.5rem] items-center gap-4 rounded-row border border-transparent px-3 transition-colors duration-150 ease-out hover:border-row-active-border hover:bg-row-active md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_8.5rem_10rem]"
+        className={cn(
+          "grid h-16 items-center gap-4 rounded-row border border-transparent px-3 transition-colors duration-150 ease-out hover:border-row-active-border hover:bg-row-active",
+          // Bajo 1280 px la fila pierde la hora y los códigos: el motivo es lo que tiene que leerse.
+          "grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_8.5rem] md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_8.5rem_6rem] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_8.5rem_10rem]",
+        )}
       >
         <span className="flex min-w-0 items-center gap-3">
           <Avatar name={d.vendorName ?? d.filename} />
@@ -227,24 +269,25 @@ export function InvoiceRow({ item, scope, countries, now, index }: CardProps) {
         </span>
 
         <span className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-small text-ink-2" title={d.summary}>
-            {reason.text}
-            <FailedCodes codes={reason.codes} max={2} wrap={false} />
+          {/* El motivo se corta con puntos suspensivos; los códigos no se cortan (y bajo 1280 px no se muestran). */}
+          <span className="flex min-w-0 items-baseline text-small text-ink-2" title={d.summary}>
+            <span className="min-w-0 truncate">{reason.text}</span>
+            <FailedCodes codes={reason.codes} max={2} wrap={false} className="relative -top-[0.5em] shrink-0 align-baseline max-xl:hidden" />
           </span>
           {/* En la fila, las insignias van solo con su icono: el motivo es lo que no debe cortarse. */}
           {d.hasSuspiciousText ? (
-            <span title="Instrucción sospechosa: la factura trae texto que intenta dar órdenes. El agente lo ignoró." className="inline-flex shrink-0">
+            <Tooltip content={SUSPICIOUS_NOTE} side="top" align="end" className="shrink-0">
               <SuspiciousBadge className="w-6 justify-center px-0">
                 <span className="sr-only">Instrucción sospechosa</span>
               </SuspiciousBadge>
-            </span>
+            </Tooltip>
           ) : null}
           {d.guardOverride ? (
-            <span title="Guardia: revisó el pago por su cuenta, no lo aprobó y lo pasó a una persona." className="inline-flex shrink-0">
+            <Tooltip content={GUARD_NOTE} side="top" align="end" className="shrink-0">
               <Badge tone="info" icon={<ShieldAlert />} className="w-6 justify-center px-0">
                 <span className="sr-only">Guardia</span>
               </Badge>
-            </span>
+            </Tooltip>
           ) : null}
         </span>
 
@@ -255,7 +298,7 @@ export function InvoiceRow({ item, scope, countries, now, index }: CardProps) {
 
         <span className="hidden items-center justify-between gap-2 md:flex">
           <DecisionChip status={d.outcome} />
-          <time dateTime={d.decidedAt} className="text-right text-caption whitespace-nowrap text-ink-3">
+          <time dateTime={d.decidedAt} className="hidden text-right text-caption whitespace-nowrap text-ink-3 xl:block">
             {relativeTime(d.decidedAt, now)}
           </time>
         </span>

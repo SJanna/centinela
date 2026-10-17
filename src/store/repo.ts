@@ -28,6 +28,7 @@ import { getDbHandle, type Db, type DbHandle, type StoreQuery } from "./db";
 import { appMeta, companySettings, decisions, invoices, readingCache, vendors } from "./schema";
 import { toDecisionSummary, type DecisionSummary } from "./mappers";
 import { toJsonbSafe, toPgSafeString } from "./jsonb";
+import { DuplicatePaymentError, PAYMENT_KEY_INDEX, PAYMENT_KEY_KINDS, paymentKeysOf, type PaymentKeyKind } from "./payment-keys";
 
 export type { DecisionSummary } from "./mappers";
 export { toDecisionSummary, toHistoryEntry } from "./mappers";
@@ -52,6 +53,10 @@ export interface Stats {
   byOutcome: Record<Outcome, number>;
   /** Suma de `amountUsd` de las decisiones PAGAR (todo el historial). */
   paidUsd: number;
+  /** Suma de `amountUsd` de las decisiones FRENAR (todo el historial; las que no tienen monto no suman). */
+  heldUsd: number;
+  /** Suma de `amountUsd` de las decisiones ESCALAR (todo el historial; las que no tienen monto no suman). */
+  escalatedUsd: number;
   /** Fondo inicial de las reglas. */
   initialFundUsd: number;
   /** Fondo inicial − pagado. */
@@ -75,6 +80,7 @@ export interface Repo {
   replaceVendors(vendors: Vendor[]): Promise<void>;
   saveInvoice(input: SaveInvoiceInput): Promise<{ id: string }>;
   getInvoiceFile(id: string): Promise<InvoiceFile | null>;
+  /** @throws DuplicatePaymentError si es un PAGAR y ya hay un pago registrado con una de sus claves. */
   appendDecision(record: DecisionRecord): Promise<void>;
   getHistory(): Promise<HistoryEntry[]>;
   listDecisions(opts?: { limit?: number }): Promise<DecisionSummary[]>;
@@ -108,12 +114,20 @@ function assertUniqueVendorIds(list: Vendor[]): void {
   }
 }
 
-function isUniqueViolation(err: unknown): boolean {
+/** El error de Postgres (o el que envuelve Drizzle) con código 23505, o null si no es una violación de unicidad. */
+function uniqueViolation(err: unknown): { constraint?: unknown; message?: unknown; detail?: unknown } | null {
   for (let e: unknown = err, depth = 0; e && depth < 5; depth++) {
-    if (typeof e === "object" && e !== null && (e as { code?: unknown }).code === "23505") return true;
+    if (typeof e === "object" && e !== null && (e as { code?: unknown }).code === "23505") return e;
     e = typeof e === "object" && e !== null ? (e as { cause?: unknown }).cause : undefined;
   }
-  return false;
+  return null;
+}
+
+/** Qué clave de pago chocó, según el índice que nombra el error (null si fue otro, p. ej. el id). */
+function collidedPaymentKey(violation: { constraint?: unknown; message?: unknown; detail?: unknown }): PaymentKeyKind | null {
+  const named = typeof violation.constraint === "string" ? violation.constraint : "";
+  const text = `${named} ${String(violation.message ?? "")} ${String(violation.detail ?? "")}`;
+  return PAYMENT_KEY_KINDS.find((kind) => named === PAYMENT_KEY_INDEX[kind] || text.includes(PAYMENT_KEY_INDEX[kind])) ?? null;
 }
 
 function newInvoiceId(): string {
@@ -241,6 +255,17 @@ const historyEntryExpr = sql<unknown>`jsonb_build_object(
 const amountUsdExpr = sql`(CASE WHEN jsonb_typeof(${decisions.record}->'decision'->'amountUsd') = 'number'
   THEN (${decisions.record}->'decision'->>'amountUsd')::numeric END)`;
 
+/** Factura de la decisión que ya tiene esa clave de pago (para explicar el choque), o null. */
+async function invoiceWithKey(db: Db, kind: PaymentKeyKind, key: string): Promise<string | null> {
+  const column = { file: decisions.payFileKey, invoice: decisions.payInvoiceKey, period: decisions.payPeriodKey }[kind];
+  try {
+    const [row] = await db.select({ invoiceId: decisions.invoiceId }).from(decisions).where(eq(column, key)).limit(1);
+    return row?.invoiceId ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Repositorio sobre una conexión concreta (o una función que la entrega cuando se necesita). */
 export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
   const handle = (): Promise<DbHandle> => (typeof source === "function" ? source() : Promise.resolve(source));
@@ -330,6 +355,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
     async appendDecision(input) {
       validateRecord(input);
       const record = toJsonbSafe(input);
+      const keys = paymentKeysOf(record);
       const db = await database();
       try {
         await db.insert(decisions).values({
@@ -338,12 +364,22 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
           decidedAt: record.decidedAt,
           outcome: record.decision.outcome,
           record,
+          payFileKey: keys.file,
+          payInvoiceKey: keys.invoice,
+          payPeriodKey: keys.period,
         });
       } catch (err) {
-        if (isUniqueViolation(err)) {
-          throw new Error(`Ya existe una decisión con id «${record.id}»: el registro no se puede reescribir.`, { cause: err });
+        const violation = uniqueViolation(err);
+        if (violation == null) throw err;
+        const kind = collidedPaymentKey(violation);
+        if (kind != null) {
+          const key = keys[kind];
+          throw new DuplicatePaymentError(
+            { kind, key, decisionId: record.id, conflictingInvoiceId: key == null ? null : await invoiceWithKey(db, kind, key) },
+            { cause: err },
+          );
         }
-        throw err;
+        throw new Error(`Ya existe una decisión con id «${record.id}»: el registro no se puede reescribir.`, { cause: err });
       }
     },
 
@@ -416,22 +452,23 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       ]);
       const rules = settingsRows[0] ? fromJson<Rules>(settingsRows[0].rules) : null;
       const byOutcome: Record<Outcome, number> = { PAGAR: 0, FRENAR: 0, ESCALAR: 0 };
-      let paidUsd = 0;
+      const amountByOutcome: Record<Outcome, number> = { PAGAR: 0, FRENAR: 0, ESCALAR: 0 };
       let monthSpentUsd = 0;
       for (const g of groups) {
         if (!OUTCOMES.includes(g.outcome)) continue;
         byOutcome[g.outcome] = Number(g.count);
-        if (g.outcome === "PAGAR") {
-          paidUsd = roundUsd(Number(g.amountUsd));
-          monthSpentUsd = roundUsd(Number(g.monthAmountUsd));
-        }
+        amountByOutcome[g.outcome] = roundUsd(Number(g.amountUsd));
+        if (g.outcome === "PAGAR") monthSpentUsd = roundUsd(Number(g.monthAmountUsd));
       }
+      const paidUsd = amountByOutcome.PAGAR;
       const total = byOutcome.PAGAR + byOutcome.FRENAR + byOutcome.ESCALAR;
       const initialFundUsd = rules?.initialFundUsd ?? 0;
       return {
         total,
         byOutcome,
         paidUsd,
+        heldUsd: amountByOutcome.FRENAR,
+        escalatedUsd: amountByOutcome.ESCALAR,
         initialFundUsd,
         fundAvailableUsd: roundUsd(initialFundUsd - paidUsd),
         month,
@@ -540,7 +577,10 @@ export function saveInvoice(input: SaveInvoiceInput): Promise<{ id: string }> {
 export function getInvoiceFile(id: string): Promise<InvoiceFile | null> {
   return shared.getInvoiceFile(id);
 }
-/** Agrega una decisión al registro. Falla si ya existe una con el mismo id. */
+/**
+ * Agrega una decisión al registro. Falla si ya existe una con el mismo id. Un PAGAR guarda sus claves
+ * de pago; si otra decisión PAGAR ya tiene una de ellas, lanza DuplicatePaymentError y no guarda nada.
+ */
 export function appendDecision(record: DecisionRecord): Promise<void> {
   return shared.appendDecision(record);
 }

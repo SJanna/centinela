@@ -10,34 +10,48 @@ import { KpiCard } from "@/components/ui/kpi-card";
 import { formatMoneyText, Money } from "@/components/ui/money";
 import { Ribbon } from "@/components/ui/ribbon";
 import { Sheet, Studio } from "@/components/ui/sheet";
+import { TONE } from "@/components/ui/tones";
 import { Eyebrow, Mono } from "@/components/ui/typography";
-import { invoicesLabel, monthName, sumUsd } from "./format";
-import type { DecisionSummary, Stats } from "./types";
+import { cn } from "@/components/ui/cn";
+import { invoicesLabel, monthName } from "./format";
+import type { Outcome, Stats } from "./types";
 
-function CountValue({ n }: { n: number }) {
+const USD_ASIDE = <Mono className="text-caption text-ink-3">USD</Mono>;
+
+const SEGMENTS: { key: Outcome; label: string; one: string }[] = [
+  { key: "PAGAR", label: "pagadas", one: "pagada" },
+  { key: "FRENAR", label: "frenadas", one: "frenada" },
+  { key: "ESCALAR", label: "escaladas", one: "escalada" },
+];
+
+/**
+ * Conteos bajo la barra de autonomía, cada uno al inicio de su segmento y en su color:
+ * así la barra se lee sin leyenda aparte ("9 · 3 · 11" bajo verde, rojo y naranja).
+ */
+function SegmentCounts({ counts }: { counts: Record<Outcome, number> }) {
+  const total = SEGMENTS.reduce((sum, s) => sum + counts[s.key], 0);
+  if (total === 0) return null;
   return (
-    <span className="inline-flex items-baseline gap-2">
-      <CountUp value={n} />
-      <span className="text-small font-normal tracking-normal text-ink-3">{n === 1 ? "factura" : "facturas"}</span>
-    </span>
+    <div aria-hidden className="mt-1.5 flex w-full gap-[3px]">
+      {SEGMENTS.filter((s) => counts[s.key] > 0).map((s) => (
+        <span
+          key={s.key}
+          className={cn("tnum min-w-0 text-caption leading-none font-medium whitespace-nowrap", TONE[s.key].text)}
+          style={{ width: `${(counts[s.key] / total) * 100}%` }}
+        >
+          {counts[s.key]}
+        </span>
+      ))}
+    </div>
   );
 }
 
-function UsdCaption({ amount, suffix }: { amount: number; suffix: string }) {
-  return (
-    <>
-      <CountUpMoney amount={amount} size="sm" display="code" className="font-normal text-ink-2" /> {suffix}
-    </>
-  );
-}
-
-export function KpiBand({ stats, decisions }: { stats: Stats; decisions: readonly DecisionSummary[] }) {
+export function KpiBand({ stats }: { stats: Stats }) {
   const { byOutcome } = stats;
-  const heldUsd = sumUsd(decisions, "FRENAR");
-  const escalatedUsd = sumUsd(decisions, "ESCALAR");
   const month = monthName(stats.month);
   const monthPct = stats.periodLimitUsd > 0 ? stats.monthSpentUsd / stats.periodLimitUsd : 0;
   const monthLeftUsd = Math.max(0, Math.round((stats.periodLimitUsd - stats.monthSpentUsd) * 100) / 100);
+  const resolved = byOutcome.PAGAR + byOutcome.FRENAR;
 
   return (
     <section aria-label="Indicadores" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -49,7 +63,7 @@ export function KpiBand({ stats, decisions }: { stats: Stats; decisions: readonl
           <Sheet as="article" aria-labelledby="kpi-fondo" className="@container flex min-h-[264px] w-full flex-col">
             <div className="flex items-center justify-between gap-3">
               <Eyebrow id="kpi-fondo">Fondo disponible</Eyebrow>
-              <Mono className="text-caption text-ink-3">USD</Mono>
+              {USD_ASIDE}
             </div>
             <div className="mt-4 text-navy">
               <CountUpMoney amount={stats.fundAvailableUsd} size="display" display="symbol" />
@@ -79,21 +93,22 @@ export function KpiBand({ stats, decisions }: { stats: Stats; decisions: readonl
                 </dd>
               </div>
             </dl>
-            <div className="space-y-2.5 pt-4">
+            {/* Solo el consumo del mes contra su límite: el umbral es por factura y no se marca sobre el acumulado. */}
+            <div className="space-y-2 pt-4">
               <UsageBar
                 value={stats.monthSpentUsd}
                 max={stats.periodLimitUsd}
                 tone={monthPct >= 0.9 ? "ESCALAR" : "NAVY"}
-                markers={[{ value: stats.approvalThresholdUsd, label: "Umbral" }]}
-                label={`Pagado en ${month}: ${formatMoneyText(stats.monthSpentUsd, "USD")} de un límite de ${formatMoneyText(stats.periodLimitUsd, "USD")}. Umbral de aprobación por factura: ${formatMoneyText(stats.approvalThresholdUsd, "USD")}.`}
+                label={`Pagado en ${month}: ${formatMoneyText(stats.monthSpentUsd, "USD")} de un límite de ${formatMoneyText(stats.periodLimitUsd, "USD")}.`}
               />
               <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-caption text-muted">
                 <span>
                   Pagado en {month}{" "}
-                  <CountUpMoney amount={stats.monthSpentUsd} size="sm" display="none" className="text-caption text-ink-2" />
+                  <CountUpMoney amount={stats.monthSpentUsd} size="sm" display="code" className="text-caption text-ink-2" />
                 </span>
                 <span>
-                  Límite del mes <span className="tnum font-medium text-ink-2">{formatMoneyText(stats.periodLimitUsd, "USD")}</span>
+                  Límite{" "}
+                  <Money amount={stats.periodLimitUsd} currency="USD" size="sm" display="code" className="text-caption text-ink-2" />
                 </span>
               </div>
             </div>
@@ -101,38 +116,48 @@ export function KpiBand({ stats, decisions }: { stats: Stats; decisions: readonl
         </div>
       </Studio>
 
+      {/* Las tres decisiones con la misma jerarquía: monto arriba, cuántas facturas debajo. */}
       <KpiCard
         eyebrow="Pagado"
         status="PAGAR"
-        aside={<Mono className="text-caption text-ink-3">USD</Mono>}
+        aside={USD_ASIDE}
         value={<CountUpMoney amount={stats.paidUsd} />}
         caption={invoicesLabel(byOutcome.PAGAR)}
       />
       <KpiCard
         eyebrow="Frenado"
         status="FRENAR"
-        value={<CountValue n={byOutcome.FRENAR} />}
-        caption={<UsdCaption amount={heldUsd} suffix="sin pagar" />}
+        aside={USD_ASIDE}
+        value={<CountUpMoney amount={stats.heldUsd} />}
+        caption={`${invoicesLabel(byOutcome.FRENAR)} sin pagar`}
       />
       <KpiCard
         eyebrow="Escalado"
         status="ESCALAR"
-        value={<CountValue n={byOutcome.ESCALAR} />}
-        caption={<UsdCaption amount={escalatedUsd} suffix="pendientes" />}
+        aside={USD_ASIDE}
+        value={<CountUpMoney amount={stats.escalatedUsd} />}
+        caption={
+          byOutcome.ESCALAR === 1
+            ? "1 factura espera a una persona"
+            : `${invoicesLabel(byOutcome.ESCALAR)} esperan a una persona`
+        }
       />
       <KpiCard
         eyebrow="Autonomía"
         value={<CountUp value={stats.autonomyRate} percent />}
-        caption="Resueltas sin una persona"
+        caption={
+          stats.total === 0
+            ? "Resueltas sin una persona"
+            : `${resolved} de ${stats.total} resueltas sin una persona`
+        }
         footer={
-          <SegmentedBar
-            label={`${byOutcome.PAGAR} pagadas, ${byOutcome.FRENAR} frenadas y ${byOutcome.ESCALAR} escaladas`}
-            segments={[
-              { key: "PAGAR", value: byOutcome.PAGAR, tone: "PAGAR", label: "Pagadas" },
-              { key: "FRENAR", value: byOutcome.FRENAR, tone: "FRENAR", label: "Frenadas" },
-              { key: "ESCALAR", value: byOutcome.ESCALAR, tone: "ESCALAR", label: "Escaladas" },
-            ]}
-          />
+          <div>
+            <SegmentedBar
+              label={SEGMENTS.map((s) => `${byOutcome[s.key]} ${byOutcome[s.key] === 1 ? s.one : s.label}`).join(", ")}
+              segments={SEGMENTS.map((s) => ({ key: s.key, value: byOutcome[s.key], tone: s.key, label: s.label }))}
+            />
+            <SegmentCounts counts={byOutcome} />
+          </div>
         }
       />
     </section>

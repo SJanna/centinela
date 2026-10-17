@@ -108,6 +108,19 @@ export function instantMonths(raw: unknown): string[] | null {
   return Array.from(new Set([monthOf(days.written), monthOf(days.utc)]));
 }
 
+/**
+ * Último día que puede traer una factura como emisión o periodo sin estar en el futuro: el día de
+ * `now` (el más tardío entre el escrito y el de UTC) más uno, por las zonas horarias adelantadas.
+ * null si `now` no es un instante válido (entonces no se puede saber qué es futuro).
+ */
+export function latestPlausibleDay(now: unknown): string | null {
+  const days = instantDays(now);
+  if (days == null) return null;
+  const latest = days.written > days.utc ? days.written : days.utc;
+  const [y, m, d] = latest.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
 /** Periodo "YYYY-MM" (mes 01–12), o el mes de una fecha de calendario válida. Otra forma → null. */
 export function periodOf(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
@@ -241,6 +254,76 @@ export function matchVendor(data: InvoiceData, vendors: readonly Vendor[]): Vend
   };
 }
 
+// ───────────────────────── Banco de la cuenta destino ─────────────────────────
+
+/** Código de ruteo o SWIFT comparable: solo letras y dígitos, en mayúscula. null si no queda nada. */
+function routingKey(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return v.length > 0 ? v : null;
+}
+
+const BIC = /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
+const ABA = /^\d{9}$/;
+
+/**
+ * ¿Dos códigos bancarios son del mismo banco? "same" si coinciden (dos SWIFT/BIC con los mismos 8
+ * primeros caracteres son del mismo banco: «SVBKUS6S» ≡ «SVBKUS6SXXX»); "different" si son del mismo
+ * tipo (SWIFT con SWIFT, ruteo ABA con ABA, u otro código con otro) y no coinciden; "unknown" si son
+ * de tipos distintos (p. ej. la ficha guarda el ABA y la factura trae el SWIFT): ahí decide el nombre.
+ */
+export function compareRoutingCodes(a: unknown, b: unknown): "same" | "different" | "unknown" {
+  const x = routingKey(a);
+  const y = routingKey(b);
+  if (x == null || y == null) return "unknown";
+  if (x === y) return "same";
+  const kind = (v: string) => (BIC.test(v) ? "bic" : ABA.test(v) ? "aba" : "other");
+  if (kind(x) !== kind(y)) return "unknown";
+  if (kind(x) === "bic" && x.slice(0, 8) === y.slice(0, 8)) return "same";
+  return "different";
+}
+
+/** Palabras que no distinguen un banco de otro («Banco», «Bank», «S.A.», «de»…). */
+const GENERIC_BANK_WORDS: ReadonlySet<string> = new Set([
+  "banco", "bank", "bco", "banca", "de", "del", "la", "el", "los", "las", "the", "of", "and", "y", "e", "do", "da",
+  "dos", "das", "sa", "na", "n", "a", "s", "ltd", "ltda", "plc", "inc", "corp", "co", "company", "trust",
+  "nacional", "national", "grupo", "group", "financiero", "financial", "multiple", "institucion",
+]);
+const CONNECTORS: ReadonlySet<string> = new Set(["de", "del", "la", "el", "los", "las", "the", "of", "and", "y", "e", "do", "da", "dos", "das"]);
+
+function bankWords(raw: string): string[] {
+  return raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\./g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 0);
+}
+
+/**
+ * ¿Dos nombres de banco pueden ser el mismo banco? Comparación tolerante a propósito (el lector
+ * escribe el nombre de mil formas): sí si comparten una palabra distintiva («Itaú Unibanco» y
+ * «Banco Itaú»), si una contiene a la otra sin espacios («JPMorgan» y «J.P. Morgan») o si una es la
+ * sigla de la otra («BCP» y «Banco de Crédito del Perú», «SVB» y «Silicon Valley Bank»). No:
+ * «Banco Pirata Internacional» y «Silicon Valley Bank». Un nombre ausente no se compara (true).
+ */
+export function bankNamesMayMatch(a: unknown, b: unknown): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return true;
+  const wa = bankWords(a);
+  const wb = bankWords(b);
+  if (wa.length === 0 || wb.length === 0) return true;
+  const sa = wa.filter((w) => !GENERIC_BANK_WORDS.has(w));
+  const sb = wb.filter((w) => !GENERIC_BANK_WORDS.has(w));
+  if (sa.length === 0 || sb.length === 0) return wa.join("") === wb.join("");
+  if (sa.some((w) => sb.includes(w))) return true;
+  const ca = sa.join("");
+  const cb = sb.join("");
+  if (ca.includes(cb) || cb.includes(ca)) return true;
+  const acronym = (words: string[]) => words.filter((w) => !CONNECTORS.has(w)).map((w) => w[0]).join("");
+  return (sa.length === 1 && acronym(wb) === sa[0]) || (sb.length === 1 && acronym(wa) === sb[0]);
+}
+
 // ───────────────────────── Acuerdo ─────────────────────────
 
 /**
@@ -289,7 +372,11 @@ export type AgreementSelectionStatus =
   /** La factura trae un periodo facturado que no es YYYY-MM válido. */
   | "invalid_period"
   /** Hay acuerdo vigente en la fecha de referencia, pero el periodo facturado queda fuera de su vigencia. */
-  | "period_outside";
+  | "period_outside"
+  /** La fecha de emisión es posterior a hoy (más un día de margen por zona horaria). */
+  | "future_date"
+  /** El periodo facturado es un mes que todavía no empieza (cobro por adelantado). */
+  | "future_period";
 
 export interface AgreementSelection {
   status: AgreementSelectionStatus;
@@ -364,7 +451,9 @@ function preferCurrency(agreements: readonly Agreement[], currency: string | nul
  * Elige el acuerdo vigente para la factura. Fecha de referencia: la de emisión o, si la factura no
  * la trae, el día de `now`. El acuerdo debe estar vigente esa fecha Y su vigencia debe cubrir el
  * mes facturado (servicePeriod, o el mes de la fecha de referencia). Con varios candidatos, prefiere
- * el de la moneda de la factura; si sigue el empate, el primero de la ficha.
+ * el de la moneda de la factura; si sigue el empate, el primero de la ficha. Con `now` válido, una
+ * emisión posterior a hoy (+1 día) da "future_date" y un mes facturado posterior al actual,
+ * "future_period"; sin `now` no se revisa.
  */
 export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string | null): AgreementSelection {
   const base = { agreement: null, referenceDate: null, referenceSource: null, billedPeriod: null, closest: null, candidates: [] };
@@ -373,6 +462,10 @@ export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string 
   if (!ref.ok) return { ...base, status: ref.reason === "invalid_issue_date" ? "invalid_date" : "no_date" };
   const referenceDate = ref.date;
   const dated = { ...base, referenceDate, referenceSource: ref.source };
+  // Una factura fechada en el futuro, o que cobra un mes que todavía no empieza, no se paga sola:
+  // la vigencia se mediría con una fecha que aún no llegó y se pagaría un servicio no prestado.
+  const latest = latestPlausibleDay(now);
+  if (latest != null && referenceDate > latest) return { ...dated, status: "future_date" };
 
   const valid = vendor.agreements.filter((a) => isAgreementValidOn(a, referenceDate));
   if (valid.length === 0) {
@@ -395,6 +488,7 @@ export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string 
 
   const billed = billedPeriodOf(data, referenceDate);
   if (!billed.ok) return { ...dated, status: "invalid_period" };
+  if (latest != null && billed.period > monthOf(latest)) return { ...dated, status: "future_period", billedPeriod: billed.period };
   const currency = normalizeCurrency(data.currency);
   const covering = valid.filter((a) => agreementCoversPeriod(a, billed.period));
   if (covering.length === 0) {

@@ -8,12 +8,14 @@
  * `getDb()` devuelve un singleton guardado en `globalThis`, así sobrevive al recargado en caliente
  * de Next (dos PGlite sobre la misma carpeta la corromperían). Al abrir se ejecuta `ensureSchema()`.
  */
-import { sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type { NeonQueryFunction } from "@neondatabase/serverless";
 import type { PGlite } from "@electric-sql/pglite";
-import { schema, type StoreSchema } from "./schema";
+import type { DecisionRecord } from "../core/schemas";
+import { PAYMENT_KEY_COLUMN, PAYMENT_KEY_INDEX, PAYMENT_KEY_KINDS, paymentKeysOf, type PaymentKeyKind } from "./payment-keys";
+import { decisions, schema, type StoreSchema } from "./schema";
 
 /** Base de datos Drizzle, igual para PGlite y Neon. */
 export type Db = PgDatabase<PgQueryResultHKT, StoreSchema>;
@@ -42,7 +44,13 @@ export type DbConfig =
   /** Cliente Neon ya construido (pruebas o configuración avanzada). */
   | { kind: "neon"; client: NeonQueryFunction<false, false> };
 
-/** SQL que crea las tablas. Debe coincidir con `schema.ts` (lo verifica una prueba). */
+/** Marca local de transacción con que la migración puede rellenar claves de pago (ver el disparador). */
+const FILL_PAY_KEYS_SETTING = "centinela.fill_pay_keys";
+
+/**
+ * SQL que crea las tablas. Junto con `PAYMENT_KEY_INDEX_STATEMENTS` debe coincidir con `schema.ts`
+ * (lo verifica una prueba).
+ */
 export const SCHEMA_STATEMENTS: readonly string[] = [
   `CREATE TABLE IF NOT EXISTS company_settings (
     id integer PRIMARY KEY CHECK (id = 1),
@@ -72,8 +80,16 @@ export const SCHEMA_STATEMENTS: readonly string[] = [
     invoice_id text NOT NULL,
     decided_at timestamptz NOT NULL,
     outcome text NOT NULL CHECK (outcome IN ('PAGAR', 'FRENAR', 'ESCALAR')),
-    record jsonb NOT NULL
+    record jsonb NOT NULL,
+    pay_file_key text,
+    pay_invoice_key text,
+    pay_period_key text
   )`,
+  // Bases creadas antes de las claves de pago. Los índices únicos se crean en `ensureSchema`,
+  // después de rellenar las claves de los PAGAR ya guardados.
+  `ALTER TABLE decisions ADD COLUMN IF NOT EXISTS pay_file_key text`,
+  `ALTER TABLE decisions ADD COLUMN IF NOT EXISTS pay_invoice_key text`,
+  `ALTER TABLE decisions ADD COLUMN IF NOT EXISTS pay_period_key text`,
   `CREATE INDEX IF NOT EXISTS decisions_decided_at_idx ON decisions (decided_at, seq)`,
   `CREATE INDEX IF NOT EXISTS decisions_invoice_id_idx ON decisions (invoice_id)`,
   `CREATE TABLE IF NOT EXISTS reading_cache (
@@ -87,9 +103,20 @@ export const SCHEMA_STATEMENTS: readonly string[] = [
   )`,
   // Registro inmutable: la base rechaza modificar o borrar decisiones fila por fila.
   // El reinicio de la demostración usa TRUNCATE, que no dispara este control.
+  // Única excepción: la migración que rellena las claves de pago de un PAGAR guardado sin ellas
+  // (solo con la marca local de esa transacción, solo claves vacías y sin cambiar nada más).
   `CREATE OR REPLACE FUNCTION centinela_decisions_append_only() RETURNS trigger
     LANGUAGE plpgsql AS $$
     BEGIN
+      IF TG_OP = 'UPDATE'
+        AND current_setting('${FILL_PAY_KEYS_SETTING}', true) = 'on'
+        AND OLD.outcome = 'PAGAR'
+        AND OLD.pay_file_key IS NULL AND OLD.pay_invoice_key IS NULL AND OLD.pay_period_key IS NULL
+        AND (NEW.id, NEW.seq, NEW.invoice_id, NEW.decided_at, NEW.outcome, NEW.record)
+          IS NOT DISTINCT FROM (OLD.id, OLD.seq, OLD.invoice_id, OLD.decided_at, OLD.outcome, OLD.record)
+      THEN
+        RETURN NEW;
+      END IF;
       RAISE EXCEPTION 'El registro de decisiones es inmutable: no se permite % sobre decisions', TG_OP;
     END
     $$`,
@@ -103,18 +130,101 @@ export const SCHEMA_STATEMENTS: readonly string[] = [
     $$`,
 ];
 
-/** Crea las tablas si no existen (sin migraciones). Reintenta por si dos arranques compiten. */
+/** Índices únicos de las claves de pago (se crean después de rellenarlas). */
+export const PAYMENT_KEY_INDEX_STATEMENTS: readonly string[] = PAYMENT_KEY_KINDS.map(
+  (kind) => `CREATE UNIQUE INDEX IF NOT EXISTS ${PAYMENT_KEY_INDEX[kind]} ON decisions (${PAYMENT_KEY_COLUMN[kind]})`,
+);
+
+/**
+ * Crea las tablas si no existen y migra las bases anteriores: agrega las columnas de claves de pago,
+ * rellena las de los PAGAR ya guardados y crea sus índices únicos. Se puede repetir sin efecto.
+ * Reintenta por si dos arranques compiten.
+ */
 export async function ensureSchema(handle: Pick<DbHandle, "db" | "atomic">): Promise<void> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await handle.atomic((db) => SCHEMA_STATEMENTS.map((stmt) => db.execute(sql.raw(stmt))));
+      await fillPaymentKeysAndIndex(handle);
       return;
     } catch (err) {
       lastError = err;
     }
   }
   throw lastError;
+}
+
+type KeyFill = { id: string } & Partial<Record<PaymentKeyKind, string>>;
+
+/**
+ * Rellena las claves de pago de los PAGAR guardados sin ellas (registrados antes de que existieran)
+ * y crea los índices únicos, en una sola transacción.
+ *
+ * Se recorre el registro en orden: si dos PAGAR viejos comparten una clave (un pago doble anterior a
+ * esta protección), solo el primero la recibe; el otro queda sin esa clave. Así crear el índice nunca
+ * falla por datos viejos, y el motor sigue viendo los dos pagos en el historial.
+ */
+async function fillPaymentKeysAndIndex(handle: Pick<DbHandle, "db" | "atomic">): Promise<void> {
+  const rows = await handle.db
+    .select({
+      id: decisions.id,
+      file: decisions.payFileKey,
+      invoice: decisions.payInvoiceKey,
+      period: decisions.payPeriodKey,
+      record: sql<unknown>`CASE WHEN ${decisions.payFileKey} IS NULL AND ${decisions.payInvoiceKey} IS NULL
+        AND ${decisions.payPeriodKey} IS NULL THEN ${decisions.record} END`,
+    })
+    .from(decisions)
+    .where(eq(decisions.outcome, "PAGAR"))
+    .orderBy(asc(decisions.decidedAt), asc(decisions.seq));
+
+  const used: Record<PaymentKeyKind, Set<string>> = { file: new Set(), invoice: new Set(), period: new Set() };
+  for (const row of rows) {
+    for (const kind of PAYMENT_KEY_KINDS) if (row[kind] != null) used[kind].add(row[kind]);
+  }
+  const fills: KeyFill[] = [];
+  for (const row of rows) {
+    if (row.record == null) continue;
+    let keys: ReturnType<typeof paymentKeysOf>;
+    try {
+      keys = paymentKeysOf((typeof row.record === "string" ? JSON.parse(row.record) : row.record) as DecisionRecord);
+    } catch {
+      continue; // Un registro ilegible no debe impedir que la aplicación arranque; queda sin claves.
+    }
+    const fill: KeyFill = { id: row.id };
+    for (const kind of PAYMENT_KEY_KINDS) {
+      const key = keys[kind];
+      if (key == null || used[kind].has(key)) continue;
+      used[kind].add(key);
+      fill[kind] = key;
+    }
+    if (PAYMENT_KEY_KINDS.some((kind) => fill[kind] != null)) fills.push(fill);
+  }
+
+  await handle.atomic((db) => {
+    const queries: StoreQuery[] = [];
+    if (fills.length > 0) {
+      queries.push(db.execute(sql`SELECT set_config(${FILL_PAY_KEYS_SETTING}, 'on', true)`));
+      for (const fill of fills) {
+        queries.push(
+          db
+            .update(decisions)
+            .set({ payFileKey: fill.file, payInvoiceKey: fill.invoice, payPeriodKey: fill.period })
+            .where(
+              and(
+                eq(decisions.id, fill.id),
+                isNull(decisions.payFileKey),
+                isNull(decisions.payInvoiceKey),
+                isNull(decisions.payPeriodKey),
+              ),
+            ),
+        );
+      }
+      queries.push(db.execute(sql`SELECT set_config(${FILL_PAY_KEYS_SETTING}, 'off', true)`));
+    }
+    for (const stmt of PAYMENT_KEY_INDEX_STATEMENTS) queries.push(db.execute(sql.raw(stmt)));
+    return queries;
+  });
 }
 
 /**
@@ -204,18 +314,52 @@ async function openNeon(config: Extract<DbConfig, { kind: "neon" }>): Promise<Db
 // ───────────────────────── Singleton ─────────────────────────
 
 const GLOBAL_KEY = "__centinelaStoreDb";
-type GlobalWithDb = typeof globalThis & { [GLOBAL_KEY]?: Promise<DbHandle> };
+const GLOBAL_SCHEMA_KEY = "__centinelaStoreSchema";
+type GlobalWithDb = typeof globalThis & { [GLOBAL_KEY]?: Promise<DbHandle>; [GLOBAL_SCHEMA_KEY]?: string };
 
-/** Conexión compartida por todo el proceso (sobrevive al recargado en caliente de Next). */
+/** El esquema que espera este código: cambia solo cuando cambia el SQL. */
+const SCHEMA_SIGNATURE = [...SCHEMA_STATEMENTS, ...PAYMENT_KEY_INDEX_STATEMENTS].join("\n");
+
+/**
+ * Conexión compartida por todo el proceso (sobrevive al recargado en caliente de Next).
+ * Si el código recargado espera otro esquema que la conexión ya abierta, lo migra sobre esa misma
+ * conexión (abrir otra PGlite sobre la misma carpeta la corrompería).
+ */
 export function getDbHandle(): Promise<DbHandle> {
   const g = globalThis as GlobalWithDb;
   const existing = g[GLOBAL_KEY];
-  if (existing) return existing;
+  if (existing) {
+    if (g[GLOBAL_SCHEMA_KEY] === SCHEMA_SIGNATURE) return existing;
+    const migrated: Promise<DbHandle> = existing.then(async (handle) => {
+      await ensureSchema(handle);
+      return handle;
+    });
+    g[GLOBAL_KEY] = migrated;
+    g[GLOBAL_SCHEMA_KEY] = SCHEMA_SIGNATURE;
+    migrated.catch(() => {
+      if (g[GLOBAL_KEY] !== migrated) return;
+      delete g[GLOBAL_SCHEMA_KEY];
+      // Si la conexión abrió, se conserva y la próxima llamada reintenta la migración; si no, se olvida.
+      existing.then(
+        () => {
+          if (g[GLOBAL_KEY] === migrated) g[GLOBAL_KEY] = existing;
+        },
+        () => {
+          if (g[GLOBAL_KEY] === migrated) delete g[GLOBAL_KEY];
+        },
+      );
+    });
+    return migrated;
+  }
   const pending: Promise<DbHandle> = openDb(configFromEnv()).catch((err: unknown) => {
-    if (g[GLOBAL_KEY] === pending) delete g[GLOBAL_KEY];
+    if (g[GLOBAL_KEY] === pending) {
+      delete g[GLOBAL_KEY];
+      delete g[GLOBAL_SCHEMA_KEY];
+    }
     throw err;
   });
   g[GLOBAL_KEY] = pending;
+  g[GLOBAL_SCHEMA_KEY] = SCHEMA_SIGNATURE;
   return pending;
 }
 
@@ -229,6 +373,7 @@ export async function resetDbForTests(): Promise<void> {
   const g = globalThis as GlobalWithDb;
   const existing = g[GLOBAL_KEY];
   delete g[GLOBAL_KEY];
+  delete g[GLOBAL_SCHEMA_KEY];
   if (!existing) return;
   try {
     const handle = await existing;
