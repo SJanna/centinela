@@ -172,6 +172,12 @@ export class Canvas {
   readonly tagged: Record<string, Box[]> = {};
   /** Citas literales de los campos de la lectura, tal como quedaron dibujadas. */
   readonly evidence: EvidenceMap = {};
+  /**
+   * Citas con la etiqueta que se ve en la misma fila («TOTAL A PAGAR $36,000.00 MXN», «Amount due
+   * $1,200.00»). Una imagen no tiene texto con qué comprobar la cita: ahí la lectura «perfecta» cita la
+   * fila completa, como la transcribiría una persona (ver renderVisual en build.ts).
+   */
+  readonly labeledEvidence: EvidenceMap = {};
 
   constructor(
     readonly width: number = A4.width,
@@ -217,6 +223,11 @@ export class Canvas {
   /** Registra la cita de un campo sin dibujar (cuando el texto ya se dibujó por otra vía). */
   cite(key: EvidenceKey, text: string): void {
     if (!(key in this.evidence)) this.evidence[key] = text;
+  }
+
+  /** Registra la cita «etiqueta valor» de una fila ya dibujada (la primera manda). */
+  citeWithLabel(key: EvidenceKey, label: string, value: string): void {
+    if (!(key in this.labeledEvidence)) this.labeledEvidence[key] = `${label.trim()} ${value.trim()}`;
   }
 
   /** Párrafo con salto de línea automático. Devuelve el y de la línea base siguiente. */

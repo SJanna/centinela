@@ -228,6 +228,7 @@ export function noSignals(overrides: Partial<ReadingSignals> = {}): ReadingSigna
     arithmeticIssues: [],
     suspiciousInstructions: [],
     evidenceNotFound: [],
+    paidDocumentMarkers: [],
     ...overrides,
   };
 }

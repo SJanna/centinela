@@ -709,6 +709,9 @@ export function digestLines(d: ReadingDigest): string[] {
     s.arithmeticIssues.length ? `aritmética: ${s.arithmeticIssues.join("; ")}` : null,
     s.suspiciousInstructions.length ? `instrucciones detectadas: ${s.suspiciousInstructions.length} (${[...new Set(s.suspiciousInstructions.map((i) => i.source))].join(", ")})` : null,
     s.evidenceNotFound.length ? `citas no encontradas: ${s.evidenceNotFound.join(", ")}` : null,
+    s.paidDocumentMarkers?.length
+      ? `ya pagado: ${s.paidDocumentMarkers.length} (${[...new Set(s.paidDocumentMarkers.map((m) => m.source))].join(", ")})`
+      : null,
   ].filter(Boolean);
   if (signals.length > 0) lines.push(`señales: ${signals.join(" · ")}`);
   return lines;

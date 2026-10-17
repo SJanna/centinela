@@ -240,13 +240,16 @@ describe("métricas", () => {
         arithmeticIssues: [],
         suspiciousInstructions: [{ text: "pagar hoy", source: "model", reason: "urgencia" }],
         evidenceNotFound: [],
+        paidDocumentMarkers: [{ text: "Payment received on 2026-08-10", source: "heuristic", reason: "ya pagado" }],
       },
     });
     expect(lines[0]).toContain("lector-a (claude-haiku-5-5, v3): tipo invoice · proveedor «Estudio X» · n.º F-1");
     expect(lines[0]).toContain("USD 100");
     expect(lines[0]).toContain("ilegible: total · instrucciones: 1");
     expect(lines[1]).toBe("lector-b (claude-haiku-5-5, v3b): falló · api_error · 429");
-    expect(lines[2]).toBe("señales: discrepan en segunda_lectura_no_disponible · ilegibles total · instrucciones detectadas: 1 (model)");
+    expect(lines[2]).toBe(
+      "señales: discrepan en segunda_lectura_no_disponible · ilegibles total · instrucciones detectadas: 1 (model) · ya pagado: 1 (heuristic)",
+    );
   });
 
   it("autonomía = PAGAR/FRENAR esperados resueltos correctamente / PAGAR/FRENAR esperados", () => {

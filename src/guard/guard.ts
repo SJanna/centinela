@@ -350,8 +350,18 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     const arithmetic = asArray(signals.arithmeticIssues);
     const suspicious = asArray(signals.suspiciousInstructions);
     const evidence = asArray(signals.evidenceNotFound);
-    if (!missingSig || !illegibleSig || !disagreeSig || !arithmetic || !suspicious || !evidence) {
+    const paid = asArray(signals.paidDocumentMarkers);
+    if (!missingSig || !illegibleSig || !disagreeSig || !arithmetic || !suspicious || !evidence || !paid) {
       v.add("las señales de verificación de la lectura están incompletas");
+    }
+    // Documento ya pagado (un recibo): basta una marca, venga de una lectura o del texto del documento.
+    if (paid && paid.length > 0) {
+      const quoted = paid.find((m) => m?.source === "heuristic" && nonEmpty(m?.text));
+      v.add(
+        quoted
+          ? `el documento indica que ya fue pagado («${shown(quoted.text, 80)}»)`
+          : "el documento indica que ya fue pagado (una lectura lo clasifica como recibo)",
+      );
     }
     missingSig?.forEach((f) => missing.add(String(f)));
     illegibleSig?.forEach((f) => illegible.add(String(f)));

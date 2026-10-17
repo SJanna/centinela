@@ -1,6 +1,7 @@
 /**
  * Verificación de lecturas (código, sin modelo): compara las dos lecturas, revisa la aritmética,
- * comprueba que las citas existan en el texto plano y corre el detector de instrucciones.
+ * comprueba que las citas existan en el texto plano (o, sin texto verificable, que la cita del total
+ * traiga su etiqueta), y corre los detectores de instrucciones y de documento ya pagado.
  */
 import {
   CRITICAL_FIELDS,
@@ -16,6 +17,7 @@ import {
 } from "../core/schemas";
 import { formatMoney, normalizeAccount, normalizeName, toCents } from "../core/normalize";
 import { detectSuspiciousInstructions } from "./heuristics";
+import { detectPaidDocumentMarkers } from "./paid-markers";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
 /** Clave en readersDisagreeOn cuando las dos lecturas imputan la factura a meses distintos. */
@@ -279,6 +281,28 @@ export function collectSuspiciousInstructions(
   return out;
 }
 
+export const RECEIPT_READING_REASON = "La lectura clasifica el documento como recibo de algo ya pagado";
+
+/**
+ * Señal de documento ya pagado: una entrada por lectura que lo clasifica como «receipt» (fuente
+ * "model") y una por cada marca del detector por patrones sobre el texto plano (fuente "heuristic").
+ * Cualquier entrada basta para no pagar: LEC-1 escala y la guardia rechaza.
+ */
+export function collectPaidDocumentMarkers(
+  doc: NormalizedDoc,
+  readings: Array<ReaderResult | null>,
+): NonNullable<ReadingSignals["paidDocumentMarkers"]> {
+  const out: NonNullable<ReadingSignals["paidDocumentMarkers"]> = [];
+  for (const reading of readings) {
+    if (!reading?.ok || reading.extraction.documentType !== "receipt") continue;
+    out.push({ text: `Clasificado como recibo por ${reading.readerId}`, source: "model", reason: RECEIPT_READING_REASON });
+  }
+  if (doc.plainText) {
+    for (const m of detectPaidDocumentMarkers(doc.plainText)) out.push({ text: m.text, source: "heuristic", reason: m.reason });
+  }
+  return out;
+}
+
 /** Forma canónica para buscar citas: NFKD, sin tildes, minúsculas, solo letras y dígitos. */
 export function canonicalText(s: string): string {
   return s
@@ -459,6 +483,101 @@ function symbolQuoteBacksCurrency(code: string, quote: SearchableText): boolean 
 }
 
 /**
+ * ¿Hay texto plano contra el cual comprobar las citas? No en una imagen, ni en un PDF sin capa de
+ * texto, ni en un documento que trae alguna imagen adjunta (lo leído en la imagen no está en el texto).
+ */
+export function hasVerifiableText(doc: NormalizedDoc): boolean {
+  if (doc.plainText == null || doc.kind === "image" || doc.plainText.trim() === "") return false;
+  return !doc.parts.some((part) => part.type === "image");
+}
+
+/**
+ * Formas de «total» que NO son el total a pagar (sobre texto plegado):
+ * - antes de impuestos o parciales: «Subtotal», «Sub-total», «Sub total», «Total sin IVA», «Total (sin
+ *   IVA)», «Total s/IVA» (pero no «Total S/ 6,000.00», soles), «Total antes de impuestos», «Total before tax», «Total excl. VAT», «Total ex
+ *   VAT», «Total without VAT», «Total pretax», «Total HT», «Total sem impostos», «Total parcial», «Total
+ *   neto», «Net total», «Total bruto», «Total gravado», «Total exento»;
+ * - totales de otra cosa: «Total IVA» / «Total impuestos» / «Total tax» (pero no «Total IVA incluido»),
+ *   «Total descuento», «Total retenciones», «Total de horas», «Total items».
+ * «Total neto a pagar» sigue contando: se quita «Total neto» y queda «a pagar».
+ */
+const NOT_A_TOTAL_LABEL = new RegExp(
+  [
+    "\\bsub[\\s.\\-]{0,2}total\\b",
+    "\\b(?:net|neto|parcial)\\s+total\\b",
+    "\\btotal\\s*[(\\[]?\\s*(?:(?:sin|antes|before|excl|excluding|ex|without|sem|pre|pretax|ht|parcial|neto|net|bruto|gravado|gravada|exento|exenta|exempt|descuentos?|discounts?|retenciones|retencion|withholding|horas|hours|hrs|items|articulos|lineas|units|unidades|qty|cantidad|de\\s+(?:horas|items|articulos|lineas|unidades))\\b|s\\s*\\/\\s*(?:iva|igv|impuestos?|impostos?|imp\\b|vat|tax))",
+    "\\btotal\\s*[(\\[]?\\s*(?:iva|igv|vat|tax|taxes|impuestos?|impostos?|icms|iss|itbis|isv)\\b(?!\\s*\\.?\\s*(?:incl|inc\\b|incluido|incluida|incluidos|included|inclusive|incluso))",
+  ].join("|"),
+  "g",
+);
+
+/**
+ * Etiquetas del total a pagar (sobre texto plegado: minúsculas, sin tildes): «Total», «Total a pagar»,
+ * «Grand total», «Total due», «Importe/Monto/Valor total», «Total geral», «Total a cobrar», «Valor a
+ * pagar», «Neto a pagar», «Amount due», «Balance due», «Amount payable», «Saldo pendiente», «Valor
+ * líquido», y en una cuenta de cobro «la suma de» / «por valor de».
+ */
+const TOTAL_LABEL =
+  /\btotal\b|\ba\s+(?:pagar|cobrar)\b|\b(?:amount|balance)\s+(?:due|payable)\b|\bsaldo\s+(?:pendiente|adeudado)\b|\bvalor\s+liquido\b|\b(?:la|por\s+la)\s+suma\s+de\b|\bpor\s+valor\s+de\b/;
+
+function foldLabel(s: string): string {
+  return s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** ¿La cita trae una etiqueta del total a pagar («Total», «Total a pagar», «Amount due»…)? «Subtotal» no cuenta. */
+export function quoteHasTotalLabel(evidence: string | null | undefined): boolean {
+  const folded = foldLabel(evidence ?? "").replace(NOT_A_TOTAL_LABEL, " ");
+  return TOTAL_LABEL.test(folded);
+}
+
+/**
+ * Regla para documentos sin texto verificable (imagen, PDF sin capa de texto, adjunto en imagen): ahí
+ * la cita del total no se puede comprobar contra el texto, y un lector puede poner como total el
+ * subtotal visible cuando la línea del total está borrosa. El total de una lectura solo cuenta como
+ * legible si su cita trae una etiqueta de total y no es la misma cita del subtotal. Devuelve true si
+ * esa lectura NO confirma el total (y entonces el total queda ilegible → LEC-1 escala). Un total sin
+ * valor no se marca aquí (eso es un dato ausente).
+ */
+export function totalNotConfirmedByQuote(doc: NormalizedDoc, extraction: Extraction): boolean {
+  if (hasVerifiableText(doc)) return false;
+  const total = extraction.total;
+  if (total.value == null) return false;
+  const evidence = total.evidence?.trim() ?? "";
+  if (!quoteHasTotalLabel(evidence)) return true;
+  const subtotal = extraction.subtotal.evidence?.trim() ?? "";
+  return subtotal !== "" && canonicalText(subtotal) === canonicalText(evidence);
+}
+
+/** Palabras del total a pagar en una nota del lector («el total», «Amount due», «el monto a pagar»). */
+const NOTE_TOTAL = /\btotal\b|\bamount\s+due\b|\bbalance\s+due\b|\ba\s+(?:pagar|cobrar)\b|\bmonto\b|\bimporte\b|\bla\s+suma\s+de\b|\bvalor\s+(?:total|a\s+pagar|liquido)\b/;
+/** La nota dice que no se lee o que se dedujo («borroso», «ilegible», «no se pudo leer», «se dedujo», «blurred», «inferred»). */
+const NOTE_DOUBT =
+  /borros|ilegib|desenfoc|difumin|tapad|cubiert[oa]|borron|blurr?|illegib|unreadable|obscured|no\s+(?:se\s+)?(?:pudo|puede|pude|podia)\s+leer|no\s+(?:es\s+|son\s+|esta\s+)?legible|sin\s+valor\s+legible|no\s+se\s+(?:lee|leen|distingue)|se\s+(?:dedujo|deduce|deducen|infiere|infirio|infieren|estimo|asumio)|deducid[oa]|inferid[oa]|\b(?:inferred|deduced|estimated|assumed|could\s+not\s+(?:be\s+)?read)\b/;
+/** Una duda negada en la misma parte de la frase («no hay partes borrosas», «sin desenfoque»). */
+const NOTE_NEGATED = /\b(?:no\s+hay|sin|ningun[oa]?|nada|tampoco\s+hay|nothing|no\s+part|not)\b[^,.;:]{0,30}(?:borros|desenfoc|difumin|blurr?|ilegib|illegib)/;
+/** La misma parte de la frase afirma que el total se lee («el total es legible», «se lee con claridad»). */
+const NOTE_READS_FINE = /\b(?:es|son|esta|estan|is|are)\s+(?:legibles?|claros?|nitidos?|clear|legible|readable)\b|\bse\s+lee\s+(?:bien|con\s+claridad|claramente)\b|\bclearly\s+(?:visible|readable|legible)\b/;
+
+function foldNote(s: string): string {
+  return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/**
+ * Regla para documentos sin texto verificable: la cita del total no se puede comprobar, y si la línea
+ * del total está borrosa un lector puede copiar la fila del subtotal CON una etiqueta inventada
+ * («Total $86,400.00 MXN»), que la regla de la cita no distingue de la fila real. Lo que sí queda es lo
+ * que la propia lectura anota: si en readerNotes una misma parte de la frase habla del total (o del
+ * «Amount due», del monto a pagar) y dice que está borroso, que no se pudo leer o que se dedujo, el
+ * total de esa lectura no cuenta como legible aunque diga legible. Solo puede escalar, nunca pagar.
+ */
+export function totalDoubtedInNotes(doc: NormalizedDoc, extraction: Extraction): boolean {
+  if (hasVerifiableText(doc)) return false;
+  if (extraction.total.value == null) return false;
+  const clauses = foldNote(extraction.readerNotes ?? "").split(/[,.;:\n]+/);
+  return clauses.some((c) => NOTE_TOTAL.test(c) && NOTE_DOUBT.test(c) && !NOTE_NEGATED.test(c) && !NOTE_READS_FINE.test(c));
+}
+
+/**
  * Campos críticos cuyo VALOR no está respaldado por el texto plano del documento: ni el valor
  * aparece en el texto (comparación tolerante a mayúsculas, tildes, espacios, saltos de línea y
  * separadores; un monto se busca leyendo los números del texto en sus formatos habituales, no como
@@ -470,8 +589,7 @@ function symbolQuoteBacksCurrency(code: string, quote: SearchableText): boolean 
  * texto plano y daría falsos positivos.
  */
 export function findEvidenceNotFound(doc: NormalizedDoc, extraction: Extraction): CriticalField[] {
-  if (doc.plainText == null || doc.kind === "image" || doc.plainText.trim() === "") return [];
-  if (doc.parts.some((part) => part.type === "image")) return [];
+  if (!hasVerifiableText(doc) || doc.plainText == null) return [];
   const text = searchable(doc.plainText);
   const notFound: CriticalField[] = [];
 
@@ -521,10 +639,16 @@ export function assessReadings(
     ? CRITICAL_FIELDS.filter((field) => dataValue(data, field) == null)
     : [...CRITICAL_FIELDS];
   // Ilegible si CUALQUIERA de las dos lecturas dudó del dato: si la segunda no lo leyó con claridad,
-  // la coincidencia entre ambas no lo respalda.
+  // la coincidencia entre ambas no lo respalda. Sin texto verificable, el total además necesita una
+  // cita con su etiqueta que no sea la del subtotal (totalNotConfirmedByQuote) y que ninguna lectura
+  // anote que está borroso o que lo dedujo (totalDoubtedInNotes).
   const okReadings = [extraction, secondary?.ok ? secondary.extraction : null].filter((e): e is Extraction => e != null);
   const illegibleCriticalFields: string[] = extraction
-    ? CRITICAL_FIELDS.filter((field) => okReadings.some((e) => !criticalField(e, field).legible))
+    ? CRITICAL_FIELDS.filter((field) =>
+        okReadings.some(
+          (e) => !criticalField(e, field).legible || (field === "total" && (totalNotConfirmedByQuote(doc, e) || totalDoubtedInNotes(doc, e))),
+        ),
+      )
     : [];
 
   const signals: ReadingSignals = {
@@ -534,6 +658,7 @@ export function assessReadings(
     arithmeticIssues: data ? arithmeticIssues(data) : [],
     suspiciousInstructions: collectSuspiciousInstructions(doc, [primary, secondary]),
     evidenceNotFound: extraction ? findEvidenceNotFound(doc, extraction) : [],
+    paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
   };
 
   return { primary, secondary, data, signals };

@@ -4,53 +4,79 @@ En orden de prioridad.
 
 ## Perfil económico y estrés (17 oct)
 
-**Hay que decidir antes de entregar.** Con Haiku en las dos lecturas (perfil `economico`, hoy por defecto) el set de 41 sale perfecto y cuesta 9 veces menos. Pero el set de estrés encontró **pagos indebidos de recibos**, y la mitad también pasan con el perfil `calidad`.
+**Resuelto y medido con Claude real.** Los 6 pagos indebidos del set de estrés (5 recibos y 1 foto con el total borroso) ya no se pagan con el perfil `economico` (Haiku en las dos lecturas, por defecto). El set de 41 sigue perfecto y la muestra de 100 no pierde autonomía. El arreglo tiene tres partes:
+- un detector de documento ya pagado, en código (`src/extract/paid-markers.ts`), que lleva a LEC-1 y a la guardia;
+- la regla del total en fotos (`totalNotConfirmedByQuote` y `totalDoubtedInNotes`);
+- los prompts `v4`/`v4b`.
 
-| Corrida (lectura real) | Aciertos | Pagos indebidos | Escaladas de más | Costo |
+Queda por decidir si se corren las 2000 (unos USD 5,5).
+
+| Corrida (lectura real, `economico`) | Aciertos | Pagos indebidos | Escaladas de más | Costo |
 |---|---:|---:|---:|---:|
-| 41 casos · `calidad` (Sonnet + Haiku, corrida anterior) | 40/41 | 0 | 1 (B05) | USD 0,84 |
-| 41 casos · `economico` | 41/41 | 0 | 0 | USD 0,09 |
-| Estrés, muestra estratificada de 100 · `economico` | 95/100 | 2 | 3 de 46 | USD 0,26 |
-| Estrés, los 61 recibos y totales borrosos · `economico` | 44/61 | 6 | 0 | USD 0,18 |
-| Estrés, esos 6 pagos indebidos · `calidad` | 3/6 | 3 | 0 | USD 0,13 |
+| 41 casos · antes (`v3`/`v3b`) | 41/41 | 0 | 0 de 24 | USD 0,09 |
+| 41 casos · **ahora (`v4`/`v4b`)** | **41/41** (13/13 en el set reservado) | **0** | **0 de 24** | USD 0,09 |
+| Muestra estratificada de 100 (semilla 17) · antes | 95/100 | 2 | 3 de 46 | USD 0,26 |
+| Muestra estratificada de 100 · **ahora** | **97/100** | **0** | **3 de 46** | USD 0,25 |
+| Los 61 recibos y totales borrosos · antes | 44/61 | 6 | 0 de 9 | USD 0,18 |
+| Los 61 recibos y totales borrosos · **ahora** | **61/61** | **0** | **0 de 9** | USD 0,19 |
 
-**Qué pagó de más**
-- **Recibos** (27 en el set): las dos lecturas con Haiku dijeron «invoice» en 16 de 27 y se pagaron 5. Las otras 11 escalaron o frenaron por otros motivos (instrucciones, umbral, duplicado).
-  - Fallan los recibos de la plantilla saas (0 de 11 detectados) y los del cuerpo del correo (1 de 5). Los de las plantillas latam, cuenta de cobro y nota de servicio se detectan en 10 de 11.
-  - S0916 y S1086 dicen «Payment received on … Thank you». Con `calidad` escalan; con `economico` se pagan.
-  - S0030, S0488 y S0768 son correos que se titulan «Payment receipt» o «Recibo de pago» pero traen vencimiento y datos bancarios. **Se pagan con los dos perfiles.** La etiqueta es discutible: en Colombia un «recibo de pago» a veces se paga. Aun así, ningún perfil los escala.
-- **Total borroso** (34): se pagó 1, S0922. Las dos lecturas pusieron como total el subtotal visible (MXN 86.400) y lo marcaron legible. Con `calidad` escala.
-- **Escaladas de más** en la muestra (S0784, S1029 y S1831): en dos casos el lector «b» (prompt v3b) marca la cuenta como ilegible; en S1831 además toma el alias «CR Dev» como proveedor. En S0784 ninguna lectura trae horas ni tarifa.
+Con el perfil `calidad` (Sonnet + Haiku) se pagaban 3 de esos 6. Con el código nuevo, repitiendo las lecturas `v3` guardadas, los 6 escalan. Con `v4` no se midió en vivo.
 
-**Opciones (ninguna aplicada)**
-1. Una comprobación de recibos en código (`src/extract`, junto al detector de instrucciones): si el texto dice «payment received», «paid on», «recibo de pago», «payment receipt», «pagado» o algo parecido, la factura escala por LEC-1. No depende del modelo y cubre los dos perfiles. Unas 1–2 h y volver a correr las 61 (~USD 0,18).
-2. Prompts v4 y v4b: un recibo es `receipt` aunque traiga vencimiento o datos bancarios, y un total deducido del subtotal va con `legible: false`. Cambia la caché, así que hay que volver a correr `eval:live` y el piloto.
-3. `READER_PROFILE=calidad` arregla 3 de los 6, pero no los recibos en el cuerpo del correo, y cuesta unos USD 0,02 por factura en vez de USD 0,0026.
+**Cómo se detienen ahora (los 61)**
+- **Recibos (27).** Con `v4`/`v4b` las dos lecturas dicen `receipt` en 25 de 27; antes era en 5. Las dos excepciones:
+  - S0488, un correo titulado «Recibo de pago A-505»: las dos lecturas dijeron `invoice`. Lo detuvo solo el detector de texto, con 3 marcas.
+  - S0768: solo una lectura dijo `receipt`, y el detector también lo marcó.
 
-**Costo:** USD 0,0026 por factura con `economico`. Las 2000 costarían unos USD 5,3 (con `calidad`, unos USD 41). En esta revisión se gastaron USD 0,66.
+  Los 5 recibos en imagen, que no tienen texto para el detector, los clasificaron como `receipt` las dos lecturas.
+- **Total borroso (34).** En 33 las dos lecturas marcan el total como ilegible. El caso que queda es S0922:
+  - El lector «a» lo marcó ilegible.
+  - El lector «b» puso MXN 86.400 con una cita inventada, «Total $86,400.00 MXN». Es justo el hueco conocido de la regla de la cita.
+  - Su propia nota dice que «Amount due» está borroso, así que `totalDoubtedInNotes` lo detiene igual.
+
+  Lo detuvieron dos defensas independientes. Si las dos lecturas inventaran la etiqueta y ninguna anotara la duda, se pagaría.
+
+**Escaladas de más en la muestra (3 de 46, todas por lectura)**
+
+Las tres son del mismo tipo que antes. Ninguna viene del detector de pagado ni de la regla del total.
+- S0784, foto de cuenta de cobro: ninguna lectura trae horas ni tarifa, así que ACU-3 queda sin datos. Ya pasaba antes.
+- S1581, correo en el cuerpo: el lector «b» (`v4b`) marca la cuenta como ilegible y LEC-1 escala. Antes le pasaba lo mismo a S1029.
+- S1831, foto saas: el lector «a» toma el alias «CR Dev» como proveedor y LEC-2 escala. Antes era el «b».
+
+Las 11 fotos legítimas de la muestra ahora citan el total con su etiqueta («TOTAL A PAGAR COP 12.000.000», «Total a cobrar …») y pasan. Con las lecturas `v3` guardadas, la regla del total habría escalado 6 de ellas.
+
+**Costo**
+- Por factura, con `economico`: USD 0,0026 (0,0032 en fotos).
+- Las 2000 costarían unos USD 5,5, ponderando por formato. Reutilizando las 157 ya leídas con `v4`, unos USD 5,1. Con `calidad`, unos USD 41.
+- En esta medición se gastaron USD 0,54: 0,19 + 0,25 + 0,09.
+
+**Pendiente**
+- Decidir si se corren las 2000 (`npm run eval:stress:live`, unos USD 5,5).
+- `calidad` con `v4`, sin medir en vivo. Al repetir las lecturas `v3` guardadas daba 38/41: B04 y B21 escalaban de más porque Sonnet citó solo el monto.
+- `src/components/invoice/trace.ts` no muestra la señal `paidDocumentMarkers`.
+- `docs/ARCHITECTURE.md` (regla del total) todavía dice «Falta medir con v4/v4b».
 
 **Cómo correrlo** (el perfil sale de `--profile` o de `READER_PROFILE`; por defecto `economico`):
 
 ```bash
 npm run eval                                          # 41 casos, simulado, sin costo
 npm run eval:stress                                   # 2000 casos, simulado, ~6 s
-npm run eval:live -- --out=live-economico             # 41 casos con Claude, ~USD 0,10
-npm run eval:stress:live -- --sample=100              # piloto de 100, ~USD 0,26
-npm run eval:stress:live                              # las 2000, ~USD 5,3
+npm run eval:live -- --concurrency=4 --out=live-economico-v4         # 41 casos con Claude, ~USD 0,10
+npm run eval:stress:live -- --sample=100 --out=stress-live-economico-muestra100-v4   # piloto de 100, ~USD 0,25
+npm run eval:stress:live -- --case=<los 61> --sample=61 --out=stress-live-economico-recibos-borrosos-v4   # ~USD 0,19
+npm run eval:stress:live                              # las 2000, ~USD 5,5
 npm run eval:live -- --profile=calidad --out=live-calidad
 ```
 
-Las lecturas quedan en caché (`dataset/reading-cache` y `dataset/stress/reading-cache`), así que repetir una corrida no cuesta.
+La lista de los 61 está en `caseFilter` de `eval/reports/stress-live-economico-recibos-borrosos.json`. Con `--sample`, el historial de cada escenario se arma con la lectura simulada, sin costo. Las lecturas quedan en caché (`dataset/reading-cache` y `dataset/stress/reading-cache`), así que repetir una corrida no cuesta.
 
-**Reportes:** en `eval/reports/`:
-- `live-economico.md`
-- `stress-live-economico-muestra100.md`
-- `stress-live-economico-recibos-borrosos.md`
-- `stress-live-calidad-indebidos.md`
+**Reportes** en `eval/reports/` (en cada fallo, el reporte muestra qué leyó cada lector):
 
-En cada fallo, el reporte muestra qué leyó cada lector.
-
-**Documentación pendiente:** `CLAUDE.md` y `docs/ARCHITECTURE.md` todavía dicen «Sonnet + Haiku».
+| Corrida | Ahora (`v4`/`v4b`) | Antes (`v3`/`v3b`) |
+|---|---|---|
+| 41 casos | `live-economico-v4.md` | `live-economico.md` |
+| Muestra de 100 | `stress-live-economico-muestra100-v4.md` | `stress-live-economico-muestra100.md` |
+| Los 61 recibos y totales borrosos | `stress-live-economico-recibos-borrosos-v4.md` | `stress-live-economico-recibos-borrosos.md` |
+| Los 6 pagos indebidos · `calidad` | — | `stress-live-calidad-indebidos.md` |
 
 ## 1. ~~Clave de Anthropic y evaluación con lectura real~~ (hecho el 17 de octubre)
 

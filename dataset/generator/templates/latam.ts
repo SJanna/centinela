@@ -140,6 +140,7 @@ export function renderLatam(spec: DocumentSpec): Canvas {
     align: "right",
     tags: ["total"],
   });
+  c.citeWithLabel("total", "TOTAL A PAGAR", totalText);
   ty += 42;
 
   let py = blockTop;

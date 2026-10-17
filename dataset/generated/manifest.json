@@ -326,7 +326,7 @@
       },
       "total": {
         "value": 36000,
-        "evidence": "$36,000.00 MXN",
+        "evidence": "TOTAL A PAGAR $36,000.00 MXN",
         "legible": true
       },
       "lineItems": [
@@ -1878,7 +1878,7 @@
       },
       "total": {
         "value": 8000000,
-        "evidence": "COP 8.000.000",
+        "evidence": "TOTAL A PAGAR COP 8.000.000",
         "legible": true
       },
       "lineItems": [
@@ -2788,7 +2788,7 @@
       },
       "total": {
         "value": 12000000,
-        "evidence": "COP 12.000.000",
+        "evidence": "Total a cobrar COP 12.000.000",
         "legible": true
       },
       "lineItems": [
@@ -3538,7 +3538,7 @@
       },
       "total": {
         "value": 1200,
-        "evidence": "$1,200.00",
+        "evidence": "Amount due $1,200.00",
         "legible": true
       },
       "lineItems": [

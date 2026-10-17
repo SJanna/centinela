@@ -113,6 +113,64 @@ describe("LEC-1 · datos completos y legibles", () => {
     }
   });
 
+  it("falla si el texto del documento dice que ya fue pagado, aunque las dos lecturas digan «invoice»", () => {
+    const signals = {
+      paidDocumentMarkers: [
+        { text: "Payment receipt", source: "heuristic" as const, reason: "Se presenta como recibo" },
+        { text: "Payment received on 2026-08-10 by wire transfer. Thank you.", source: "heuristic" as const, reason: "Dice que el pago ya se hizo" },
+      ],
+    };
+    const d = decide(engineInput(acmeInvoice(), { signals }), context());
+    const c = check(d, "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe(
+      "El documento indica que ya fue pagado: «Payment receipt», «Payment received on 2026-08-10 by wire transfer. Thank you.».",
+    );
+    expect(c.params.paidMarkers).toBe(2);
+    expect(c.params.firstPaidMarker).toBe("Payment receipt");
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.humanAction).toContain("un recibo es de algo ya pagado");
+  });
+
+  it("con más de dos marcas cita dos y cuenta el resto; si una lectura dice «receipt», lo agrega", () => {
+    const marker = (text: string) => ({ text, source: "heuristic" as const, reason: "x" });
+    const signals = {
+      paidDocumentMarkers: [
+        { text: "Clasificado como recibo por lector-a", source: "model" as const, reason: "recibo" },
+        marker("Asunto: Recibo de pago A-505"),
+        marker("Les enviamos el recibo de pago de octubre de 2026."),
+        marker("Recibo de pago N° A-505"),
+      ],
+    };
+    const c = check(decide(engineInput(acmeInvoice({ documentType: "receipt" }), { signals }), context()), "LEC-1");
+    expect(c.explanation).toBe(
+      "El documento indica que ya fue pagado: «Asunto: Recibo de pago A-505», «Les enviamos el recibo de pago de octubre de 2026.» y 1 más (una de las lecturas también lo clasifica como recibo).",
+    );
+  });
+
+  it("una marca que viene solo de una lectura («receipt») también hace fallar LEC-1", () => {
+    const signals = { paidDocumentMarkers: [{ text: "Clasificado como recibo por lector-b", source: "model" as const, reason: "recibo" }] };
+    const c = check(decide(engineInput(acmeInvoice(), { signals }), context()), "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("El documento parece un recibo de algo ya pagado");
+  });
+
+  it("sin la señal (registro anterior a ella) decide igual por el tipo de documento de las lecturas", () => {
+    const input = engineInput(acmeInvoice());
+    delete input.reading.signals.paidDocumentMarkers;
+    expect(check(decide(input, context()), "LEC-1").status).toBe("pass");
+    const receipt = engineInput(acmeInvoice({ documentType: "receipt" }));
+    delete receipt.reading.signals.paidDocumentMarkers;
+    expect(check(decide(receipt, context()), "LEC-1").status).toBe("fail");
+  });
+
+  it("total ilegible solo por la verificación (las lecturas lo dieron por legible): explica la cita", () => {
+    const c = check(decide(engineInput(acmeInvoice(), { signals: { illegibleCriticalFields: ["total"] } }), context()), "LEC-1");
+    expect(c.explanation).toBe(
+      "No se leen con claridad: total. La cita del total no muestra la etiqueta del total, es la misma del subtotal o una lectura anota que el total está borroso o que lo dedujo, y el documento no tiene texto para comprobarlo.",
+    );
+  });
+
   it("falla aunque las señales vengan vacías si un campo crítico es null en los datos", () => {
     const c = check(decide(engineInput(acmeInvoice({ accountNumber: null })), context()), "LEC-1");
     expect(c.status).toBe("fail");

@@ -127,6 +127,15 @@ export interface ReadingSignals {
   suspiciousInstructions: { text: string; source: "model" | "heuristic"; reason: string }[];
   /** Citas de evidencia de campos críticos que no aparecen en el texto plano del documento. */
   evidenceNotFound: string[];
+  /**
+   * LEC-1: el documento es de algo YA PAGADO (un recibo, no un cobro). Una entrada por lectura que lo
+   * clasifica como "receipt" (source "model"; text dice qué lectura) y una por cada marca del detector
+   * por patrones sobre el texto plano (source "heuristic"; text = la línea del documento, p. ej.
+   * «Payment received on 2026-08-10»). Si no está vacía, nunca se paga: LEC-1 escala y la guardia
+   * rechaza. La verificación siempre la llena; es opcional solo para leer registros guardados antes de
+   * que existiera (la guardia la exige: si falta, las señales están incompletas y no aprueba).
+   */
+  paidDocumentMarkers?: { text: string; source: "model" | "heuristic"; reason: string }[];
 }
 
 export interface ReadingAssessment {

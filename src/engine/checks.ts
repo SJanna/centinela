@@ -252,6 +252,11 @@ function ruleValue(ctx: DecisionContext, rule: NumericRule): { ok: true; value: 
 const PAYABLE_DOCUMENT_TYPES: ReadonlySet<string> = new Set(["invoice", "cuenta_de_cobro"]);
 const RECEIPT_PROBLEM = "El documento parece un recibo de algo ya pagado, no una factura ni una cuenta de cobro";
 const OTHER_DOCUMENT_PROBLEM = "El documento no parece una factura ni una cuenta de cobro";
+const PAID_PROBLEM = "El documento indica que ya fue pagado";
+/** Cuántas marcas de «ya pagado» se citan en la explicación (el resto se cuenta). */
+const PAID_QUOTES_SHOWN = 2;
+const TOTAL_QUOTE_PROBLEM =
+  "La cita del total no muestra la etiqueta del total, es la misma del subtotal o una lectura anota que el total está borroso o que lo dedujo, y el documento no tiene texto para comprobarlo";
 const ACTION_RECEIPT = "Confirmar con el proveedor si hay un cobro pendiente: un recibo es de algo ya pagado y no se paga otra vez.";
 const ACTION_OTHER_DOCUMENT =
   "Revisar el documento original: solo se pagan facturas y cuentas de cobro. Si es un cobro, pedir al proveedor la factura o la cuenta de cobro.";
@@ -264,6 +269,25 @@ function okExtractions(input: EngineInput): Extraction[] {
 
 function extractionField(e: Extraction, field: CriticalField): { legible?: unknown } | undefined {
   return field === "accountNumber" ? e.payment?.accountNumber : e[field];
+}
+
+/**
+ * Marcas de documento ya pagado de la señal (lecturas que dicen «receipt» y detector por patrones).
+ * La señal la produce otro módulo y es opcional en registros viejos: si no es una lista, no hay marcas
+ * (el tipo de documento de las lecturas se revisa aparte).
+ */
+function paidMarkersOf(input: EngineInput): NonNullable<ReadingSignals["paidDocumentMarkers"]> {
+  const markers: unknown = input.reading.signals.paidDocumentMarkers;
+  return Array.isArray(markers) ? (markers as NonNullable<ReadingSignals["paidDocumentMarkers"]>) : [];
+}
+
+/** «El documento indica que ya fue pagado: «Payment receipt», «Payment received on 2026-08-10» y 1 más». */
+function paidProblem(quotes: readonly string[], readersSayReceipt: boolean): string {
+  const shown = quotes.slice(0, PAID_QUOTES_SHOWN).map((q) => `«${truncate(q, 100)}»`);
+  const rest = quotes.length - shown.length;
+  const more = rest > 0 ? ` y ${rest} más` : "";
+  const alsoReaders = readersSayReceipt ? " (una de las lecturas también lo clasifica como recibo)" : "";
+  return `${PAID_PROBLEM}: ${shown.join(", ")}${more}${alsoReaders}`;
 }
 
 /**
@@ -294,28 +318,43 @@ const lec1: Evaluator = (f, input) => {
   // u otro documento, la coincidencia en los demás datos no basta para pagarlo.
   const readTypes = unique([documentType, ...okExtractions(input).map((e) => String(e.documentType))]);
   const notPayable = readTypes.filter((t) => !PAYABLE_DOCUMENT_TYPES.has(t));
-  const documentKind = notPayable.length === 0 ? null : notPayable.includes("receipt") ? "receipt" : "other";
+  // Documento ya pagado según la verificación: lecturas que dicen «receipt» o marcas en el texto
+  // («Payment received on…», «Recibo de pago», un sello «PAGADO»). No depende de que el modelo acierte.
+  const paidMarkers = paidMarkersOf(input);
+  const paidQuotes = unique(
+    paidMarkers.filter((m) => m?.source === "heuristic").map((m) => String(m?.text ?? "").replace(/\s+/g, " ").trim()).filter(Boolean),
+  );
+  const readersSayReceipt = notPayable.includes("receipt") || paidMarkers.some((m) => m?.source !== "heuristic");
+  const documentKind = paidMarkers.length > 0 || notPayable.includes("receipt") ? "receipt" : notPayable.length > 0 ? "other" : null;
   const documentProblem =
     documentKind == null
       ? null
-      : `${documentKind === "receipt" ? RECEIPT_PROBLEM : OTHER_DOCUMENT_PROBLEM}${
-          PAYABLE_DOCUMENT_TYPES.has(documentType) ? " (así lo clasifica una de las dos lecturas)" : ""
-        }`;
+      : paidQuotes.length > 0
+        ? paidProblem(paidQuotes, readersSayReceipt)
+        : `${documentKind === "receipt" ? RECEIPT_PROBLEM : OTHER_DOCUMENT_PROBLEM}${
+            PAYABLE_DOCUMENT_TYPES.has(documentType) ? " (así lo clasifica una de las dos lecturas)" : ""
+          }`;
   const nullCritical = CRITICAL_FIELDS.filter((k) => isBlank(data[k]));
   const missing = unique([...s.missingCriticalFields, ...nullCritical].map(fieldLabel));
   const illegible = unique([...s.illegibleCriticalFields, ...illegibleInReadings(input)].map(fieldLabel));
   const notFound = unique(s.evidenceNotFound.map(fieldLabel));
+  // Total ilegible solo por la verificación (las lecturas lo dieron por legible): sin texto con qué
+  // comprobarlo, la cita del total no trae su etiqueta, es la del subtotal o la nota de una lectura dice
+  // que está borroso o que lo dedujo.
+  const totalQuoteProblem =
+    s.illegibleCriticalFields.includes("total") && okExtractions(input).every((e) => e.total?.legible === true);
 
   if (documentProblem == null && missing.length === 0 && illegible.length === 0 && notFound.length === 0) {
     return pass(
       `Están completos y legibles los datos críticos: ${listEs(CRITICAL_FIELDS.map(fieldLabel))}.`,
-      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null },
+      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null, paidMarkers: 0 },
     );
   }
   const parts: string[] = [];
   if (documentProblem != null) parts.push(documentProblem);
   if (missing.length > 0) parts.push(`Faltan datos críticos: ${listEs(missing)}`);
   if (illegible.length > 0) parts.push(`No se leen con claridad: ${listEs(illegible)}`);
+  if (totalQuoteProblem) parts.push(TOTAL_QUOTE_PROBLEM);
   if (notFound.length > 0) {
     parts.push(
       notFound.length === 1
@@ -334,6 +373,8 @@ const lec1: Evaluator = (f, input) => {
     missing: missing.join(", ") || null,
     illegible: illegible.join(", ") || null,
     evidenceNotFound: notFound.join(", ") || null,
+    paidMarkers: paidMarkers.length,
+    firstPaidMarker: paidQuotes[0] != null ? truncate(paidQuotes[0], 120) : null,
   });
 };
 

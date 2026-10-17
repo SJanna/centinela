@@ -87,8 +87,8 @@ describe("getAppStatus", () => {
     expect(status.models).toEqual(["claude-haiku-5-5"]);
     expect(status.promptVersion).toBe(PROMPT_VERSION);
     expect(status.readers.map((r) => `${r.id} · ${r.model} · ${r.promptVersion}`)).toEqual([
-      "lector-a · claude-haiku-5-5 · v3",
-      "lector-b · claude-haiku-5-5 · v3b",
+      `lector-a · claude-haiku-5-5 · ${PROMPT_VERSION}`,
+      `lector-b · claude-haiku-5-5 · ${PROMPT_VERSION_B}`,
     ]);
     expect(status.accessProtected).toBe(true);
   });

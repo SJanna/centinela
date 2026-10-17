@@ -103,6 +103,7 @@ export function renderCuentaCobro(spec: DocumentSpec): Canvas {
   const sumRow = (label: string, value: string, key: "subtotal" | "tax" | "total", bold = false) => {
     c.text(colPeriod, y, label, { size: 10, font: bold ? serifBold : serif, color: INK });
     c.field(key, colValue, y, value, { size: 10, font: bold ? serifBold : serif, color: INK, align: "right", tags: key === "total" ? ["total"] : [] });
+    if (key === "total") c.citeWithLabel("total", label, value);
     y += 14;
   };
   if (spec.subtotal != null) sumRow("Subtotal", money(spec.subtotal), "subtotal");

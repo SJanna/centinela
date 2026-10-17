@@ -338,6 +338,11 @@ function fieldOf<T>(value: T | null) {
   return { value, evidence: value === null ? null : String(value), legible: true };
 }
 
+/** El total con su etiqueta en la cita («Total 1200»), como lo cita un lector en una imagen. */
+function totalOf(value: number | null) {
+  return { value, evidence: value === null ? null : `Total ${value}`, legible: true };
+}
+
 function extractionOf(inv: TrueInvoice): Extraction {
   return {
     documentType: inv.documentType,
@@ -350,7 +355,7 @@ function extractionOf(inv: TrueInvoice): Extraction {
     currency: fieldOf(inv.currency),
     subtotal: fieldOf(inv.subtotal),
     tax: fieldOf(inv.tax),
-    total: fieldOf(inv.total),
+    total: totalOf(inv.total),
     lineItems: inv.lineItems.map((l) => ({ ...l })),
     payment: {
       beneficiaryName: fieldOf(inv.vendorName),
@@ -385,6 +390,7 @@ function secondReading(g: Gen, primary: Extraction, inv: TrueInvoice, vendor: Ve
     [2, "currency"],
     [2, "instructions"],
     [2, "docType"],
+    [2, "totalQuote"],
   ] as const)) {
     case "same":
       break;
@@ -404,7 +410,11 @@ function secondReading(g: Gen, primary: Extraction, inv: TrueInvoice, vendor: Ve
       e.payment.accountNumber = fieldOf(inv.accountNumber.replace(/[^0-9A-Z]/g, ""));
       break;
     case "total":
-      e.total = fieldOf(cents(inv.total + 1));
+      e.total = totalOf(cents(inv.total + 1));
+      break;
+    case "totalQuote":
+      // Cita del total sin etiqueta (solo el monto): en una imagen no confirma el total.
+      e.total = fieldOf(e.total.value);
       break;
     case "illegible":
       markIllegible(e, pick(g, CRITICAL));
@@ -437,7 +447,7 @@ function docFor(g: Gen, primary: Extraction, n: number): NormalizedDoc {
     primary.issueDate.evidence,
     primary.servicePeriod.evidence,
     ...primary.lineItems.map((l) => `${l.description} ${l.quantity ?? ""} ${l.unitPrice ?? ""} ${l.amount}`),
-    `Total ${primary.currency.evidence ?? ""} ${primary.total.evidence ?? ""}`,
+    `${primary.total.evidence ?? "Total"} ${primary.currency.evidence ?? ""}`,
     `Cuenta ${primary.payment.accountNumber.evidence ?? ""}`,
     "Gracias por su pago puntual.",
   ];

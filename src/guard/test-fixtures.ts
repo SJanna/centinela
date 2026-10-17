@@ -172,6 +172,7 @@ export function emptySignals(): ReadingSignals {
     arithmeticIssues: [],
     suspiciousInstructions: [],
     evidenceNotFound: [],
+    paidDocumentMarkers: [],
   };
 }
 

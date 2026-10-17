@@ -68,7 +68,10 @@ describe("generador", () => {
     const h01 = byId.get("H01")!.groundTruth;
     const h03 = byId.get("H03")!.groundTruth;
     expect(h03.invoiceNumber.value).toBe(h01.invoiceNumber.value);
-    expect({ ...h03, readerNotes: "" }).toEqual({ ...h01, readerNotes: "" });
+    // En la foto la cita del total es la fila completa, con su etiqueta (en una imagen no hay texto
+    // con qué comprobarla); en el PDF es solo el monto. El resto de la lectura es igual.
+    expect(h03.total).toEqual({ ...h01.total, evidence: `Total a cobrar ${h01.total.evidence}` });
+    expect({ ...h03, readerNotes: "", total: h01.total }).toEqual({ ...h01, readerNotes: "" });
     expect(byId.get("H03")!.sha256).not.toBe(byId.get("H01")!.sha256);
   });
 

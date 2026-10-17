@@ -128,6 +128,7 @@ export function renderNotaServico(spec: DocumentSpec): Canvas {
   const totalText = money(spec.total);
   const lw = c.text(W / 2 - 50, y + 20, label, { size: 11.5, font: "sansBold", color: INK, align: "center" });
   c.field("total", W / 2 - 50 + lw / 2 + 8, y + 20, totalText, { size: 12.5, font: "sansBold", color: INK, tags: ["total"] });
+  c.citeWithLabel("total", label, totalText);
   y += 30;
   c.line(X0, y, X1, y, LINE, 0.9);
 

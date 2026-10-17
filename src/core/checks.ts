@@ -18,7 +18,7 @@ export interface CheckDefinition {
 }
 
 export const CHECK_CATALOG: readonly CheckDefinition[] = [
-  { code: "LEC-1", group: "Lectura", title: "Datos completos y legibles", description: "La factura trae, legibles, el proveedor, el número, la moneda, el total y la cuenta destino.", outcomeIfFail: "ESCALAR" },
+  { code: "LEC-1", group: "Lectura", title: "Datos completos y legibles", description: "Es un cobro, no un recibo de algo ya pagado, y trae legibles el proveedor, el número, la moneda, el total y la cuenta destino.", outcomeIfFail: "ESCALAR" },
   { code: "LEC-2", group: "Lectura", title: "Dos lecturas coinciden", description: "Dos lecturas independientes de la factura coinciden en los datos críticos.", outcomeIfFail: "ESCALAR" },
   { code: "LEC-3", group: "Lectura", title: "Las cuentas cuadran", description: "Las líneas suman el subtotal y subtotal más impuestos da el total.", outcomeIfFail: "ESCALAR" },
   { code: "LEC-4", group: "Lectura", title: "Sin instrucciones escondidas", description: "El documento no contiene texto que intente dar órdenes al sistema o a quien paga.", outcomeIfFail: "ESCALAR" },

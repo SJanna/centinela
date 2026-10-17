@@ -76,17 +76,32 @@ export async function renderPdfDocument(spec: DocumentSpec, template: TemplateKi
   return { bytes, evidence: canvas.evidence, illegible: [] };
 }
 
+/**
+ * Citas de una imagen: en una imagen no hay texto con qué comprobar la cita, así que la lectura
+ * «perfecta» cita la fila completa del total con su etiqueta («TOTAL A PAGAR $36,000.00 MXN»), como la
+ * transcribiría una persona y como lo exige la verificación (src/extract/assess.ts,
+ * totalNotConfirmedByQuote). En un PDF la cita es solo el monto: ahí la etiqueta puede quedar en otra
+ * línea o con las letras unidas en la capa de texto.
+ */
+function imageEvidence(spec: DocumentSpec, template: TemplateKind, canvas: { evidence: EvidenceMap; labeledEvidence: EvidenceMap }): EvidenceMap {
+  if (canvas.evidence.total != null && canvas.labeledEvidence.total == null) {
+    throw new Error(`${spec.id}: la plantilla ${template} no registró la fila del total con su etiqueta (citeWithLabel)`);
+  }
+  return { ...canvas.evidence, ...canvas.labeledEvidence };
+}
+
 async function renderVisual(spec: DocumentSpec, format: "pdf" | "png" | "jpg", template: TemplateKind, photo: PhotoSpec | null): Promise<Rendered> {
   if (format === "pdf") return renderPdfDocument(spec, template);
   const canvas = renderTemplate(spec, template);
   const page = canvas.page();
+  const evidence = imageEvidence(spec, template, canvas);
   if (format === "png") {
-    return { bytes: await renderPng(page, template === "portal" ? 1.5 : 2), evidence: canvas.evidence, illegible: [] };
+    return { bytes: await renderPng(page, template === "portal" ? 1.5 : 2), evidence, illegible: [] };
   }
   if (!photo) throw new Error(`${spec.id}: falta photo para jpg`);
   const illegibleTags = spec.blurTotal ? ["total"] : [];
   const bytes = await renderPhoto(page, photo, { illegibleTags });
-  return { bytes, evidence: canvas.evidence, illegible: spec.blurTotal ? ["total"] : [] };
+  return { bytes, evidence, illegible: spec.blurTotal ? ["total"] : [] };
 }
 
 async function renderDocument(spec: DocumentSpec): Promise<Rendered & { attachment: Buffer | null }> {

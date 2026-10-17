@@ -83,6 +83,7 @@ export function renderPortal(spec: DocumentSpec): Canvas {
     c.text(x + 16, cardY + 24, label, { size: 9, color: MUTED });
     const style = { size: i === 0 ? 22 : 15, font: "sansBold" as const, color: INK, tags };
     const vw = key ? c.field(key, x + 16, cardY + 54, value, style) : c.text(x + 16, cardY + 54, value, style);
+    if (key === "total") c.citeWithLabel("total", label, value);
     if (sub) c.text(x + 16 + vw + 6, cardY + 54, sub, { size: 10, font: "sansBold", color: MUTED });
   };
   card(0, "Amount due", money(spec.total), "total", spec.currency, ["total"]);
@@ -145,6 +146,7 @@ export function renderPortal(spec: DocumentSpec): Canvas {
   const sum = (label: string, value: string, key: EvidenceKey, bold = false, tags: string[] = []) => {
     c.text(sx, y, label, { size: 9.5, font: bold ? "sansBold" : "sans", color: bold ? INK : MUTED });
     c.field(key, dr, y, value, { size: 9.5, font: bold ? "sansBold" : "sans", color: INK, align: "right", tags });
+    if (key === "total") c.citeWithLabel("total", label, value);
     y += 18;
   };
   if (spec.subtotal != null) sum("Subtotal", money(spec.subtotal), "subtotal");

@@ -188,8 +188,8 @@ describe("createLiveReaders", () => {
 
   it("calidad conserva las claves de antes (reutiliza las lecturas ya guardadas)", async () => {
     const cache = createMemoryReadingCache();
-    await cache.set(readingCacheKey(doc.fileHash, "lector-a", "claude-sonnet-5-5", "v3"), makeExtraction());
-    await cache.set(readingCacheKey(doc.fileHash, "lector-b", "claude-haiku-5-5", "v3"), makeExtraction());
+    await cache.set(readingCacheKey(doc.fileHash, "lector-a", "claude-sonnet-5-5", PROMPT_VERSION), makeExtraction());
+    await cache.set(readingCacheKey(doc.fileHash, "lector-b", "claude-haiku-5-5", PROMPT_VERSION), makeExtraction());
     const { client, create, betaCreate } = fakeClient();
     const pair = createLiveReaders({ profile: "calidad", cache, client });
     expect((await pair.primary.read(doc)).ok).toBe(true);

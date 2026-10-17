@@ -11,8 +11,11 @@ import {
   canonicalText,
   compareReadings,
   findEvidenceNotFound,
+  hasVerifiableText,
+  quoteHasTotalLabel,
   readInvoice,
   toInvoiceData,
+  totalNotConfirmedByQuote,
 } from "./assess";
 import { failResult, fakeReader, field, makeDoc, makeExtraction, okResult, SAMPLE_INVOICE_TEXT } from "./test-utils";
 
@@ -69,6 +72,7 @@ describe("assessReadings · campos críticos (LEC-1)", () => {
       arithmeticIssues: [],
       suspiciousInstructions: [],
       evidenceNotFound: [],
+      paidDocumentMarkers: [],
     });
   });
 
@@ -630,5 +634,202 @@ describe("revisión · PDF con título espaciado y la moneda en el mismo fragmen
     // Sin cita para la moneda: tiene que estar en el texto como palabra.
     const e = makeExtraction({ currency: field("USD", null) });
     expect(findEvidenceNotFound(doc, e), doc.plainText ?? "").toEqual([]);
+  });
+});
+
+describe("documento ya pagado (paidDocumentMarkers → LEC-1)", () => {
+  const receiptText = `${SAMPLE_INVOICE_TEXT}\nPayment received on 2026-08-10 by wire transfer. Thank you.`;
+
+  it("marca lo que diga el texto aunque las dos lecturas digan «invoice»", () => {
+    const a = assessReadings(makeDoc({ plainText: receiptText }), okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
+    expect(a.signals.paidDocumentMarkers).toEqual([
+      { text: "Payment received on 2026-08-10 by wire transfer. Thank you.", source: "heuristic", reason: "Dice que el pago ya se hizo o ya se recibió" },
+    ]);
+  });
+
+  it("agrega una entrada por cada lectura que diga «receipt», aunque el texto no tenga marcas (p. ej. una foto)", () => {
+    const photo = makeDoc({ kind: "image", plainText: null, parts: [{ type: "image", mediaType: "image/jpeg", base64: "" }] });
+    const receipt = makeExtraction({ documentType: "receipt" });
+    const a = assessReadings(photo, okResult(makeExtraction(), "lector-a"), okResult(receipt, "lector-b"));
+    expect(a.signals.paidDocumentMarkers).toEqual([
+      { text: "Clasificado como recibo por lector-b", source: "model", reason: "La lectura clasifica el documento como recibo de algo ya pagado" },
+    ]);
+  });
+
+  it("una factura normal no trae marcas", () => {
+    const a = assessReadings(makeDoc(), okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
+    expect(a.signals.paidDocumentMarkers).toEqual([]);
+  });
+});
+
+describe("total sin texto verificable (cita con etiqueta, no la del subtotal)", () => {
+  const photo = makeDoc({ kind: "image", mediaType: "image/jpeg", plainText: null, parts: [{ type: "image", mediaType: "image/jpeg", base64: "" }] });
+  const withTotal = (evidence: string | null, subtotalEvidence: string | null = "Subtotal: USD 2.400,00") =>
+    makeExtraction({ total: field(2400, evidence), subtotal: field(2400, subtotalEvidence) });
+
+  it("qué documentos tienen texto verificable", () => {
+    expect(hasVerifiableText(makeDoc())).toBe(true);
+    expect(hasVerifiableText(photo)).toBe(false);
+    expect(hasVerifiableText(makeDoc({ plainText: "  " }))).toBe(false); // PDF sin capa de texto
+    expect(hasVerifiableText(makeDoc({ plainText: null }))).toBe(false);
+    const mailWithPhoto = makeDoc({ kind: "email", parts: [{ type: "text", text: "Adjunto foto" }, { type: "image", mediaType: "image/png", base64: "" }], plainText: "Adjunto foto" });
+    expect(hasVerifiableText(mailWithPhoto)).toBe(false);
+  });
+
+  it.each([
+    ["Total a pagar: USD 2.400,00"],
+    ["TOTAL A PAGAR $36,000.00 MXN"],
+    ["Total $1,200.00"],
+    ["Grand total USD 2,400.00"],
+    ["Amount due $1,200.00"],
+    ["Balance due: 2,400.00"],
+    ["Total due USD 2,400"],
+    ["Importe total: $ 2.400"],
+    ["Monto total USD 2.400"],
+    ["Valor total: USD 2.400"],
+    ["VALOR TOTAL DO SERVIÇO = R$ 9.500,00"],
+    ["Total geral R$ 9.500,00"],
+    ["Valor a pagar R$ 9.500,00"],
+    ["Neto a pagar COP 2.400.000"],
+    ["Total a cobrar COP 12.000.000"],
+    ["LA SUMA DE: DOCE MILLONES DE PESOS ($12.000.000)"],
+  ])("«%s» trae la etiqueta del total", (quote) => {
+    expect(quoteHasTotalLabel(quote)).toBe(true);
+    expect(totalNotConfirmedByQuote(photo, withTotal(quote))).toBe(false);
+  });
+
+  it.each([
+    ["USD 2.400,00"],
+    ["$36,000.00 MXN"],
+    ["Subtotal: USD 2.400,00"],
+    ["Sub-total USD 2.400,00"],
+    ["Sub total USD 2.400,00"],
+    ["Total sin IVA USD 2.400,00"],
+    ["Total before tax $2,400.00"],
+    ["Due date: 2026-10-30"],
+    [""],
+  ])("«%s» no trae la etiqueta del total: en una imagen el total queda ilegible", (quote) => {
+    expect(quoteHasTotalLabel(quote)).toBe(false);
+    expect(totalNotConfirmedByQuote(photo, withTotal(quote))).toBe(true);
+  });
+
+  it("la cita del total no puede ser la misma del subtotal (el lector copió el subtotal)", () => {
+    expect(totalNotConfirmedByQuote(photo, withTotal("Total USD 2.400,00", "Total USD 2.400,00"))).toBe(true);
+    expect(totalNotConfirmedByQuote(photo, withTotal("Total USD 2.400,00", "Subtotal USD 2.400,00"))).toBe(false);
+    expect(totalNotConfirmedByQuote(photo, withTotal("Total USD 2.400,00", null))).toBe(false);
+  });
+
+  it("con texto verificable no aplica (ahí se comprueba la cita contra el texto); sin valor tampoco (es un dato ausente)", () => {
+    expect(totalNotConfirmedByQuote(makeDoc(), withTotal("USD 2.400,00"))).toBe(false);
+    expect(totalNotConfirmedByQuote(photo, makeExtraction({ total: field<number>(null) }))).toBe(false);
+  });
+
+  it("en una foto, si CUALQUIERA de las lecturas cita solo el monto, el total queda ilegible (LEC-1)", () => {
+    const good = withTotal("TOTAL A PAGAR USD 2.400,00");
+    const bad = withTotal("USD 2.400,00");
+    expect(assessReadings(photo, okResult(good), okResult(good, "segunda")).signals.illegibleCriticalFields).toEqual([]);
+    expect(assessReadings(photo, okResult(good), okResult(bad, "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+    expect(assessReadings(photo, okResult(bad), okResult(good, "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+    // El mismo par de lecturas sobre un PDF con texto: la cita se comprueba contra el texto y basta.
+    expect(assessReadings(makeDoc(), okResult(good), okResult(bad, "segunda")).signals.illegibleCriticalFields).toEqual([]);
+  });
+
+  it("caso S0922 (foto saas con el total borroso): la segunda lectura pone el subtotal visible como total sin etiqueta", () => {
+    const a = makeExtraction({ subtotal: field(86400, "Subtotal $86,400.00 MXN"), total: field(86400, "Total $86,400.00 MXN"), tax: field<number>(null), lineItems: [{ description: "Diseño", quantity: 96, unitPrice: 900, amount: 86400 }] });
+    const b = makeExtraction({ subtotal: field<number>(null), total: field(86400, "$86,400.00 MXN"), tax: field<number>(null), lineItems: [{ description: "Diseño", quantity: 96, unitPrice: 900, amount: 86400 }] });
+    expect(assessReadings(photo, okResult(a), okResult(b, "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+  });
+});
+
+describe("revisión adversarial · etiquetas que dicen «total» pero no son el total a pagar", () => {
+  const photo = makeDoc({ kind: "image", mediaType: "image/jpeg", plainText: null, parts: [{ type: "image", mediaType: "image/jpeg", base64: "" }] });
+  const withTotal = (evidence: string) => makeExtraction({ total: field(2400, evidence), subtotal: field(2400, "Subtotal: USD 2.400,00") });
+
+  it.each([
+    // Antes de impuestos, con otra forma de escribirlo
+    ["Total (sin IVA) 86.400"],
+    ["Total s/IVA 86.400"],
+    ["Total s/ impuestos R$ 9.500,00"],
+    ["Total (excl. tax) $86,400.00"],
+    ["Total ex VAT 86,400.00"],
+    ["Total ex. IVA 86.400"],
+    ["Total without VAT 86,400.00"],
+    ["Total pretax 86,400.00"],
+    ["Total HT 86 400,00"],
+    ["Total parcial 86.400"],
+    ["Total neto 86.400"],
+    ["Total net 86,400.00"],
+    ["Net total 86,400.00"],
+    ["Total bruto 86.400"],
+    ["Total gravado 86.400"],
+    ["Total exento 86.400"],
+    // Totales de otra cosa: impuestos, descuentos, horas, ítems
+    ["Total IVA 13.824"],
+    ["Total impuestos 13.824"],
+    ["Total tax $13,824.00"],
+    ["Total (IVA) 13.824"],
+    ["Total descuento 0"],
+    ["Total de horas 120"],
+    ["Total hours 120"],
+    ["Total items 3"],
+  ])("«%s» no confirma el total en una imagen", (quote) => {
+    expect(quoteHasTotalLabel(quote)).toBe(false);
+    expect(totalNotConfirmedByQuote(photo, withTotal(quote))).toBe(true);
+  });
+
+  it.each([
+    ["Total IVA incluido 100.200"],
+    ["Total (IVA incluido) 100.200"],
+    ["Total con IVA 100.200"],
+    ["Total incl. VAT 1,200.00"],
+    ["Total neto a pagar COP 2.400.000"],
+    ["Total a pagar: USD 2.400,00 (exento de IVA)"],
+    ["TOTAL A PAGAR S/ 6,000.00"],
+    ["Total: R$ 9.500,00 (BRL)"],
+    ["Total S/ 6,000.00"],
+  ])("«%s» sigue siendo la etiqueta del total", (quote) => {
+    expect(quoteHasTotalLabel(quote)).toBe(true);
+  });
+});
+
+describe("revisión adversarial · las dos lecturas citan «Total …» sacado del subtotal (foto con el total borroso)", () => {
+  const photo = makeDoc({ kind: "image", mediaType: "image/jpeg", plainText: null, parts: [{ type: "image", mediaType: "image/jpeg", base64: "" }] });
+  // Sin texto, una cita con etiqueta inventada («Total $86,400.00 MXN» copiada de la fila del subtotal)
+  // no se distingue de la fila real del total. Lo que sí queda es lo que la propia lectura anota.
+  const reading = (readerNotes: string) =>
+    makeExtraction({
+      subtotal: field(86400, "Subtotal $86,400.00 MXN"),
+      total: field(86400, "Total $86,400.00 MXN"),
+      tax: field<number>(null),
+      lineItems: [{ description: "Diseño", quantity: 96, unitPrice: 900, amount: 86400 }],
+      readerNotes,
+    });
+
+  it("si una lectura anota que el total o el «Amount due» está borroso o que lo dedujo, el total queda ilegible aunque diga legible", () => {
+    // Notas reales de las lecturas de S0922 (Haiku, v3 / v3b).
+    const a = reading("El monto Amount due está parcialmente borroso y no se pudo leer con certeza; se usó el total visible de $86,400.00 MXN.");
+    const b = reading("Subtotal, impuesto y Amount due aparecen borrosos o sin valor legible; no los pude leer.");
+    expect(assessReadings(photo, okResult(a), okResult(b, "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+    const deduced = reading("El total se dedujo del subtotal porque no se muestran impuestos.");
+    expect(assessReadings(photo, okResult(deduced), okResult(reading(""), "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+    const english = reading("Total row is blurred; value inferred from the subtotal.");
+    expect(assessReadings(photo, okResult(reading("")), okResult(english, "segunda")).signals.illegibleCriticalFields).toEqual(["total"]);
+  });
+
+  it("notas que no dudan del total no lo cambian", () => {
+    for (const notes of [
+      "",
+      "La fecha de vencimiento está borrosa, el total es legible.",
+      "No hay partes borrosas; el total coincide con el subtotal porque no hay impuestos.",
+      "El encabezado está desenfocado. Subtotal y total coinciden en 86400 MXN.",
+      "El RFC del emisor aparece en minúsculas; conviene verificarlo.",
+    ]) {
+      expect(assessReadings(photo, okResult(reading(notes)), okResult(reading(""), "segunda")).signals.illegibleCriticalFields, notes).toEqual([]);
+    }
+  });
+
+  it("con texto verificable no aplica (ahí el total se comprueba contra el texto)", () => {
+    const blurred = reading("El total está borroso.");
+    expect(assessReadings(makeDoc(), okResult(blurred), okResult(blurred, "segunda")).signals.illegibleCriticalFields).toEqual([]);
   });
 });

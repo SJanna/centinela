@@ -13,15 +13,23 @@
  *
  * Cambiar el texto de una variante cambia lo que leen los modelos: sube su versión
  * (PROMPT_VERSION o PROMPT_VERSION_B; forma parte de la clave de la caché de lecturas).
+ *
+ * v4 / v4b (17 oct): un documento que dice que el pago ya se hizo es "receipt" aunque traiga número,
+ * vencimiento o datos bancarios; si la línea del total no se lee, total.legible = false aunque se pueda
+ * deducir del subtotal o de las líneas (nunca copiar el subtotal como total), y la cita del total es la
+ * línea con su etiqueta. Antes de la primera lectura con v4/v4b (no hay ninguna en la caché) se
+ * agregaron como ejemplos de "receipt" los sellos y estados de pagado y el saldo en cero; por eso no se
+ * subió la versión. La verificación en código no depende de esto: el detector de documento pagado
+ * y la regla de la cita del total (src/extract/paid-markers.ts y assess.ts) cubren los mismos huecos.
  */
 import type { DocPart, NormalizedDoc } from "../core/schemas";
 
 export type PromptVariant = "a" | "b";
 
 /** Versión del prompt «a» (lector principal; también la segunda lectura del perfil «calidad»). */
-export const PROMPT_VERSION = "v3";
+export const PROMPT_VERSION = "v4";
 /** Versión del prompt «b» (segunda lectura del perfil «economico»). */
-export const PROMPT_VERSION_B = "v3b";
+export const PROMPT_VERSION_B = "v4b";
 
 export const PROMPT_VERSIONS: Readonly<Record<PromptVariant, string>> = { a: PROMPT_VERSION, b: PROMPT_VERSION_B };
 
@@ -65,13 +73,13 @@ Cada campo tiene found, value, evidence y legible (todos son texto o sí/no; nun
 - legible: false si el dato está borroso, cortado, tachado, sobrescrito, es ambiguo (admite dos lecturas) o lo dedujiste en vez de leerlo. true si lo leíste con claridad. Si el dato simplemente no aparece: found false, value "", evidence "", legible true. Si aparece pero no se puede leer: found true, value "" (o tu mejor lectura) y legible false.
 
 # Formato de los valores
-- documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro).
+- documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro). Si el documento dice que el pago ya se hizo o ya se recibió (p. ej. "Payment receipt", "Payment received on…", "Paid", "Recibo de pago", "Pago recibido el…", "Pagado", "Comprovante de pagamento", "Pagamento recebido"), trae un sello o un estado de pagado ("PAID", "PAGADO", "QUITADO", "Settled", "Status: Paid", "Estado: Pagado") o dice que no queda saldo por pagar ("Balance due: $0.00", "Saldo pendiente: 0"), es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios: esos datos no lo convierten en un cobro.
 - vendorName: quien cobra (el emisor), tal como aparece. vendorTaxId: su identificación tributaria (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
 - invoiceNumber: el número del documento sin la etiqueta ("Factura N.º", "Invoice #", "No.") pero con sus prefijos y ceros (p. ej. "FV-0012").
 - issueDate y dueDate: YYYY-MM-DD (found false si no aparecen).
 - servicePeriod: YYYY-MM si el documento indica el periodo facturado (p. ej. "octubre 2026" → "2026-10"). Si el año no aparece y lo deduces de la fecha de emisión, legible = false. found false si no indica periodo.
 - currency: código ISO 4217 en mayúsculas (COP, USD, MXN, BRL, PEN, CLP, ARS, EUR…). "R$" → BRL; "S/" → PEN; "US$" → USD. Si solo aparece "$" y nada en el documento dice qué moneda es, deduce por país y contexto y marca legible = false.
-- subtotal, tax, total: el value es el número escrito como decimal simple: solo dígitos, punto como separador decimal, sin símbolos ni separadores de miles. Cuidado con los formatos: "12.000.000,00" → "12000000"; "1.200" en un documento en español → "1200"; "1,200.00" → "1200"; "9.500,50" → "9500.5". Confirma con el contexto (cantidad × tarifa, subtotal + impuestos = total). total = total a pagar. tax = suma de impuestos agregados (IVA, ICMS, ISS, sales tax…); found false si el documento no muestra impuestos. subtotal = valor antes de impuestos; found false si el documento no lo muestra. La evidence sí va tal cual aparece en el documento.
+- subtotal, tax, total: el value es el número escrito como decimal simple: solo dígitos, punto como separador decimal, sin símbolos ni separadores de miles. Cuidado con los formatos: "12.000.000,00" → "12000000"; "1.200" en un documento en español → "1200"; "1,200.00" → "1200"; "9.500,50" → "9500.5". Confirma con el contexto (cantidad × tarifa, subtotal + impuestos = total). total = total a pagar. Si la línea del total no se lee (borrosa, cortada, tapada o fuera de la foto), total.legible = false aunque puedas deducirlo del subtotal o de las líneas: nunca copies el subtotal como total. La evidence del total es la línea del total con su etiqueta, tal cual aparece (p. ej. "Total a pagar: $ 1.200.000"), no el monto solo. tax = suma de impuestos agregados (IVA, ICMS, ISS, sales tax…); found false si el documento no muestra impuestos. subtotal = valor antes de impuestos; found false si el documento no lo muestra. La evidence sí va tal cual aparece en el documento.
 - lineItems: solo los conceptos facturados; no incluyas subtotal, impuestos ni total como líneas. quantity, unitPrice y amount como decimal simple en texto, igual que los montos (p. ej. "40 h × MXN 900" → quantity "40", unitPrice "900", amount "36000"); quantity y unitPrice = "" si la línea no los muestra.
 - payment: datos de la cuenta a la que el documento pide pagar. accountNumber tal como aparece (con guiones o espacios si los tiene). routingOrSwift: SWIFT/BIC, ABA/routing o código del banco, si aparece. Si aparecen varias cuentas, usa aquella a la que el documento pide pagar y menciona las otras en readerNotes.
 - readerNotes: notas breves en español sobre dudas o particularidades de la lectura ("" si no hay).
@@ -105,15 +113,15 @@ Cada campo trae found, value, evidence y legible (texto o sí/no; nunca null):
 # Campos, en el orden en que debes revisarlos
 Empieza por el pago y el dinero; termina por quién cobra.
 1. payment: la cuenta a la que el documento pide pagar. accountNumber tal como aparece (con guiones o espacios si los tiene). routingOrSwift: SWIFT/BIC, ABA/routing o código del banco, si aparece. bankName y beneficiaryName tal como aparecen. Si hay más de una cuenta, usa aquella a la que el documento pide pagar y anota las otras en readerNotes.
-2. total: el total a pagar.
+2. total: el total a pagar. Si la línea del total no se lee (borrosa, cortada, tapada o fuera de la foto), legible = false aunque puedas deducirlo del subtotal o de las líneas: nunca copies el subtotal como total. En evidence transcribe la línea del total con su etiqueta, tal cual aparece (p. ej. "Total a pagar: $ 1.200.000"), no el monto solo.
 3. subtotal y tax: subtotal = valor antes de impuestos (found false si el documento no lo muestra); tax = suma de impuestos agregados (IVA, ICMS, ISS, sales tax…; found false si el documento no muestra impuestos).
-   En total, subtotal y tax el value es un decimal simple: solo dígitos y punto decimal, sin símbolos ni separadores de miles. "12.000.000,00" → "12000000"; "1.200" en un documento en español → "1200"; "1,200.00" → "1200"; "9.500,50" → "9500.5". Compruébalo con el resto del documento (cantidad × tarifa, subtotal + impuestos = total). En evidence va el monto como está escrito.
+   En total, subtotal y tax el value es un decimal simple: solo dígitos y punto decimal, sin símbolos ni separadores de miles. "12.000.000,00" → "12000000"; "1.200" en un documento en español → "1200"; "1,200.00" → "1200"; "9.500,50" → "9500.5". Compruébalo con el resto del documento (cantidad × tarifa, subtotal + impuestos = total). En evidence va el monto como está escrito y, en el total, con su etiqueta (punto 2).
 4. currency: código ISO 4217 en mayúsculas (COP, USD, MXN, BRL, PEN, CLP, ARS, EUR…). "R$" → BRL; "S/" → PEN; "US$" → USD. Si solo aparece "$" y nada en el documento dice qué moneda es, deduce por país y contexto, marca legible = false y anótalo en readerNotes.
 5. lineItems: solo los conceptos cobrados; el subtotal, los impuestos y el total no son líneas. quantity, unitPrice y amount como decimal simple en texto, igual que los montos (p. ej. "40 h × MXN 900" → quantity "40", unitPrice "900", amount "36000"); quantity y unitPrice = "" si la línea no los muestra.
 6. dueDate e issueDate: YYYY-MM-DD (found false si no aparecen).
 7. servicePeriod: YYYY-MM si el documento indica el periodo cobrado (p. ej. "octubre 2026" → "2026-10"). Si el año no aparece y lo tomas de la fecha de emisión, legible = false. found false si no indica periodo.
 8. invoiceNumber: el número del documento sin la etiqueta ("Factura N.º", "Invoice #", "No.") pero con sus prefijos y ceros (p. ej. "FV-0012").
-9. documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro).
+9. documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro). Si el documento dice que el pago ya se hizo o ya se recibió (p. ej. "Payment receipt", "Payment received on…", "Paid", "Recibo de pago", "Pago recibido el…", "Pagado", "Comprovante de pagamento", "Pagamento recebido"), trae un sello o un estado de pagado ("PAID", "PAGADO", "QUITADO", "Settled", "Status: Paid", "Estado: Pagado") o dice que no queda saldo por pagar ("Balance due: $0.00", "Saldo pendiente: 0"), es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios: esos datos no lo convierten en un cobro.
 10. vendorTaxId: identificación tributaria de quien cobra (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
 11. vendorName: quien cobra (el emisor), tal como aparece.
 

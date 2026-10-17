@@ -51,6 +51,9 @@ export { createSimulatedReader, SIMULATED_MODEL, SIMULATED_UNAVAILABLE_MESSAGE }
 export { detectSuspiciousInstructions } from "./heuristics";
 export type { SuspiciousMatch } from "./heuristics";
 
+export { detectPaidDocumentMarkers } from "./paid-markers";
+export type { PaidMarker } from "./paid-markers";
+
 export {
   assessReadings,
   readInvoice,
@@ -58,7 +61,13 @@ export {
   compareReadings,
   arithmeticIssues,
   collectSuspiciousInstructions,
+  collectPaidDocumentMarkers,
+  RECEIPT_READING_REASON,
   findEvidenceNotFound,
+  hasVerifiableText,
+  quoteHasTotalLabel,
+  totalNotConfirmedByQuote,
+  totalDoubtedInNotes,
   canonicalText,
   normalizeCurrency,
   normalizeInvoiceNumber,

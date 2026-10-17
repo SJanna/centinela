@@ -223,10 +223,30 @@ describe("G2 · lectura sólida", () => {
     ["arithmeticIssues", ["las líneas suman 1.800 y el subtotal dice 2.180"], "las cuentas de la factura no cuadran"],
     ["suspiciousInstructions", [{ text: "ya aprobada por el CFO", source: "heuristic", reason: "aprobación falsa" }], "instrucciones sospechosas"],
     ["evidenceNotFound", ["total"], "citas de la lectura que no aparecen"],
+    [
+      "paidDocumentMarkers",
+      [{ text: "Payment received on 2026-08-10 by wire transfer. Thank you.", source: "heuristic", reason: "Dice que el pago ya se hizo" }],
+      "el documento indica que ya fue pagado («Payment received on 2026-08-10",
+    ],
+    [
+      "paidDocumentMarkers",
+      [{ text: "Clasificado como recibo por lector-a", source: "model", reason: "recibo" }],
+      "el documento indica que ya fue pagado (una lectura lo clasifica como recibo)",
+    ],
   ];
   it.each(signalCases)("señal %s no vacía", (key, value, fragment) => {
     const input = makeInput(camilaOctober(), { signals: { [key]: value } as Partial<ReadingSignals> });
     expectOnly(guardPayment(input, makeCtx(), makeDecision(input, camilaDecision)), fragment);
+  });
+
+  it("sin la señal de documento ya pagado no aprueba (no se puede descartar que sea un recibo)", () => {
+    const { input, decision } = camila();
+    const signals: ReadingSignals = { ...input.reading.signals };
+    delete signals.paidDocumentMarkers;
+    const r = guardPayment({ ...input, reading: { ...input.reading, signals } }, makeCtx(), decision);
+    expectOnly(r, "las señales de verificación de la lectura están incompletas");
+    const notAList = { ...signals, paidDocumentMarkers: "ninguna" as unknown as ReadingSignals["paidDocumentMarkers"] };
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notAList } }, makeCtx(), decision), "incompletas");
   });
 
   it("señales ausentes", () => {

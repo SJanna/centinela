@@ -144,6 +144,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
     c.text(sx, y, label, { size: 9.5, font, color: INK });
     if (opts.key) c.field(opts.key, W - M, y, value, { size: 9.5, font, color: INK, align: "right", tags: opts.tags });
     else c.text(W - M, y, value, { size: 9.5, font, color: INK, align: "right", tags: opts.tags });
+    if (opts.key === "total") c.citeWithLabel("total", label, value);
     y += 9;
     c.line(sx, y, W - M, y, HAIR, 0.6);
     y += 15;

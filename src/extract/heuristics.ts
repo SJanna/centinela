@@ -247,7 +247,7 @@ function isSentenceEnd(text: string, i: number): boolean {
 }
 
 /** La línea donde está la coincidencia; si es muy larga, la frase alrededor (máx. ~240 caracteres). */
-function snippetAround(text: string, start: number, end: number): string {
+export function snippetAround(text: string, start: number, end: number): string {
   const lineStart = start === 0 ? 0 : text.lastIndexOf("\n", start - 1) + 1;
   const nl = text.indexOf("\n", end);
   const lineEnd = nl === -1 ? text.length : nl;
@@ -345,7 +345,7 @@ const MIN_LONG_WORD = 10;
 const LETTER_RUN = /\p{L}+/gu;
 const HORIZONTAL_SPACES = /^[^\S\n]+$/;
 
-interface Region {
+export interface Region {
   /** [start, end) en el texto de la segunda pasada. */
   start: number;
   end: number;
@@ -353,7 +353,7 @@ interface Region {
   joined: boolean;
 }
 
-interface Rejoined {
+export interface Rejoined {
   /** Texto plegado con los tramos de letras sueltas unidos. */
   text: string;
   /** map[i] = índice en el texto plegado del carácter i de `text` (con uno extra al final). */
@@ -367,7 +367,7 @@ function isUppercase(s: string): boolean {
 }
 
 /** La región que se solapa con [s, e), o null. Búsqueda binaria: las regiones están en orden y no se solapan. */
-function regionAt(regions: readonly Region[], s: number, e: number): Region | null {
+export function regionAt(regions: readonly Region[], s: number, e: number): Region | null {
   let lo = 0;
   let hi = regions.length - 1;
   let found = -1;
@@ -387,7 +387,7 @@ function regionAt(regions: readonly Region[], s: number, e: number): Region | nu
  * Une los tramos de letras sueltas del texto plegado y marca las palabras largas en mayúsculas (según
  * el texto original). Devuelve null si no hay ninguno. Tiempo lineal: cada palabra se mira una vez.
  */
-function rejoinSpacedLetters(folded: string, original: string, foldMap: readonly number[]): Rejoined | null {
+export function rejoinSpacedLetters(folded: string, original: string, foldMap: readonly number[]): Rejoined | null {
   const words: { start: number; end: number; letters: number }[] = [];
   for (const m of folded.matchAll(LETTER_RUN)) {
     words.push({ start: m.index, end: m.index + m[0].length, letters: [...m[0]].length });

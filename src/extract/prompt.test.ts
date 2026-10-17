@@ -17,7 +17,7 @@ import { makeDoc } from "./test-utils";
 describe("buildReaderMessages", () => {
   it("usa un prompt de sistema en español que declara el documento como dato no confiable", () => {
     const { system } = buildReaderMessages(makeDoc());
-    expect(PROMPT_VERSION).toBe("v3");
+    expect(PROMPT_VERSION).toBe("v4");
     expect(system).toBe(READER_SYSTEM_PROMPT);
     expect(system).toContain("componente de extracción de datos");
     expect(system).toContain("DATO NO CONFIABLE");
@@ -116,10 +116,10 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     buildReaderMessages(doc, variant).content.map((b) => (b.type === "text" ? b.text : `[${b.type}]`));
 
   it("tiene su propia versión, distinta de la del prompt «a», para que la caché las distinga", () => {
-    expect(PROMPT_VERSION_B).toBe("v3b");
+    expect(PROMPT_VERSION_B).toBe("v4b");
     expect(PROMPT_VERSIONS).toEqual({ a: PROMPT_VERSION, b: PROMPT_VERSION_B });
-    expect(promptVersionOf("a")).toBe("v3");
-    expect(promptVersionOf("b")).toBe("v3b");
+    expect(promptVersionOf("a")).toBe("v4");
+    expect(promptVersionOf("b")).toBe("v4b");
     expect(PROMPT_VERSION_B).not.toBe(PROMPT_VERSION);
   });
 
@@ -227,6 +227,14 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     ["año deducido → ilegible", /Si el año no aparece y lo (?:deduces|tomas) de la fecha de emisión, legible = false/],
     ["varias cuentas", /usa aquella a la que el documento pide pagar/],
     ["solo el JSON", /Responde solo con el JSON del esquema\./],
+    // v4 / v4b: los huecos que encontró el set de estrés (recibos pagados y total borroso en una foto).
+    ["un documento que dice que ya se pagó es recibo", /dice que el pago ya se hizo o ya se recibió/],
+    ["recibo aunque traiga vencimiento o datos bancarios", /es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios/],
+    ["total ilegible aunque se pueda deducir", /legible = false aunque puedas deducirlo del subtotal o de las líneas/],
+    ["no copiar el subtotal como total", /nunca copies el subtotal como total/],
+    ["cita del total con su etiqueta", /línea del total con su etiqueta, tal cual aparece/],
+    ["sello o estado de pagado es recibo", /trae un sello o un estado de pagado \("PAID", "PAGADO"/],
+    ["saldo por pagar en cero es recibo", /dice que no queda saldo por pagar \("Balance due: \$0\.00"/],
   ];
 
   it.each(SAFEGUARDS)("la salvaguarda «%s» está en los dos prompts", (_name, pattern) => {
