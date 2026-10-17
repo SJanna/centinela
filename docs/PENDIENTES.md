@@ -31,6 +31,27 @@ Después de desplegar:
 
 Guion en [docs/DEMO.md](DEMO.md). Graba sobre la versión desplegada (en local aparece el indicador «N» de Next en modo desarrollo).
 
+## 5. Ajustes acordados para retomar (revisión del reto, 17 de octubre)
+
+**Fecha límite: 18 de octubre** (la hora exacta está dentro de HackRadar). El formulario exige tres enlaces: repositorio público en GitHub (listo), URL de la demo y video.
+
+Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero hoy se presenta como «motor de reglas». Ajustes, en orden:
+
+1. **Contarlo como agente (1–2 h, sin riesgo).**
+   - README y [DEMO.md](DEMO.md) con el ciclo **percibe → decide → se revisa → registra → pide permiso**.
+   - Una sola cifra de autonomía: «24 de 41 resueltas solas, todas correctas; las demás escaladas a propósito». Hoy conviven 100 % (reporte), 58,5 % (set) y 52 % (pantalla).
+   - Corregir en el README que las etiquetas «las fijan personas»: las redactó Claude y falta revisarlas.
+   - Cambiar bancos y códigos SWIFT/ABA de `dataset/company.json` por ficticios.
+2. **Cerrar el ciclo de permiso (3–5 h).**
+   - Aprobar y Rechazar en lo escalado, con nombre y motivo.
+   - Cada respuesta es un registro nuevo encadenado a la decisión original, y cuenta para el fondo y el límite del mes.
+   - Solo se puede autorizar lo que se puede escalar (umbral, proveedor nuevo, cambio de cuenta); nunca un duplicado ni un pago sin fondo. La guardia vuelve a revisar.
+3. **Opcional: mostrar al agente trabajando (3–4 h).** La traza paso a paso aparece en vivo mientras procesa.
+
+**No hacer:** un orquestador de Claude con herramientas antes de la entrega. No dejar que el modelo toque la decisión.
+
+**Frase para el pitch:** «Centinela lee cada factura como una persona, pero paga como un contador: un modelo entiende el documento y la política de la empresa decide. Ninguna factura, por convincente que sea, puede convencerlo de pagar algo que las reglas no permiten. Cuando algo se sale de ellas, le pide permiso a una persona y explica por qué.»
+
 ## Riesgos conocidos (decisiones conscientes, documentadas)
 
 - **Límite mensual y fondo entre instancias de Vercel.** Los duplicados están protegidos en la base con índices únicos. El límite del mes y el fondo dependen de un candado por proceso: dos personas subiendo a la vez en dos instancias distintas podrían, en teoría, pasarse del límite. La interfaz sube de a una factura. Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
