@@ -19,10 +19,9 @@ import { PRIMARY_READER_ID, SECONDARY_READER_ID } from "../src/pipeline/reader-i
 import { buildEvalReaders } from "../eval/lib";
 import { CASES, SCENARIOS, type RedCase } from "./cases";
 
-const live = process.argv.includes("--live");
 const OUT = path.join(process.cwd(), "redteam");
 
-interface Result {
+export interface Result {
   id: string;
   scenario: string;
   track: RedCase["track"];
@@ -43,13 +42,17 @@ function manifestEntry(caseId: string, sha256: string, gt: Extraction): Manifest
   return { caseId, file: `${caseId}`, sha256, mediaType: "", groundTruth: gt } as ManifestEntry;
 }
 
-async function main(): Promise<void> {
+/** Genera las facturas y decide cada caso. No escribe reportes. */
+export async function runRedteam(opts: { live?: boolean; writeFiles?: boolean } = {}): Promise<Result[]> {
+  const live = opts.live === true;
   const specs = CASES.map((c) => parseSpec(c.spec, c.id));
   const generated = await generateAll(specs);
   const byId = new Map(generated.map((g) => [g.caseId, g]));
   const genDir = path.join(OUT, "generated");
-  fs.mkdirSync(genDir, { recursive: true });
-  for (const g of generated) fs.writeFileSync(path.join(genDir, g.file), g.bytes);
+  if (opts.writeFiles !== false) {
+    fs.mkdirSync(genDir, { recursive: true });
+    for (const g of generated) fs.writeFileSync(path.join(genDir, g.file), g.bytes);
+  }
 
   const company: Company = loadDatasetCompany();
   const liveReaders = live ? buildEvalReaders("live", { cacheDir: path.join("redteam", "reading-cache") }) : null;
@@ -91,7 +94,7 @@ async function main(): Promise<void> {
       history.push({
         invoiceId, fileHash: doc.fileHash, outcome: d.outcome, vendorId: d.vendorId,
         invoiceNumber: reading.data?.invoiceNumber ?? null, agreementId: d.agreementId,
-        agreementPeriod: d.agreementPeriod, amountUsd: d.amountUsd, decidedAt: scen.now,
+        agreementPeriod: d.agreementPeriod, amountUsd: d.amountUsd, decidedAt: scen.now, issueDate: reading.data?.issueDate ?? null,
       });
       results.push({
         id: c.id, scenario: key, track: c.track, attack: c.attack, accept: c.accept, severity: c.severity,
@@ -106,6 +109,12 @@ async function main(): Promise<void> {
   }
 
   results.sort((a, b) => a.id.localeCompare(b.id));
+  return results;
+}
+
+async function main(): Promise<void> {
+  const live = process.argv.includes("--live");
+  const results = await runRedteam({ live });
   const bad = results.filter((r) => !r.ok);
   const money = bad.filter((r) => r.severity === "dinero");
   const lines: string[] = [];
@@ -132,7 +141,9 @@ async function main(): Promise<void> {
   console.log(`\n${results.length} ataques · pagos indebidos ${money.length} · fallos de política ${bad.filter((r) => r.severity === "politica").length} · escaladas de más ${bad.filter((r) => r.severity === "autonomia").length}`);
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exitCode = 1;
-});
+if (process.argv[1] && path.resolve(process.argv[1]).endsWith(path.join("redteam", "run.ts"))) {
+  main().catch((err: unknown) => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+}

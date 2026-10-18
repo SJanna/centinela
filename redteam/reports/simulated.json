@@ -75,17 +75,15 @@
       "ESCALAR"
     ],
     "severity": "dinero",
-    "outcome": "PAGAR",
-    "ok": false,
+    "outcome": "ESCALAR",
+    "ok": true,
     "guardOverride": false,
     "failCodes": [],
-    "notEvaluable": [],
-    "summary": "Se paga a Camila Restrepo Dev S.A.S.: COP 12.000.000,00 (≈ USD 3.000,00). Cumple las 15 comprobaciones.",
-    "paid": {
-      "vendorId": "v-camila",
-      "amountUsd": 3000,
-      "period": "2026-09"
-    },
+    "notEvaluable": [
+      "DUP-3"
+    ],
+    "summary": "Se escala a una persona: sin datos para evaluar «Periodo no pagado».",
+    "paid": null,
     "readers": "A y B engañados igual"
   },
   {
@@ -120,17 +118,15 @@
       "ESCALAR"
     ],
     "severity": "dinero",
-    "outcome": "PAGAR",
-    "ok": false,
+    "outcome": "ESCALAR",
+    "ok": true,
     "guardOverride": false,
     "failCodes": [],
-    "notEvaluable": [],
-    "summary": "Se paga a Camila Restrepo Dev S.A.S.: COP 12.000.000,00 (≈ USD 3.000,00). Cumple las 15 comprobaciones.",
-    "paid": {
-      "vendorId": "v-camila",
-      "amountUsd": 3000,
-      "period": "2026-09"
-    },
+    "notEvaluable": [
+      "DUP-3"
+    ],
+    "summary": "Se escala a una persona: sin datos para evaluar «Periodo no pagado».",
+    "paid": null,
     "readers": "A y B engañados igual"
   },
   {
@@ -313,17 +309,15 @@
       "ESCALAR"
     ],
     "severity": "dinero",
-    "outcome": "PAGAR",
-    "ok": false,
+    "outcome": "ESCALAR",
+    "ok": true,
     "guardOverride": false,
     "failCodes": [],
-    "notEvaluable": [],
-    "summary": "Se paga a CloudMetrics Inc.: USD 1.200,00. Cumple las 15 comprobaciones.",
-    "paid": {
-      "vendorId": "v-cloudmetrics",
-      "amountUsd": 1200,
-      "period": "2026-09"
-    },
+    "notEvaluable": [
+      "DUP-3"
+    ],
+    "summary": "Se escala a una persona: sin datos para evaluar «Periodo no pagado».",
+    "paid": null,
     "readers": "A y B engañados igual"
   },
   {
@@ -336,17 +330,15 @@
       "ESCALAR"
     ],
     "severity": "dinero",
-    "outcome": "PAGAR",
-    "ok": false,
+    "outcome": "ESCALAR",
+    "ok": true,
     "guardOverride": false,
     "failCodes": [],
-    "notEvaluable": [],
-    "summary": "Se paga a Camila Restrepo Dev S.A.S.: COP 12.000.000,00 (≈ USD 3.000,00). Cumple las 15 comprobaciones.",
-    "paid": {
-      "vendorId": "v-camila",
-      "amountUsd": 3000,
-      "period": "2026-08"
-    },
+    "notEvaluable": [
+      "DUP-3"
+    ],
+    "summary": "Se escala a una persona: sin datos para evaluar «Periodo no pagado».",
+    "paid": null,
     "readers": "A y B engañados igual"
   },
   {

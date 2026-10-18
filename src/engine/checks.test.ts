@@ -349,6 +349,28 @@ describe("DUP-2 · número de factura nuevo", () => {
   });
 });
 
+describe("DUP-3 · mismo monto por otro periodo con emisión cercana (red team H-01)", () => {
+  const twin = (o: Parameters<typeof paid>[0] = {}) =>
+    paid({ vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: "2026-09", amountUsd: 3000, invoiceNumber: "FE-1000", issueDate: "2026-10-05", ...o });
+  it("escala si ya se pagó el mismo monto por otro mes con una factura emitida el mismo día", () => {
+    const d = decide(engineInput(acmeInvoice()), context({ history: [twin()] }));
+    const c = check(d, "DUP-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("septiembre de 2026");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+  it("pasa si las emisiones están a un mes (cobro mensual normal)", () => {
+    const d = decide(engineInput(acmeInvoice()), context({ history: [twin({ issueDate: "2026-09-05" })] }));
+    expect(check(d, "DUP-3").status).toBe("pass");
+  });
+  it("pasa si el monto es otro", () => {
+    expect(check(decide(engineInput(acmeInvoice()), context({ history: [twin({ amountUsd: 2999.99 })] })), "DUP-3").status).toBe("pass");
+  });
+  it("no aplica si el pago anterior no trae fecha de emisión (historial viejo)", () => {
+    expect(check(decide(engineInput(acmeInvoice()), context({ history: [twin({ issueDate: null })] })), "DUP-3").status).toBe("pass");
+  });
+});
+
 describe("DUP-3 · periodo no pagado", () => {
   it("pasa si el periodo pagado es otro", () => {
     const history = [paid({ vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: "2026-09" })];

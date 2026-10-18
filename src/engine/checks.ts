@@ -615,6 +615,45 @@ function paidUnderAnotherAgreement(f: Facts, chosen: Agreement, ctx: DecisionCon
   return null;
 }
 
+/** Días entre fechas de emisión en que un cobro del mismo monto por otro periodo hace dudar del periodo leído. */
+export const SAME_AMOUNT_WINDOW_DAYS = 4;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function issueDayMs(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+/**
+ * Un pago del mismo acuerdo mensual, por el mismo monto en USD, por OTRO periodo y con una fecha de
+ * emisión a menos de SAME_AMOUNT_WINDOW_DAYS días de la de esta factura. DUP-3 confía en el periodo
+ * leído: si los dos lectores lo leen mal (septiembre en vez de octubre), un segundo cobro del mismo
+ * mes con otro número pasaría. Dos cobros mensuales legítimos se emiten con ~un mes de diferencia.
+ * Si alguna de las dos facturas no trae fecha de emisión, esta señal no aplica.
+ */
+function samePaymentRecently(
+  f: Facts,
+  agreement: Agreement,
+  period: string,
+): { entry: Facts["paid"][number]; days: number } | null {
+  if (!f.usd.ok) return null;
+  const mine = issueDayMs(f.data?.issueDate);
+  if (mine == null) return null;
+  for (const h of f.paid) {
+    if (h.agreementId !== agreement.id) continue;
+    const p = periodOf(h.agreementPeriod);
+    if (p == null || p === period) continue;
+    if (typeof h.amountUsd !== "number" || toCents(h.amountUsd) !== f.usd.amountUsdCents) continue;
+    const theirs = issueDayMs(h.issueDate);
+    if (theirs == null) continue;
+    const days = Math.abs(mine - theirs) / DAY_MS;
+    if (days >= SAME_AMOUNT_WINDOW_DAYS) continue;
+    return { entry: h, days: Math.round(days) };
+  }
+  return null;
+}
+
 const dup3: Evaluator = (f, _input, ctx) => {
   if (f.data == null) return derived(NO_DATA);
   if (f.vendor == null) {
@@ -668,6 +707,14 @@ const dup3: Evaluator = (f, _input, ctx) => {
       `El periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» ya se pagó (factura ${prev.invoiceId}).`,
       "Confirmar con el proveedor: ese mes ya se pagó.",
       { agreementId: agreement.id, frequency: "monthly", period, previousInvoiceId: prev.invoiceId },
+    );
+  }
+  const twin = samePaymentRecently(f, agreement, period);
+  if (twin) {
+    return notEvaluable(
+      `Ya se le pagó a este proveedor el mismo monto por ${formatPeriod(periodOf(twin.entry.agreementPeriod) ?? "")} con una factura emitida ${twin.days === 0 ? "el mismo día" : `a ${countText(twin.days, "día", "días")}`} de esta (factura ${twin.entry.invoiceId}). Dos cobros mensuales se emiten con un mes de diferencia: si el periodo de esta factura se leyó mal, sería el mismo mes cobrado dos veces.`,
+      "Confirmar con el proveedor qué mes cobra esta factura y que no sea un segundo cobro de un mes ya pagado.",
+      { agreementId: agreement.id, frequency: "monthly", period, previousInvoiceId: twin.entry.invoiceId },
     );
   }
   const doubts = periodDoubts(f, agreement, ctx);

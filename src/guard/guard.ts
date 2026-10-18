@@ -212,7 +212,7 @@ function evaluate(input: EngineInput, ctx: DecisionContext, decision: Decision):
   } else skipped = true;
 
   // G9 · duplicados
-  checkDuplicates(input, ctx.history, invoice, vendor, fitting, v);
+  checkDuplicates(input, ctx.history, invoice, vendor, fitting, v, usdCents);
 
   // G10 · el monto en USD de la decisión coincide con el recalculado
   const decisionCents = guardCents(decision.amountUsd);
@@ -788,6 +788,7 @@ function checkDuplicates(
   vendor: Vendor | null,
   fitting: Agreement[] | null,
   v: Violations,
+  usdCents: number | null = null,
 ): void {
   if (!Array.isArray(history)) return; // ya reportado
   const entries = (history as readonly unknown[]).filter(isEntry); // las demás ya se reportaron
@@ -831,5 +832,28 @@ function checkDuplicates(
       if (p === null) v.add(`el historial tiene un pago del acuerdo ${a.id} sin periodo válido`);
       else if (p === invoice.period) v.add(`el periodo ${p} del acuerdo ${a.id} ya se pagó`);
     }
+    // Mismo monto por otro periodo con fechas de emisión cercanas: si el periodo se leyó mal, sería
+    // el mismo mes cobrado dos veces.
+    const mine = guardIssueMs(invoice.data.issueDate);
+    if (usdCents !== null && mine !== null) {
+      for (const h of paidSameAgreement) {
+        const p = guardPeriod(h.agreementPeriod);
+        if (p === null || p === invoice.period || guardCents(h.amountUsd) !== usdCents) continue;
+        const theirs = guardIssueMs((h as { issueDate?: unknown }).issueDate);
+        if (theirs !== null && Math.abs(mine - theirs) < GUARD_SAME_AMOUNT_DAYS * GUARD_DAY_MS) {
+          v.add(`ya se pagó el mismo monto del acuerdo ${a.id} por el periodo ${p} con una factura emitida a menos de ${GUARD_SAME_AMOUNT_DAYS} días de esta`);
+        }
+      }
+    }
   }
 }
+
+function guardIssueMs(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+const GUARD_DAY_MS = 86_400_000;
+/** Igual que la ventana del motor, escrita aparte a propósito (la guardia no importa el motor). */
+const GUARD_SAME_AMOUNT_DAYS = 4;

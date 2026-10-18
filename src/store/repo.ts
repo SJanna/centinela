@@ -248,7 +248,8 @@ const historyEntryExpr = sql<unknown>`jsonb_build_object(
   'agreementId', ${decisions.record}->'decision'->'agreementId',
   'agreementPeriod', ${decisions.record}->'decision'->'agreementPeriod',
   'amountUsd', ${decisions.record}->'decision'->'amountUsd',
-  'decidedAt', ${decisions.record}->'decidedAt'
+  'decidedAt', ${decisions.record}->'decidedAt',
+  'issueDate', ${decisions.record}->'reading'->'data'->'issueDate'
 )`;
 
 // Solo convierte valores numéricos: un valor de otro tipo no debe hacer fallar las estadísticas.
@@ -401,6 +402,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
           agreementPeriod: e.agreementPeriod ?? null,
           amountUsd: e.amountUsd ?? null,
           decidedAt: e.decidedAt as string,
+          issueDate: typeof e.issueDate === "string" ? e.issueDate : null,
         };
       });
     },

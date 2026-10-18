@@ -235,6 +235,7 @@ describe.each([
           agreementPeriod: "2026-09",
           amountUsd: 321.45,
           decidedAt: "2026-10-16T10:00:00.000Z",
+          issueDate: "2026-10-01",
         },
         {
           invoiceId: "inv-d2",
@@ -246,6 +247,7 @@ describe.each([
           agreementPeriod: null,
           amountUsd: null,
           decidedAt: "2026-10-16T11:00:00.000Z",
+          issueDate: null,
         },
       ]);
     });
