@@ -30,7 +30,7 @@ import {
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
 import { detectVoidDocumentMarkers } from "./void-markers";
-import { detectEarlierPeriodMarkers } from "./period-markers";
+import { detectEarlierPeriodMarkers, type EarlierPeriodMarker, type EarlierPeriodSource } from "./period-markers";
 import { voidMarkersInNotes } from "./void-notes";
 import { DOLLAR_SIGN_CURRENCIES, currencyMarkerIn, declaresCurrency, namesCurrency } from "./currency-written";
 
@@ -394,9 +394,12 @@ export function collectVoidDocumentMarkers(
 
 /**
  * Señal de factura que cobra un mes anterior al de su fecha (src/extract/period-markers.ts): sobre el
- * texto plano del documento, la descripción de cada línea y la nota de cada lectura que funcionó. El
- * mes de emisión es el de la lectura principal (o, si no lo trae, el de la segunda). Solo la usan
- * DUP-3 y la guardia cuando la factura no trae periodo de servicio.
+ * texto plano del documento (si lo hay), la descripción de cada línea y la nota de cada lectura que
+ * funcionó, cada marca con su origen. En una imagen o un PDF sin texto solo cuentan las líneas y las
+ * notas de las lecturas (ver docs/ARCHITECTURE.md, DUP-3: suponer el mes anterior escalaba facturas
+ * legítimas). El mes de emisión es el
+ * de la lectura principal (o, si no lo trae, el de la segunda). Solo la usan DUP-3 y la guardia cuando
+ * la factura no trae periodo de servicio.
  */
 export function collectEarlierPeriodMarkers(
   doc: NormalizedDoc,
@@ -409,21 +412,18 @@ export function collectEarlierPeriodMarkers(
   const issueMonth = issue ? issue.trim().slice(0, 7) : null;
   const out: NonNullable<ReadingSignals["earlierPeriodMarkers"]> = [];
   const seen = new Set<string>();
-  const add = (text: string, period: string | null) => {
-    const key = `${period ?? ""}|${text}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push({ text, period });
-    }
+  const add = (m: EarlierPeriodMarker, source: EarlierPeriodSource, readerId?: string) => {
+    const key = `${source}|${readerId ?? ""}|${m.period ?? ""}|${m.month ?? ""}|${m.text}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ ...m, source, ...(readerId != null ? { readerId } : {}) });
   };
-  for (const m of detectEarlierPeriodMarkers(doc.plainText, issueMonth)) add(m.text, m.period);
+  for (const m of detectEarlierPeriodMarkers(doc.plainText, issueMonth, "document")) add(m, "document");
   for (const r of ok) {
     for (const line of r.extraction.lineItems ?? []) {
-      for (const m of detectEarlierPeriodMarkers(line.description, issueMonth)) add(m.text, m.period);
+      for (const m of detectEarlierPeriodMarkers(line.description, issueMonth, "line_item")) add(m, "line_item", r.readerId);
     }
-    for (const m of detectEarlierPeriodMarkers(r.extraction.readerNotes, issueMonth)) {
-      add(`${r.readerId} anota: «${m.text}»`, m.period);
-    }
+    for (const m of detectEarlierPeriodMarkers(r.extraction.readerNotes, issueMonth, "reader_note")) add(m, "reader_note", r.readerId);
   }
   return out;
 }

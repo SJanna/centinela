@@ -20,6 +20,7 @@ import type {
   Extraction,
   HistoryEntry,
   InvoiceData,
+  ReadingAssessment,
   Rules,
   Vendor,
 } from "../core/schemas";
@@ -355,28 +356,122 @@ export function referenceDateOf(data: InvoiceData, now: string | null | undefine
   return today != null ? { ok: true, date: today, source: "now" } : { ok: false, reason: "no_date" };
 }
 
-/** Mes facturado: servicePeriod; si la factura no lo trae, el mes de la fecha de referencia. */
+/**
+ * Mes facturado: servicePeriod; si la factura no lo trae, el mes al que el documento se refiere sin
+ * lugar a dudas (`impliedPeriod`, de documentPeriodReference: «servicios del mes anterior» emitida en
+ * noviembre → octubre); si tampoco, el mes de la fecha de referencia.
+ */
 export type BilledPeriod =
-  | { ok: true; period: string; source: "service_period" | "reference_date" }
+  | { ok: true; period: string; source: BilledPeriodSource }
   | { ok: false; reason: "invalid_service_period" | "no_date" };
 
-export function billedPeriodOf(data: InvoiceData, referenceDate: string | null): BilledPeriod {
+export function billedPeriodOf(data: InvoiceData, referenceDate: string | null, impliedPeriod?: string | null): BilledPeriod {
   if (!isAbsent(data.servicePeriod)) {
     const period = periodOf(data.servicePeriod);
     return period != null ? { ok: true, period, source: "service_period" } : { ok: false, reason: "invalid_service_period" };
   }
+  const implied = impliedPeriod != null && /^\d{4}-(0[1-9]|1[0-2])$/.test(impliedPeriod) ? impliedPeriod : null;
   const day = calendarDate(referenceDate);
-  return day != null ? { ok: true, period: monthOf(day), source: "reference_date" } : { ok: false, reason: "no_date" };
+  if (day == null) return { ok: false, reason: "no_date" };
+  return implied != null ? { ok: true, period: implied, source: "document_reference" } : { ok: true, period: monthOf(day), source: "reference_date" };
 }
 
-/** De dónde salió el mes facturado: el periodo de servicio de la factura o el mes de la fecha de referencia. */
-export type BilledPeriodSource = "service_period" | "reference_date";
+/**
+ * De dónde salió el mes facturado: "service_period" el periodo de servicio de la factura;
+ * "document_reference" el mes al que el documento se refiere sin escribirlo como periodo («servicios
+ * del mes anterior»); "reference_date" el mes de la fecha de referencia (emisión, o hoy).
+ */
+export type BilledPeriodSource = "service_period" | "document_reference" | "reference_date";
 
 /** Mes anterior a un periodo "YYYY-MM" ya validado ("2026-01" → "2025-12"). */
 export function previousPeriod(period: string): string {
   const year = Number(period.slice(0, 4));
   const month = Number(period.slice(5, 7));
   return month > 1 ? `${period.slice(0, 4)}-${String(month - 1).padStart(2, "0")}` : `${String(year - 1).padStart(4, "0")}-12`;
+}
+
+/** Una referencia del documento (o de una lectura) a un mes anterior al de su fecha. */
+export interface PeriodHint {
+  /** El mes al que apunta (YYYY-MM), anterior al de la fecha. */
+  month: string;
+  /** El fragmento citado, o null si no hay (se supone el mes anterior sin haberlo leído). */
+  text: string | null;
+  /** true si es «el mes anterior» (sin nombre); false si nombra el mes. */
+  relative: boolean;
+  /** Dónde apareció: el texto del documento, una línea leída o la nota de una lectura. */
+  source: "document" | "line_item" | "reader_note";
+  readerId: string | null;
+}
+
+/**
+ * Qué dice el documento sobre el mes que cobra cuando no trae periodo de servicio (señal
+ * earlierPeriodMarkers, src/extract/period-markers.ts), frente al mes de su fecha:
+ * - "none": no se refiere a ningún mes anterior (y se revisó el texto del documento): cobra el de su fecha;
+ * - "single": todas las referencias apuntan a un mismo mes anterior y lo dice el texto del documento,
+ *   o las dos lecturas: el pago se imputa a ese mes;
+ * - "ambiguous": apuntan a varios meses, o solo una lectura lo dice: no se sabe a qué mes imputarlo;
+ * - "unchecked": no se pudo revisar (sin la señal: registros viejos): puede cobrar el mes anterior.
+ * En una imagen o un PDF sin texto la señal sale solo de las líneas y las notas de las lecturas; no se
+ * supone el mes anterior (en el set de estrés escalaba 6 facturas mensuales legítimas: S0043, S0528,
+ * S0597, S0629, S0926 y S1925).
+ */
+export type DocumentPeriodReference =
+  | { kind: "none" }
+  | { kind: "unchecked" }
+  | { kind: "single"; period: string; hints: PeriodHint[] }
+  | { kind: "ambiguous"; reason: "several_months" | "one_reading"; periods: string[]; hints: PeriodHint[] };
+
+const HINT_SOURCES = ["document", "line_item", "reader_note"] as const;
+
+/** Las referencias ordenadas para citar: primero el documento, luego las líneas, al final las notas. */
+export function sortHints(hints: readonly PeriodHint[]): PeriodHint[] {
+  return [...hints].sort((a, b) => HINT_SOURCES.indexOf(a.source) - HINT_SOURCES.indexOf(b.source));
+}
+
+/**
+ * Ubica cada marca de la señal contra el mes de la fecha (`dateMonth`) y decide si el documento se
+ * refiere sin lugar a dudas a un mes anterior. Una marca con un mes inválido se toma como «el mes
+ * anterior» (ante la duda, no se descarta); las que caen en el mes de la fecha o después no cuentan.
+ */
+export function documentPeriodReference(reading: ReadingAssessment, dateMonth: string): DocumentPeriodReference {
+  const markers: unknown = reading.signals.earlierPeriodMarkers;
+  if (!Array.isArray(markers)) return { kind: "unchecked" };
+  const previous = previousPeriod(dateMonth);
+  const hints: PeriodHint[] = [];
+  for (const raw of markers as unknown[]) {
+    if (raw == null || typeof raw !== "object") {
+      hints.push({ month: previous, text: null, relative: true, source: "reader_note", readerId: null });
+      continue;
+    }
+    const m = raw as { text?: unknown; period?: unknown; month?: unknown; source?: unknown; readerId?: unknown };
+    const text = typeof m.text === "string" && m.text.trim() !== "" ? m.text.trim() : null;
+    const source = HINT_SOURCES.find((s) => s === m.source) ?? "reader_note";
+    const readerId = typeof m.readerId === "string" && m.readerId.trim() !== "" ? m.readerId.trim() : null;
+    let month: string;
+    let relative = false;
+    const named = typeof m.period === "string" ? /^\d{4}-(0[1-9]|1[0-2])$/.test(m.period.trim()) ? m.period.trim() : null : null;
+    if (named != null) month = named;
+    else if (m.period == null && typeof m.month === "number" && Number.isInteger(m.month) && m.month >= 1 && m.month <= 12) {
+      // Mes sin año y sin fecha de emisión: la última vez que cayó antes del mes de la fecha.
+      const year = Number(dateMonth.slice(0, 4));
+      const current = Number(dateMonth.slice(5, 7));
+      if (m.month === current) continue;
+      month = `${m.month < current ? year : year - 1}-${String(m.month).padStart(2, "0")}`;
+    } else {
+      month = previous;
+      relative = true;
+    }
+    if (month >= dateMonth) continue;
+    hints.push({ month, text, relative, source, readerId });
+  }
+  if (hints.length === 0) return { kind: "none" };
+  const sorted = sortHints(hints);
+  const periods = Array.from(new Set(sorted.map((h) => h.month))).sort().reverse();
+  if (periods.length > 1) return { kind: "ambiguous", reason: "several_months", periods, hints: sorted };
+  const fromDocument = sorted.some((h) => h.source === "document");
+  const readers = new Set(sorted.filter((h) => h.source !== "document" && h.readerId != null).map((h) => h.readerId));
+  if (fromDocument || readers.size >= 2) return { kind: "single", period: periods[0], hints: sorted };
+  return { kind: "ambiguous", reason: "one_reading", periods, hints: sorted };
 }
 
 export type AgreementSelectionStatus =
@@ -409,8 +504,10 @@ export interface AgreementSelection {
   /** Mes facturado (YYYY-MM) contra el que se revisa la vigencia, o null si no se pudo saber. */
   billedPeriod: string | null;
   /**
-   * De dónde salió billedPeriod: "service_period" si la factura dice qué mes cobra; "reference_date"
-   * si se dedujo del mes de la fecha de referencia (emisión, o hoy si no hay emisión). null sin periodo.
+   * De dónde salió billedPeriod: "service_period" si la factura dice qué mes cobra;
+   * "document_reference" si el documento se refiere a ese mes sin escribirlo como periodo (`impliedPeriod`);
+   * "reference_date" si se dedujo del mes de la fecha de referencia (emisión, o hoy si no hay emisión).
+   * null sin periodo.
    */
   billedPeriodSource: BilledPeriodSource | null;
   /**
@@ -481,7 +578,12 @@ function preferCurrency(agreements: readonly Agreement[], currency: string | nul
  * emisión posterior a hoy (+1 día) da "future_date" y un mes facturado posterior al actual,
  * "future_period"; sin `now` no se revisa.
  */
-export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string | null): AgreementSelection {
+export function selectAgreement(
+  vendor: Vendor,
+  data: InvoiceData,
+  now?: string | null,
+  impliedPeriod?: string | null,
+): AgreementSelection {
   const base = {
     agreement: null,
     referenceDate: null,
@@ -520,7 +622,7 @@ export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string 
     return { ...dated, status: "none_valid", closest: ended ?? upcoming };
   }
 
-  const billed = billedPeriodOf(data, referenceDate);
+  const billed = billedPeriodOf(data, referenceDate, impliedPeriod);
   if (!billed.ok) return { ...dated, status: "invalid_period" };
   const billedAt = { ...dated, billedPeriod: billed.period, billedPeriodSource: billed.source };
   if (latest != null && billed.period > monthOf(latest)) return { ...billedAt, status: "future_period" };
@@ -793,10 +895,17 @@ export interface Facts {
   period: string | null;
   /**
    * De dónde salió `period` (null si no hay): "service_period" si la factura dice qué mes cobra;
-   * "reference_date" si se dedujo de la fecha de emisión (o de hoy). En el segundo caso la factura
-   * puede cobrar también el mes anterior (se factura a mes vencido): DUP-3 lo revisa.
+   * "document_reference" si el documento se refiere sin lugar a dudas a un mes anterior al de su fecha
+   * («servicios del mes anterior»): se imputa a ese mes; "reference_date" si es el mes de la fecha de
+   * emisión (o de hoy).
    */
   periodSource: BilledPeriodSource | null;
+  /**
+   * Solo si la factura NO trae periodo de servicio y se pudo fechar: el mes de su fecha de referencia y
+   * lo que dice el documento de otro mes (documentPeriodReference). DUP-3 revisa con esto que ningún
+   * mes que la factura pueda estar cobrando ya se haya pagado. null en otro caso.
+   */
+  inferred: { dateMonth: string; reference: DocumentPeriodReference } | null;
   /** Moneda de la factura normalizada. */
   currency: string | null;
   usd: UsdAmount;
@@ -819,7 +928,18 @@ export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
   const data = input.reading.data;
   const match = data != null ? matchVendor(data, ctx.company.vendors) : null;
   const vendor = match?.vendor ?? null;
-  const selection = data != null && vendor != null ? selectAgreement(vendor, data, ctx.now) : null;
+  let selection = data != null && vendor != null ? selectAgreement(vendor, data, ctx.now) : null;
+  // Sin periodo escrito, el mes se deduce. Si el documento se refiere sin lugar a dudas a un mes
+  // anterior al de su fecha («servicios del mes anterior»), el acuerdo mensual se revisa y se imputa
+  // con ese mes: registrarlo con el mes de la fecha dejaría el mes de verdad libre para otra factura.
+  let inferred: Facts["inferred"] = null;
+  if (data != null && vendor != null && selection != null && selection.billedPeriodSource === "reference_date" && selection.billedPeriod != null) {
+    inferred = { dateMonth: selection.billedPeriod, reference: documentPeriodReference(input.reading, selection.billedPeriod) };
+    const ref = inferred.reference;
+    if (ref.kind === "single" && selection.agreement != null && selection.agreement.frequency !== "once") {
+      selection = selectAgreement(vendor, data, ctx.now, ref.period);
+    }
+  }
   const agreement = selection?.agreement ?? null;
   const period = agreement != null && agreement.frequency !== "once" ? (selection?.billedPeriod ?? null) : null;
   return {
@@ -830,6 +950,7 @@ export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
     agreement,
     period,
     periodSource: period != null ? (selection?.billedPeriodSource ?? null) : null,
+    inferred,
     currency: normalizeCurrency(data?.currency),
     usd: computeUsdAmount(data, ctx.company.rules),
     paid: ctx.history.filter((h) => h.outcome === "PAGAR"),

@@ -220,14 +220,24 @@ export interface ReadingSignals {
    * DUP-3: el documento, la descripción de una línea o la nota de una lectura dice que cobra un mes
    * ANTERIOR al de su fecha (src/extract/period-markers.ts): una referencia relativa («servicios del
    * mes anterior», «previous month», «in arrears»; period = null, el mes anterior al de la fecha) o un
-   * mes con nombre anterior al mes de emisión («octubre de 2026»; period = "2026-10"). text = la línea
-   * del documento o «lector-a anota: «…»». Solo importa si la factura NO trae periodo de servicio (el
-   * mes se dedujo de la fecha): entonces DUP-3 y la guardia revisan también esos meses, y si alguno
-   * ya se pagó con el acuerdo, no se paga. La verificación siempre la llena; es opcional solo para
-   * leer registros guardados antes de que existiera (sin ella, el motor y la guardia suponen que la
-   * factura puede cobrar el mes anterior).
+   * mes con nombre en contexto de cobro anterior al mes de emisión («Servicios de octubre de 2026»;
+   * period = "2026-10"; sin año y sin fecha de emisión, period = null y month = el número del mes, que
+   * el motor y la guardia ubican contra su fecha de referencia). text = el fragmento del texto alrededor
+   * de la referencia; source = dónde apareció ("document" el texto plano del documento, "line_item" la
+   * descripción de una línea leída, "reader_note" la nota de una lectura) y readerId qué lectura (en
+   * líneas y notas). Solo importa si la factura NO trae periodo de servicio (el mes se deduce): si todas
+   * las marcas apuntan a un mismo mes y lo dice el documento (o las dos lecturas), el pago se imputa a
+   * ese mes; si apuntan a varios meses o solo lo dice una lectura, se escala. La verificación siempre
+   * la llena; es opcional solo para leer registros guardados antes de que existiera (sin ella, el motor
+   * y la guardia suponen que la factura puede cobrar el mes anterior).
    */
-  earlierPeriodMarkers?: { text: string; period: string | null }[];
+  earlierPeriodMarkers?: {
+    text: string;
+    period: string | null;
+    month?: number;
+    source?: "document" | "line_item" | "reader_note";
+    readerId?: string;
+  }[];
 }
 
 export interface ReadingAssessment {

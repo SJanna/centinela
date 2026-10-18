@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { formatMoney } from "../core/normalize";
+import type { HistoryEntry, ReadingSignals, Vendor } from "../core/schemas";
 import { decide } from "./index";
 import {
+  ACME,
+  BUFETE,
+  NOPAL,
+  ROBLE,
   acmeInvoice,
   bufeteInvoice,
   check,
@@ -434,18 +439,16 @@ describe("DUP-3 · periodo no pagado", () => {
   });
 });
 
-describe("DUP-3 · periodo deducido de la fecha (la factura no dice qué mes cobra)", () => {
-  const acmePaid = (period: string, invoiceId = "PREV-1") =>
-    paid({ invoiceId, vendorId: "v-acme", agreementId: "a-acme-mensual", agreementPeriod: period, invoiceNumber: `FE-${period}` });
+describe("DUP-3 · periodo deducido (la factura no dice qué mes cobra)", () => {
+  const acmePaid = (period: string, invoiceId = "PREV-1", agreementId = "a-acme-mensual") =>
+    paid({ invoiceId, vendorId: "v-acme", agreementId, agreementPeriod: period, invoiceNumber: `FE-${period}-${invoiceId}` });
   const noPeriod = (overrides: Parameters<typeof acmeInvoice>[0] = {}) => acmeInvoice({ servicePeriod: null, ...overrides });
-  const MES_ANTERIOR: { text: string; period: string | null } = {
-    text: "Servicios prestados durante el mes anterior a la fecha de emisión",
-    period: null,
-  };
-  const arrears = (data: ReturnType<typeof acmeInvoice>, markers = [MES_ANTERIOR]) =>
+  type Marker = NonNullable<ReadingSignals["earlierPeriodMarkers"]>[number];
+  const MES_ANTERIOR: Marker = { text: "Servicios prestados durante el mes anterior a la fecha de emisión", period: null, source: "document" };
+  const arrears = (data: ReturnType<typeof acmeInvoice>, markers: Marker[] = [MES_ANTERIOR]) =>
     engineInput(data, { signals: { earlierPeriodMarkers: markers } });
 
-  it("no es evaluable si dice que cobra el mes anterior y ese mes ya se pagó", () => {
+  it("se imputa al mes anterior al que se refiere el documento; si ese mes ya se pagó, no es evaluable", () => {
     const d = decide(arrears(noPeriod()), context({ history: [acmePaid("2026-09", "B07")] }));
     const c = check(d, "DUP-3");
     expect(c.status).toBe("not_evaluable");
@@ -456,11 +459,61 @@ describe("DUP-3 · periodo deducido de la fecha (la factura no dice qué mes cob
       inferredPeriod: "2026-10",
       previousPeriod: "2026-09",
       previousInvoiceId: "B07",
-      periodSource: "reference_date",
+      periodSource: "document_reference",
     });
     expect(d.outcome).toBe("ESCALAR");
+    expect(d.agreementPeriod).toBe("2026-09");
     expect(d.humanAction).toContain("Confirmar con el proveedor qué mes cobra esta factura; si es septiembre de 2026, ya se pagó.");
+    expect(d.summary).toBe("Se escala a una persona: no se sabe qué mes cobra la factura («Periodo no pagado»).");
   });
+
+  it("si el mes anterior está libre se paga, imputado a ese mes (no al de la emisión)", () => {
+    const d = decide(arrears(noPeriod()), context({ history: [acmePaid("2026-08")] }));
+    expect(d.outcome).toBe("PAGAR");
+    expect(d.agreementPeriod).toBe("2026-09");
+    expect(check(d, "DUP-3").params).toMatchObject({ period: "2026-09", inferredPeriod: "2026-10", periodSource: "document_reference" });
+    expect(decide(arrears(noPeriod()), context()).agreementPeriod).toBe("2026-09");
+    // El mes anterior decidido pero no pagado (escalado) no cuenta.
+    expect(decide(arrears(noPeriod()), context({ history: [{ ...acmePaid("2026-09"), outcome: "ESCALAR" }] })).outcome).toBe("PAGAR");
+  });
+
+  it("si el mes de la emisión ya se pagó, tampoco se paga (la referencia la detecta código; puede cobrar ese mes)", () => {
+    const d = decide(arrears(noPeriod()), context({ history: [acmePaid("2026-10", "B10")] }));
+    const c = check(d, "DUP-3");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("se imputaría a septiembre de 2026. Por la fecha de emisión (5 de octubre de 2026) también puede ser de octubre de 2026, y octubre de 2026 del acuerdo «Desarrollo backend, fijo mensual» ya se pagó (factura B10)");
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("en cascada: pagada la del «mes anterior», una factura que escribe ese mes ya no se paga", () => {
+    const x = decide(arrears(noPeriod(), [MES_ANTERIOR]), context());
+    expect(x).toMatchObject({ outcome: "PAGAR", agreementPeriod: "2026-09" });
+    const recorded = acmePaid(x.agreementPeriod!, "X");
+    const y = decide(engineInput(acmeInvoice({ invoiceNumber: "FE-9999", servicePeriod: "2026-09" }), { fileHash: "c".repeat(64) }), context({ history: [recorded] }));
+    expect(check(y, "DUP-3").status).toBe("fail");
+    expect(y.outcome).toBe("FRENAR");
+  });
+
+  it("un proveedor que siempre cobra «el mes anterior» sin periodo: se paga cada mes, uno por mes", () => {
+    const history: HistoryEntry[] = [];
+    const got: Array<[string, string | null]> = [];
+    for (const [i, issued] of ["2026-07-06", "2026-08-05", "2026-09-04", "2026-10-05"].entries()) {
+      const input = engineInput(noPeriod({ issueDate: issued, invoiceNumber: `FE-${i}` }), {
+        fileHash: String(i).repeat(64),
+        signals: { earlierPeriodMarkers: [MES_ANTERIOR] },
+      });
+      const d = decide(input, context({ history, now: `${issued}T15:00:00Z` }));
+      got.push([d.outcome, d.agreementPeriod]);
+      history.push(acmePaid(d.agreementPeriod ?? "", `S${i}`));
+    }
+    expect(got).toEqual([
+      ["PAGAR", "2026-06"],
+      ["PAGAR", "2026-07"],
+      ["PAGAR", "2026-08"],
+      ["PAGAR", "2026-09"],
+    ]);
+  });
+
   it("sin ninguna referencia a otro mes se paga el mes de la emisión aunque el anterior esté pagado", () => {
     // Como S1925 del set de estrés: mensual, sin periodo, emitida a comienzo de mes → cobra ese mes.
     const d = decide(arrears(noPeriod(), []), context({ history: [acmePaid("2026-09")] }));
@@ -468,57 +521,99 @@ describe("DUP-3 · periodo deducido de la fecha (la factura no dice qué mes cob
     expect(d.outcome).toBe("PAGAR");
     expect(d.agreementPeriod).toBe("2026-10");
   });
+
   it("sin la señal (registro viejo) supone que puede cobrar el mes anterior", () => {
     const input = engineInput(noPeriod());
     delete input.reading.signals.earlierPeriodMarkers;
     const c = check(decide(input, context({ history: [acmePaid("2026-09")] })), "DUP-3");
     expect(c.status).toBe("not_evaluable");
     expect(c.explanation).toContain("La factura no dice qué mes cobra y no se pudo revisar si se refiere a un mes anterior.");
+    expect(decide(input, context()).agreementPeriod).toBe("2026-10");
   });
-  it("un mes anterior con nombre: revisa ese mes", () => {
-    const markers = [{ text: "Honorarios agosto 2026", period: "2026-08" }];
+
+  it("un mes anterior con nombre: se imputa a ese mes", () => {
+    const markers: Marker[] = [{ text: "Honorarios agosto 2026", period: "2026-08", source: "document" }];
     const d = decide(arrears(noPeriod(), markers), context({ history: [acmePaid("2026-08")] }));
     const c = check(d, "DUP-3");
     expect(c.status).toBe("not_evaluable");
     expect(c.explanation).toContain("y menciona agosto de 2026 («Honorarios agosto 2026»)");
     expect(c.explanation).toContain("puede ser de octubre de 2026 o de agosto de 2026");
-    // El mes mencionado sin pagar no frena aunque otro mes anterior esté pagado.
-    expect(check(decide(arrears(noPeriod(), markers), context({ history: [acmePaid("2026-09")] })), "DUP-3").status).toBe("pass");
+    const free = decide(arrears(noPeriod(), markers), context({ history: [acmePaid("2026-09")] }));
+    expect(free).toMatchObject({ outcome: "PAGAR", agreementPeriod: "2026-08" });
   });
-  it("sin fecha de emisión cuenta el mes anterior al de hoy", () => {
+
+  it("referencias a meses distintos, o de una sola lectura: no se sabe a qué mes imputar, se escala aunque nada esté pagado", () => {
+    const two = decide(arrears(noPeriod(), [MES_ANTERIOR, { text: "Honorarios agosto 2026", period: "2026-08", source: "document" }]), context());
+    expect(check(two, "DUP-3").status).toBe("not_evaluable");
+    expect(check(two, "DUP-3").explanation).toContain("se refiere a varios meses anteriores a su fecha: septiembre de 2026 («Servicios prestados durante el mes anterior a la fecha de emisión») y agosto de 2026 («Honorarios agosto 2026»)");
+    expect(two.outcome).toBe("ESCALAR");
+    const oneReader = decide(arrears(noPeriod(), [{ text: "…servicios del mes anterior…", period: null, source: "reader_note", readerId: "primary" }]), context());
+    expect(check(oneReader, "DUP-3").explanation).toBe(
+      "La factura no dice qué mes cobra y una de las lecturas anota «…servicios del mes anterior…», que se referiría a septiembre de 2026, pero el documento no lo dice de forma que se pueda comprobar. Por la fecha de emisión (5 de octubre de 2026) sería octubre de 2026. No se sabe a qué mes imputar el pago: registrarlo en el mes equivocado dejaría el otro libre para cobrarlo otra vez.",
+    );
+    expect(oneReader.outcome).toBe("ESCALAR");
+    // Las dos lecturas lo anotan: basta (en una foto no hay texto del documento que revisar).
+    const both = decide(
+      arrears(noPeriod(), [
+        { text: "…servicios del mes anterior…", period: null, source: "reader_note", readerId: "primary" },
+        { text: "…prestados el mes anterior…", period: null, source: "line_item", readerId: "secondary" },
+      ]),
+      context(),
+    );
+    expect(both).toMatchObject({ outcome: "PAGAR", agreementPeriod: "2026-09" });
+  });
+
+  it("sin fecha de emisión cuenta el mes anterior al de hoy; un mes sin año se ubica contra hoy", () => {
     const d = decide(arrears(noPeriod({ issueDate: null })), context({ history: [acmePaid("2026-09")] }));
     const c = check(d, "DUP-3");
     expect(c.status).toBe("not_evaluable");
     expect(c.explanation).toContain("Tampoco trae fecha de emisión; por la fecha de hoy (20 de octubre de 2026) puede ser de octubre de 2026 o de septiembre de 2026");
+    const named = decide(arrears(noPeriod({ issueDate: null }), [{ text: "Servicios de agosto", period: null, month: 8, source: "document" }]), context());
+    expect(named).toMatchObject({ outcome: "PAGAR", agreementPeriod: "2026-08" });
+    // El mismo mes de hoy no es «anterior».
+    const same = decide(arrears(noPeriod({ issueDate: null }), [{ text: "Servicios de octubre", period: null, month: 10, source: "document" }]), context());
+    expect(same.agreementPeriod).toBe("2026-10");
   });
+
   it("cruza el año: emitida en enero, diciembre ya pagado", () => {
     const d = decide(arrears(noPeriod({ issueDate: "2027-01-04" })), context({ history: [acmePaid("2026-12")], now: "2027-01-06T15:00:00Z" }));
     expect(check(d, "DUP-3").status).toBe("not_evaluable");
     expect(check(d, "DUP-3").params).toMatchObject({ inferredPeriod: "2027-01", previousPeriod: "2026-12" });
   });
-  it("si el mes de la emisión ya se pagó sigue fallando (frena), como antes", () => {
-    const d = decide(arrears(noPeriod()), context({ history: [acmePaid("2026-09"), acmePaid("2026-10", "PREV-2")] }));
-    expect(check(d, "DUP-3").status).toBe("fail");
-    expect(d.outcome).toBe("FRENAR");
-  });
+
   it("con el periodo escrito en la factura, la referencia al mes anterior no importa", () => {
     const d = decide(arrears(acmeInvoice({ servicePeriod: "2026-10" })), context({ history: [acmePaid("2026-09")] }));
     expect(check(d, "DUP-3").status).toBe("pass");
-    expect(d.outcome).toBe("PAGAR");
+    expect(d).toMatchObject({ outcome: "PAGAR", agreementPeriod: "2026-10" });
   });
-  it("sin historial, o con el mes anterior sin pagar, se paga el mes de la emisión", () => {
-    expect(decide(arrears(noPeriod()), context()).outcome).toBe("PAGAR");
-    const older = decide(arrears(noPeriod()), context({ history: [acmePaid("2026-08")] }));
-    expect(check(older, "DUP-3").status).toBe("pass");
-    expect(older.agreementPeriod).toBe("2026-10");
-    // El mes anterior decidido pero no pagado (escalado) tampoco cuenta.
-    const escalated = decide(arrears(noPeriod()), context({ history: [{ ...acmePaid("2026-09"), outcome: "ESCALAR" }] }));
-    expect(check(escalated, "DUP-3").status).toBe("pass");
-  });
-  it("el mes anterior pagado con otro acuerdo con el que la factura no cuadra no cuenta", () => {
+
+  it("el mes pagado con otro acuerdo con el que la factura no cuadra no cuenta", () => {
     const history = [paid({ vendorId: "v-nopal", agreementId: "a-nopal-diseno", agreementPeriod: "2026-09", invoiceNumber: "N-1" })];
-    expect(check(decide(arrears(noPeriod()), context({ history })), "DUP-3").status).toBe("pass");
+    expect(decide(arrears(noPeriod()), context({ history })).outcome).toBe("PAGAR");
   });
+
+  it("acuerdo renovado al empezar el mes: el mes anterior pagado con el acuerdo vencido sí cuenta", () => {
+    const renewed: Vendor = {
+      ...ACME,
+      agreements: [
+        { ...ACME.agreements[0], validTo: "2026-09-30" },
+        { ...ACME.agreements[0], id: "a-acme-mensual-2", validFrom: "2026-10-01", validTo: null },
+      ],
+    };
+    const vendors = [renewed, NOPAL, BUFETE, ROBLE];
+    // Con la referencia, septiembre queda fuera del acuerdo nuevo (igual que si lo escribiera).
+    const d = decide(arrears(noPeriod()), context({ vendors, history: [acmePaid("2026-09")] }));
+    expect(check(d, "ACU-1").status).toBe("fail");
+    expect(d.outcome).not.toBe("PAGAR");
+    // Sin la señal (se supone el mes anterior), el pago de septiembre con el acuerdo vencido cuenta.
+    const old = engineInput(noPeriod());
+    delete old.reading.signals.earlierPeriodMarkers;
+    const o = decide(old, context({ vendors, history: [acmePaid("2026-09")] }));
+    expect(o.agreementId).toBe("a-acme-mensual-2");
+    expect(check(o, "DUP-3").status).toBe("not_evaluable");
+    expect(check(o, "DUP-3").params).toMatchObject({ paidAgreementId: "a-acme-mensual", previousPeriod: "2026-09" });
+  });
+
   it("pago único: no aplica (no hay meses); sigue fallando solo si el acuerdo ya se pagó", () => {
     const now = "2026-11-08T15:00:00Z";
     const invoice = bufeteInvoice({ issueDate: "2026-11-05", servicePeriod: null });
@@ -530,6 +625,7 @@ describe("DUP-3 · periodo deducido de la fecha (la factura no dice qué mes cob
     expect(c.status).toBe("fail");
     expect(c.params).toMatchObject({ frequency: "once" });
   });
+
   it("cobro por adelantado (emitida a fin de mes para el siguiente, sin periodo): frena si el mes de la emisión ya se pagó", () => {
     // Decisión documentada: el mes siguiente no es candidato. Si el mes de la emisión ya está pagado
     // la factura falla DUP-3 (un freno de más si de verdad cobraba el mes siguiente, nunca un pago).
