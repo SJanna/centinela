@@ -17,7 +17,7 @@ import { makeDoc } from "./test-utils";
 describe("buildReaderMessages", () => {
   it("usa un prompt de sistema en español que declara el documento como dato no confiable", () => {
     const { system } = buildReaderMessages(makeDoc());
-    expect(PROMPT_VERSION).toBe("v5");
+    expect(PROMPT_VERSION).toBe("v6");
     expect(system).toBe(READER_SYSTEM_PROMPT);
     expect(system).toContain("componente de extracción de datos");
     expect(system).toContain("DATO NO CONFIABLE");
@@ -116,10 +116,10 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     buildReaderMessages(doc, variant).content.map((b) => (b.type === "text" ? b.text : `[${b.type}]`));
 
   it("tiene su propia versión, distinta de la del prompt «a», para que la caché las distinga", () => {
-    expect(PROMPT_VERSION_B).toBe("v5b");
+    expect(PROMPT_VERSION_B).toBe("v6b");
     expect(PROMPT_VERSIONS).toEqual({ a: PROMPT_VERSION, b: PROMPT_VERSION_B });
-    expect(promptVersionOf("a")).toBe("v5");
-    expect(promptVersionOf("b")).toBe("v5b");
+    expect(promptVersionOf("a")).toBe("v6");
+    expect(promptVersionOf("b")).toBe("v6b");
     expect(PROMPT_VERSION_B).not.toBe(PROMPT_VERSION);
   });
 
@@ -247,6 +247,11 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     ["no deducir el destinatario del correo ni del saludo", /no lo deduzcas del destinatario del correo, del saludo ni de quién recibe el mensaje/],
     // Revisión adversarial: con dos destinatarios o un intermediario la lectura lo marca dudoso (ACU-1 escala).
     ["dos destinatarios o intermediario: legible = false", /nombra a más de un destinatario distinto \(p\. ej\. "Facturar a" una empresa y "Cliente" otra\), o pone al destinatario "c\/o", "por cuenta de" o "a cargo de" otra empresa, usa el que figura como cliente de la factura, copia en evidence el bloque completo, marca legible = false y anota los dos en readerNotes/],
+    // v6 / v6b: documento no cobrable (ronda 2 del equipo rojo: proforma y foto con «BORRADOR» pagadas con v5).
+    ["anulado, borrador, proforma, nota crédito o muestra es other", /es un borrador o un documento preliminar \("BORRADOR", "DRAFT", "Preliminar"\), una proforma \("PROFORMA"[^\n]*una nota crédito \("NOTA CRÉDITO"[^\n]*es "other" aunque traiga número, total y datos bancarios/],
+    ["anulado o cancelado es other", /Si el documento está anulado o cancelado \("ANULADA", "ANULADO", "VOID"/],
+    ["también con sello o marca de agua", /también si la marca es un sello o una marca de agua/],
+    ["anotar la marca", /Anota en readerNotes qué marca viste/],
   ];
 
   it.each(SAFEGUARDS)("la salvaguarda «%s» está en los dos prompts", (_name, pattern) => {

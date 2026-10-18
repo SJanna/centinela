@@ -64,8 +64,8 @@ El equipo rojo (`docs/REDTEAM.md`, LOG-11) pagó una factura de Camila Restrepo 
 
 | Perfil | Lectura «a» (`lector-a`) | Lectura «b» (`lector-b`) | Costo aprox. por factura |
 |---|---|---|---:|
-| `economico` (por defecto) | Haiku 5.5, prompt «a» (`v5`) | Haiku 5.5, prompt «b» (`v5b`): otra formulación (auditor que transcribe y luego interpreta, campos en otro orden) para que las dos lecturas no sean copias | USD 0,0030 (medido con `v5`) |
-| `calidad` | Sonnet 5.5, prompt «a» (`v5`) | Haiku 5.5, prompt «a» (`v5`) | USD 0,02 |
+| `economico` (por defecto) | Haiku 5.5, prompt «a» (`v6`) | Haiku 5.5, prompt «b» (`v6b`): otra formulación (auditor que transcribe y luego interpreta, campos en otro orden) para que las dos lecturas no sean copias | USD 0,0030 (medido con `v5`) |
+| `calidad` | Sonnet 5.5, prompt «a» (`v6`) | Haiku 5.5, prompt «a» (`v6`) | USD 0,02 |
 
 Con cualquier perfil el modelo solo lee: la verificación, el motor y la guardia son los mismos.
 
