@@ -259,7 +259,7 @@ export const CompanySchema = z.object({
   vendors: z.array(VendorSchema),
   /**
    * Opcional. Sin este bloque, la razón social de la compradora es `name` y no hay ids tributarios con
-   * qué comparar. (La base de datos hoy guarda solo `name` y `rules`: en la app se usa `name`.)
+   * qué comparar. La base lo guarda en `company_settings.buyer`.
    */
   buyer: BuyerSchema.optional(),
 });

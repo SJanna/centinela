@@ -6,15 +6,17 @@
  * original desde el JSON (p. ej. `record.decidedAt`): las columnas sirven para ordenar.
  */
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { Extraction, Rules, Vendor, DecisionRecord, Outcome } from "../core/schemas";
+import type { Buyer, Extraction, Rules, Vendor, DecisionRecord, Outcome } from "../core/schemas";
 
 const tsz = (name: string) => timestamp(name, { withTimezone: true, mode: "string" });
 
-/** Una sola fila (id = 1): nombre de la empresa y reglas. */
+/** Una sola fila (id = 1): nombre de la empresa, reglas e identidad de compradora (`buyer`, opcional). */
 export const companySettings = pgTable("company_settings", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
   rules: jsonb("rules").$type<Rules>().notNull(),
+  /** Razones sociales, alias e ids tributarios de la empresa (ACU-1 y la guardia). null si no se declaró. */
+  buyer: jsonb("buyer").$type<Buyer>(),
   updatedAt: tsz("updated_at").notNull().defaultNow(),
 });
 

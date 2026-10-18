@@ -14,6 +14,7 @@ import {
   ExtractionSchema,
   RulesSchema,
   VendorSchema,
+  type Buyer,
   type Company,
   type DecisionRecord,
   type HistoryEntry,
@@ -235,13 +236,13 @@ function validateRecord(record: DecisionRecord): void {
 
 // Consultas reutilizables (se construyen sobre la base que reciban, también dentro de una transacción).
 
-function upsertSettingsQuery(db: Db, name: string, rules: Rules) {
+function upsertSettingsQuery(db: Db, name: string, rules: Rules, buyer: Buyer | null) {
   return db
     .insert(companySettings)
-    .values({ id: COMPANY_ROW_ID, name, rules })
+    .values({ id: COMPANY_ROW_ID, name, rules, buyer })
     .onConflictDoUpdate({
       target: companySettings.id,
-      set: { name: sql`excluded.name`, rules: sql`excluded.rules`, updatedAt: sql`now()` },
+      set: { name: sql`excluded.name`, rules: sql`excluded.rules`, buyer: sql`excluded.buyer`, updatedAt: sql`now()` },
     });
 }
 
@@ -359,10 +360,12 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       ]);
       const settings = settingsRows[0];
       if (!settings) return null;
+      const buyer = settings.buyer == null ? null : fromJson<Buyer | null>(settings.buyer);
       return {
         name: settings.name,
         rules: fromJson<Rules>(settings.rules),
         vendors: vendorRows.map((r) => fromJson<Vendor>(r.data)),
+        ...(buyer ? { buyer } : {}),
       };
     },
 
@@ -370,7 +373,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       const c = toJsonbSafe(parseOrThrow(CompanySchema, company, "La empresa no es válida"));
       assertUniqueVendorIds(c.vendors);
       const h = await handle();
-      await h.atomic((db) => [upsertSettingsQuery(db, c.name, c.rules), ...replaceVendorsQueries(db, c.vendors)]);
+      await h.atomic((db) => [upsertSettingsQuery(db, c.name, c.rules, c.buyer ?? null), ...replaceVendorsQueries(db, c.vendors)]);
     },
 
     async saveRules(rules) {
@@ -584,7 +587,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       await h.atomic((db) => [
         // TRUNCATE (y no DELETE) porque el registro de decisiones rechaza borrados fila por fila.
         db.execute(sql`TRUNCATE TABLE ${invoices}, ${decisions} RESTART IDENTITY`),
-        upsertSettingsQuery(db, c.name, c.rules),
+        upsertSettingsQuery(db, c.name, c.rules, c.buyer ?? null),
         ...replaceVendorsQueries(db, c.vendors),
       ]);
     },
