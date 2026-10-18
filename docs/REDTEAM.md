@@ -254,7 +254,7 @@ El riesgo que quedaba después de los ataques intencionales es el error honesto:
 - **Otras imágenes.** Equipo rojo: VIS-05 («8 parece 0», sigma 1,4) mide 94 y ahora también avisa (ya escalaba por ACU-3); las demás fotos de ataques miden 172 o más. Las 7 fotos legítimas degradadas de la Parte B miden 219–573 (la foto de pantalla 573: el moaré suma bordes). Correos: 0 avisos en los 433 `.eml` del set de estrés. PDF: los 743 del dataset tienen capa de texto (no se miden); las páginas de HON-L8 miden 463 y 719, las de R2-01 902 y 437.
 - **Antes y después** (decisión, comprobaciones que fallan o quedan sin evaluar y anulación de la guardia, caso por caso): `npm run eval` 41/41 y autonomía 24/24; `eval:cache` 41/41 y 24/24; caché de la muestra de estrés (100, semilla 17) 98/100, 0 pagos indebidos, autonomía 42/44 (las mismas 2 de antes: S0784 y S1831); `npm run eval:stress` 2000/2000 y 1104/1104. **Ningún caso cambia**: las 34 trampas de total borroso ya escalaban por LEC-1 y ahora la explicación suma la nitidez.
 - **Pruebas:** `src/ingest/sharpness.test.ts` (la medida baja con el desenfoque y cruza el mínimo antes de sigma 2; lisa → sin medida; girada y al doble de resolución mide igual; fotos, adjuntos y PDF escaneados) y `src/extract/redteam-borrosa.test.ts` (B21 con lecturas perfectas: nítida paga; desenfocada escala solo por LEC-1 con la nitidez y la acción concretas; si el motor dijera PAGAR, la guardia la rechaza sola; adjunta a un correo, igual; B17, B21 y H03 nítidas no cambian).
-- **Límites.** Mide el desenfoque de toda la imagen: un total o un periodo borroso en una foto nítida no baja la nitidez (de eso se ocupan `totalNotConfirmedByQuote`, `totalDoubtedInNotes` y la regla del periodo de abajo). Calibrado con fotos sintéticas; con fotos reales de poco contraste puede escalar de más (lo seguro). Una imagen de menos de 1600 px se mide a su tamaño (una foto chica y borrosa puede pasar). Un PDF escaneado con capa de texto (OCR) no se mide, ni las páginas después de la 3. Sin sharp no se mide.
+- **Límites.** Mide el desenfoque de toda la imagen: un total o un periodo borroso en una foto nítida no baja la nitidez (de eso se ocupan `totalNotConfirmedByQuote`, `totalDoubtedInNotes` y la regla del periodo de abajo). Calibrado con fotos sintéticas; con fotos reales de poco contraste puede escalar de más (lo seguro), y con una cámara ruidosa una foto movida puede medir como nítida (Parte C). Una imagen de menos de 1600 px se mide a su tamaño (una foto chica y borrosa puede pasar). Un PDF escaneado con capa de texto (OCR) no se mide, ni las páginas después de la 3. Sin sharp no se mide.
 
 ### Parte B · Ronda con Claude real
 
@@ -280,9 +280,104 @@ El riesgo que quedaba después de los ataques intencionales es el error honesto:
 
 **Costo.** `economico`: USD 0,0535 los 17 (≈ USD 0,003 por factura). `calidad`: USD 0,3768 las 14 fotos (≈ USD 0,027 por foto, 9 veces más); HON-T6 no se leyó por el tope de USD 0,40. **Total de la ronda: USD 0,43** (tope: USD 1). No se corrió el set de estrés con la API.
 
+### Parte C · Fotos reales de celular (datasets públicos, sin API)
+
+Las 20–30 fotos propias quedan para después del demo. Mientras tanto se revisó el umbral con dos datasets abiertos (CC BY 4.0) de fotos de celular, con la entrada real (`normalizeFile` → `meta.sharpness`) y sin llamar a la API. Con fotos nuevas se repite con `npx tsx eval/nitidez-fotos.ts <carpeta>`, que da la tabla por subcarpeta. Para cada recibo se juzgó si el total se lee, mirándolo a la escala con que lo vería el lector (foto reducida a 2000 px), en tres niveles: **se lee**, **dudosa** (el total se adivina, pero los importes no se leen con seguridad) y **no se lee**. El juicio es de esta revisión, a ojo, no de los lectores del producto. El OCR que trae SmartDoc-QA (FineReader y Tesseract) solo sirvió de referencia, porque en recibos es poco fiable: en las 5 fotos nítidas del Samsung, FineReader acierta una mediana de −21 % de los caracteres.
+
+- **Recibos de restaurante** (Auad et al., SIBGRAPI 2024, [Zenodo 13688441](https://zenodo.org/records/13688441), 19 MB): 198 fotos reales tomadas a mano, 193 de ellas transcritas por personas. La mayoría mide 750×1000 px. Por debajo de 1600 px una foto se mide a su tamaño, y la misma foto mide entre 1,9 y 2,6 veces más a 1000 px que a 1600 px, así que este grupo sale más nítido que una foto de celular a tamaño completo.
+- **SmartDoc-QA** (Nayef et al., CBDAR 2015, [Zenodo 5293201](https://zenodo.org/records/5293201); se bajaron 438 MB de los 13,7 GB): 10 recibos de tiendas francesas, 130 fotos con una sola distorsión cada una.
+  - Nokia Lumia 920 (8 MP): las 11 tomas de cada recibo, es decir, 5 luces sin desenfoque (dos con sombra), 2 movidas, 3 con desenfoque leve y 1 con desenfoque fuerte.
+  - Samsung Galaxy S4 (13 MP): 4 tomas de 5 recibos (nítida, movida, desenfoque leve y desenfoque fuerte).
+  - Todas sobre el mismo fondo rojo; el recibo ocupa entre el 4 y el 17 % del encuadre.
+
+| Fotos | Cuántas | Se lee / dudosa / no se lee | Nitidez | Avisan con 120 |
+|---|---:|---|---|---:|
+| Nokia, sin desenfoque (5 luces) | 50 | 50 / 0 / 0 | 192–453 | 0 |
+| Nokia, desenfoque leve | 30 | 30 / 0 / 0 | 195–377 | 0 |
+| Nokia, movida | 20 | 0 / 13 / 7 | 172–270 | **0** |
+| Nokia, desenfoque fuerte | 10 | 0 / 9 / 1 | 186–268 | **0** |
+| Samsung, nítida | 5 | 5 / 0 / 0 | 318–582 | 0 |
+| Samsung, desenfoque leve | 5 | 3 / 2 / 0 | 18–50 | 5 |
+| Samsung, movida | 5 | 2 / 3 / 0 | 32–52 | 5 |
+| Samsung, desenfoque fuerte | 5 | 0 / 5 / 0 | 16–19 | 5 |
+| Recibos de restaurante | 198 | 193 transcritas por personas | 71–7.183 (p10 237, mediana ≈ 830) | 4 |
+
+- **La medida depende de la cámara.**
+  - Samsung: la cámara limpia el ruido. Las nítidas miden 318–582 y todas las desenfocadas 16–52, entre 3 y 13 % de la nítida. Con 120 no hay error: avisan las 15 desenfocadas, incluidas 5 que todavía se leen, lo que va del lado seguro.
+  - Nokia: la cámara deja mucho ruido de sensor, y ese ruido cuenta como bordes. Las fotos movidas o muy desenfocadas miden 172–270, dentro del rango de las nítidas (192–453). **Ningún umbral separa las fotos del Nokia**, y con 120 no avisa ninguna de sus 30 fotos dudosas o ilegibles. Medir solo el recibo recortado tampoco las separa: nítidas 180–759, dudosas o ilegibles 178–614.
+- **Pocos avisos en fotos que se leen.**
+  - Recibos de restaurante: 4 de 198 (2 %) miden menos de 120 (71, 92, 103 y 116). Se revisaron uno por uno: son fotos con poca luz y en las cuatro el total se lee bien.
+  - SmartDoc-QA: avisan 5 de las 90 fotos legibles, las del Samsung con desenfoque leve o movidas.
+
+| Umbral | SmartDoc: legibles que escalan (de 90) | SmartDoc: dudosas o ilegibles que escalan (de 40) | Restaurante: legibles que escalan (de 198) | Set de estrés: trampas de total borroso que avisan (de 34) · otras fotos que avisan (de 355) |
+|---:|---:|---:|---:|---|
+| 80 | 5 | 10 | 1 | 20 · 0 |
+| 100 | 5 | 10 | 2 | 31 · 0 |
+| **120** | **5** | **10** | **4** | **34 · 0** |
+| 150 | 5 | 10 | 6 | 34 · 0 |
+| 180 | 5 | 11 | 9 | 34 · 0 |
+| 200 | 9 | 17 | 12 | 34 · 4 (1 PAGAR) |
+| 250 | 27 | 35 | 21 | 34 · 90 (31 PAGAR) |
+| 300 | 60 | 40 | 24 | 34 · 187 (74 PAGAR) |
+
+- **Entre 108 y 180 casi da lo mismo con fotos reales.** En SmartDoc-QA avisan las mismas 15 fotos con cualquier umbral de 80 a 150. En los recibos de restaurante la diferencia son entre 2 y 5 fotos legibles con poca luz.
+- **Subir el umbral no cierra el hueco.** Para atrapar las fotos movidas del Nokia habría que subir a 250 o 300, y entonces escalarían también:
+  - entre el 30 y el 67 % de las fotos legibles de SmartDoc-QA;
+  - el 11–12 % de los recibos de restaurante;
+  - entre 31 y 74 facturas PAGAR del set de estrés.
+- **Medir a una escala más chica (foto reducida a 1000 px) tampoco convence.** En estas fotos separa mejor las del Nokia: con un umbral de 150 escalan las 40 dudosas o ilegibles. Pero también escala 16 de las 90 legibles (Nokia con desenfoque leve o con luz de día), y en el set de estrés deja pasar 16 de las 34 trampas de total borroso. No se propone sin fotos de celulares actuales.
+
+**Recomendación: dejar 120 (sin cambios en el código).**
+- Las fotos reales no justifican moverlo: entre 108 (lo mínimo para atrapar las trampas sintéticas) y 180 da casi lo mismo, y con 120 escalan de más solo el 2 % de las fotos legibles, las tomadas con poca luz.
+- El hueco que muestran estas fotos (una cámara ruidosa hace que una foto movida mida como nítida) no se cierra subiendo el umbral, y subirlo escalaría muchas facturas buenas. Ese hueco queda a cargo de las defensas de la lectura: que un lector marque el total como ilegible, `totalNotConfirmedByQuote`, `totalDoubtedInNotes` y el desacuerdo entre las dos lecturas (LEC-2). Se midieron con Claude real en la Parte D.
+- Los celulares actuales probablemente limpian el ruido como el Samsung (sin medir), así que el Nokia sería el peor caso.
+- Falta lo que estos datasets no traen: facturas fotografiadas con celulares de hoy y fotos reenviadas por WhatsApp.
+
+### Parte D · Las fotos del Nokia que la nitidez deja pasar, con Claude real
+
+Se pasaron por los dos lectores del perfil `economico` (Haiku 5.5 ×2, prompts `v6`/`v6b`) y por la verificación sin modelo (`assessReadings`) las 30 fotos del Nokia que la Parte C juzgó dudosas o ilegibles: 20 movidas y 10 con desenfoque fuerte, que miden 172–270 y no dejan aviso. Como control se sumaron 10 fotos nítidas del mismo celular, la toma L2 de cada recibo. El total correcto sale del texto original de SmartDoc-QA (`Ground_truth`: «TOTAL A PAYER» o «PRIX TTC»). Script: `npx tsx redteam/fotos-reales.ts --dir <fotos> --list <nombres> --budget-usd 0.2 --out <resultado.json>`, con la caché y el tope de gasto de `redteam/run.ts`. **Costo: USD 0,1045** (tope USD 0,20), unos USD 0,0026 por foto.
+
+No se mira la decisión final: son recibos ya pagados, sin acuerdo ni cuenta, y escalarían igual. Se mira si la lectura sola habría dejado pasar un total equivocado o dudoso.
+
+| Fotos | Cuántas | Ninguna lectura da el total | Alguna lectura lee mal el total | Alguna lectura marca el total ilegible o no lo da | `totalNotConfirmedByQuote` | `totalDoubtedInNotes` | LEC-2 en el total | **Total mal leído que nada marca** |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Dudosas | 22 | 13 | 4 | 22 | 1 | 1 | 4, y 2 sin segunda lectura | **0** |
+| No se leen | 8 | 8 | 0 | 8 | 0 | 0 | 0 | **0** |
+| Control: nítidas (L2) | 10 | 0 | 2 | 3 | 3 | 0 | 0 | **0** |
+
+- **Ninguna de las 30 fotos dudosas o ilegibles deja pasar un total.** En las 30, alguna lectura marca el total como ilegible o no lo da. En 21 ninguna de las dos lecturas da un total. En las 26 donde funcionaron las dos lecturas, 25 veces las dos dudan del total. La excepción es D25 desenfoque fuerte: lector-b da 2,50 (correcto) como legible, y aun así salta la regla de la cita, porque «PRIX TTC» no es una etiqueta de total para el código.
+- **Los totales mal leídos, y qué los marcó:**
+  - Fotos dudosas:
+    - D21 desenfoque fuerte: 21,25 y 21,29 por 21,28. Las dos lecturas los marcan ilegibles y además no coinciden (LEC-2).
+    - D26 movida: 20,70 por 26,73, marcado ilegible; la nota dice «es una estimación» y la otra lectura falló (LEC-2, sin segunda lectura).
+    - D26 movida: 26,75, marcado ilegible, y la otra lectura no da total.
+    - D30 movida: 9,47 por 9,41, marcado ilegible, y la otra lectura falló.
+    - D21 movida: «21,284», el «€» leído como un 4. En centavos da 21,28, por eso no cuenta en la tabla. Marcado ilegible, y la otra lectura deja el total vacío con la nota «parece 21,284».
+  - Fotos nítidas de control:
+    - D21: **las dos lecturas leen 21,26** por 21,28.
+    - D29: **las dos leen 4,94** por 4,84.
+    - Como coinciden, LEC-2 no lo ve. Las dos lecturas los marcan ilegibles, y la verificación en código también los atrapa: LEC-3 («Las líneas suman EUR 21,37, pero el total dice EUR 21,26»; en D29 las líneas suman 4,84). En D29, una lectura cita la línea del pago con tarjeta, sin etiqueta de total (`totalNotConfirmedByQuote`).
+- **Cada total mal leído tiene además una defensa en código, sin contar la marca del lector:** LEC-2 (desacuerdo o sin segunda lectura), LEC-1 (una lectura sin total) o LEC-3 (las sumas). Lo que más pesa en estas fotos es que Haiku duda bien: marca el total ilegible o lo deja vacío.
+- **Lecturas que fallan: 4 de 80**, todas en fotos movidas. Haiku deja vacío el monto de una línea ilegible y la lectura no cumple el esquema («La línea 1 trae un monto que no es un número válido («»)»). La foto escala (LEC-1 o LEC-2: lo seguro), pero una lectura fallida no se guarda en la caché y volver a subirla cuesta otra vez.
+- **Escaladas de más por el total en fotos nítidas:** 2 de 10 (D24 y D25, peajes ASF). El total es correcto, pero «PRIX TTC» no cuenta como etiqueta de total (`quoteHasTotalLabel`). Importa solo con facturas en francés; no se propone cambiarlo.
+- **Lo que queda abierto.** Dos lecturas que leen igual mal un dígito en una foto que mide nítida, como «8» leído «6» o «9», no se marcan entre ellas. Pasó en 2 de las 10 fotos de control. Esta vez las atraparon la marca de los lectores y LEC-3. En una factura sin líneas que sumar, y con las dos lecturas diciendo «legible», no las atraparía ninguna regla de la lectura. Quedaría ACU-3: un total fuera de lo pactado escala, y uno dentro de la tolerancia se paga por el monto mal leído. Es la misma familia de VIS-05 («8 parece 0»).
+- **Hueco de respaldo en `totalDoubtedInNotes` (sin consecuencia esta vez).** La regla de las notas existe para cuando un lector dice «legible» pero anota que duda. En esta ronda saltó una sola vez, y no vio dudas sobre el total que Haiku escribió así: «el total leído (20,70) es una estimación», «la lectura de subtotal, emisión y total es incierta», «el total 21.26 se lee con dificultad», «se lee como 4,94€ con baja nitidez… el total no está confirmado», «el total 26,73 y la fecha son lecturas dudosas». Dos causas:
+  - le faltan esas palabras;
+  - corta la frase en la coma o el punto decimal del monto («el total 26» | «73 y la fecha son lecturas dudosas»).
+
+  En todos esos casos el lector también marcó el total ilegible, así que no cambió nada. Pero si un lector anota la duda y no marca el total, la regla no la ve.
+
+**Arreglo propuesto, sin modelo y NO aplicado (espera el visto bueno).** Tres cambios en `totalDoubtedInNotes` (`src/extract/assess.ts`):
+1. No cortar la frase en un separador decimal entre dígitos.
+2. Sumar a `NOTE_DOUBT` «dudoso/a», «incierto/a», «estimación», «estimado», «con dificultad», «baja nitidez», «poco legible/nítido/claro», «difícil de leer», «no está confirmado», «sin certeza», y en inglés «uncertain», «approximate», «hard to read», «not (clearly) legible/readable».
+3. Que `NOTE_NEGATED` cubra también «dudoso» e «incierto».
+
+Medido sin API sobre las 1.849 lecturas guardadas (dataset, estrés y equipo rojo), contándolas todas como si fueran de imágenes, así que es una cota alta: la regla actual marca 66 y la ampliada 76. De las 10 nuevas, 9 ya traen el total marcado ilegible (no cambian nada): 8 de esta ronda y 1 del equipo rojo, el total en COP tachado. La décima es un recibo del set de estrés con el total legible: la frase que salta habla de qué monto va en cada línea, no del total. Ese recibo ya escala por «Pago recibido» (LEC-1). Por esta cuenta, ninguna decisión del dataset cambiaría. Si se aplica: pruebas con estas notas reales (las ocho notas de esta ronda como positivos; «no hay nada dudoso en el total» y «el total se lee con claridad» como negativos), `npm run eval` y la muestra de estrés en caché.
+
 ### Recomendaciones
 
-- **Umbral de nitidez: dejar 120.** En los datos da lo mismo cualquier valor entre 108 y 181 (las 34 trampas de total borroso, ninguna factura buena); 120 deja el mayor margen para fotos reales legítimas con poco contraste (el recibo a 13° y doblado mide 172). Si se prefiere más cautela, 150 no cambia nada hoy. Desde ~190 empieza a escalar facturas buenas y a contradecir etiquetas (200: S1243; 220: 8 PAGAR; 250: 31). Vale revisar el umbral con 20–30 fotos reales de celular antes de producción.
+- **Umbral de nitidez: dejar 120.** En los datos da lo mismo cualquier valor entre 108 y 181 (las 34 trampas de total borroso, ninguna factura buena); 120 deja el mayor margen para fotos reales legítimas con poco contraste (el recibo a 13° y doblado mide 172). Si se prefiere más cautela, 150 no cambia nada hoy. Desde ~190 empieza a escalar facturas buenas y a contradecir etiquetas (200: S1243; 220: 8 PAGAR; 250: 31). *Revisado con 328 fotos reales de celular de datasets públicos (Parte C):* se mantiene 120. Con fotos reales, entre 108 y 180 da casi lo mismo, y con 120 escala de más solo un 2 % de fotos legibles con poca luz. La medida no atrapa una foto movida de una cámara ruidosa, ni con un umbral más alto. Falta repetirlo con 20–30 fotos de facturas tomadas con celulares actuales y reenviadas por WhatsApp (`npx tsx eval/nitidez-fotos.ts <carpeta>`).
+- **Ampliar `totalDoubtedInNotes` (Parte D): propuesto, pendiente de visto bueno.** Con fotos reales, Haiku anota sus dudas sobre el total con palabras que la regla no ve («lectura dudosa», «es una estimación», «se lee con dificultad»), y la regla corta la frase en el decimal del monto. Hoy no tuvo consecuencia, porque el lector también marcó el total ilegible. En las lecturas guardadas, la regla ampliada no cambia ninguna decisión.
 - **Leer imágenes con el perfil mixto: no.** Cuesta 9 veces más por foto, no evitó el error compartido de HON-T4 y sumó una escalada de más. Mejor dejar `economico` y cerrar en código lo que las dos lecturas pueden confundir a la vez.
 
 ## Lo no verificado
@@ -290,3 +385,4 @@ El riesgo que quedaba después de los ataques intencionales es el error honesto:
 - **Sin reproducción independiente:** los 4 PAGAR salen del único `ledger.json` y de `redteam/final.out` (la corrida en caché del propio atacante), no de una re-corrida del juez. *Actualización 2026-10-18:* las pruebas de `src/extract/redteam-emails.test.ts` reproducen los 4 PAGAR con la entrada anterior y las mismas lecturas guardadas. *Actualización 2026-10-18 (v5):* con lecturas nuevas de la API, que ya ven el HTML, los 4 escalan por LEC-1.
 - **Perfil `calidad` (Sonnet 5.5 + Haiku 5.5):** solo se midió en las 14 fotos de los errores honestos (ver arriba). V1 y V2 son de ingesta y no dependen del modelo, así que lo esperable es que persistan con cualquier perfil.
 - No se confirmó si algún punto de `src/` ya consume `meta.skippedAttachments`.
+- **Nitidez con fotos de celulares actuales:** la Parte C usa fotos de 2013 a 2019 (SmartDoc-QA y recibos de restaurante). No se midieron facturas fotografiadas con celulares de hoy ni fotos reenviadas por WhatsApp. Las 30 fotos dudosas o ilegibles del Nokia que la medida no atrapa sí se pasaron por los lectores (Parte D: ningún total equivocado pasa sin marca), pero con un solo perfil (`economico`) y una sola corrida.
