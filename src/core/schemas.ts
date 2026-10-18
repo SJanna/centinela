@@ -130,6 +130,9 @@ export interface InvoiceData {
 }
 
 /** Señales que produce la verificación (código, sin modelo) sobre las lecturas. */
+/** Clase de documento no cobrable (voidDocumentMarkers): anulado, nota crédito, borrador o proforma, «no es una factura». */
+export type VoidDocumentKind = "void" | "credit_note" | "draft" | "not_invoice";
+
 export interface ReadingSignals {
   /** LEC-1: campos críticos ausentes. */
   missingCriticalFields: string[];
@@ -162,28 +165,45 @@ export interface ReadingSignals {
   ingestWarnings?: string[];
   /**
    * LEC-1: el documento NO es un cobro válido: una factura anulada, un borrador, una proforma, una
-   * nota crédito o un documento que dice que no es una factura. Una entrada por cada marca del
-   * detector por patrones sobre el texto plano (src/extract/void-markers.ts; text = la línea del
-   * documento, p. ej. «ANULADA»; reason = por qué no se cobra). Si no está vacía, nunca se paga:
-   * LEC-1 escala y la guardia rechaza. La verificación siempre la llena; es opcional solo para leer
-   * registros guardados antes de que existiera (la guardia la exige: si falta, las señales están
-   * incompletas y no aprueba).
+   * nota crédito o un documento que dice que no es una factura. Una entrada por cada línea marcada por
+   * el detector por patrones sobre el texto plano (src/extract/void-markers.ts; text = la línea del
+   * documento, p. ej. «ANULADA»; reason = por qué no se cobra; kind = la clase, que elige qué se le
+   * pide a la persona: "void" anulada, "credit_note" nota crédito, "draft" borrador o proforma,
+   * "not_invoice" dice que no es una factura; opcional en registros viejos). Si no está vacía, nunca
+   * se paga: LEC-1 escala y la guardia rechaza. La verificación siempre la llena; es opcional solo
+   * para leer registros guardados antes de que existiera (la guardia la exige: si falta, las señales
+   * están incompletas y no aprueba).
    */
-  voidDocumentMarkers?: { text: string; reason: string }[];
+  voidDocumentMarkers?: { text: string; reason: string; kind?: VoidDocumentKind }[];
   /**
    * ACU-2: la moneda leída (data.currency) es una de las que se escriben con un «$» solo (USD, COP,
    * MXN, CLP, ARS) y el documento no la nombra de forma explícita (código ISO como palabra, «US$»,
-   * «dólares», «pesos argentinos», «COL$»…; src/extract/currency-written.ts). Qué textos cuentan:
-   * con texto verificable (hasVerifiableText: no es una imagen ni trae imágenes), solo el texto plano
-   * del documento; sin texto verificable, las citas (evidence) de moneda, total y subtotal, y cada
-   * lectura que funcionó tiene que nombrar la moneda en sus propias citas (si una sola lo hace, es
-   * true). Nunca las notas del lector (readerNotes): son palabras del modelo. false para cualquier
-   * otra moneda, o sin moneda leída. Si es true y para el país del proveedor el «$» es otra moneda (el
-   * peso en CO/MX/CL/AR) o no se sabe el país, ACU-2 escala y la guardia rechaza. La verificación
-   * siempre la llena; es opcional solo para leer registros guardados antes de que existiera (la
-   * guardia la exige: si falta, las señales están incompletas y no aprueba).
+   * «dólares», «Dlls», «pesos argentinos», «COL$»…; src/extract/currency-written.ts) DONDE COBRA. Qué
+   * textos cuentan (src/extract/assess.ts, assessCurrencyWriting):
+   * - con texto verificable (hasVerifiableText: no es una imagen ni trae imágenes), solo dos cosas del
+   *   texto plano: un campo que declara la moneda («Moneda: USD», «CURRENCY» y debajo «USD», «Valores
+   *   en USD», el total en letras «SON: … PESOS M/CTE») y lo escrito junto a cada aparición del total y
+   *   del subtotal leídos (la etiqueta y la moneda en su línea; si el importe no aparece en el texto,
+   *   junto a las citas del total y del subtotal de las dos lecturas que sí aparecen). Una mención
+   *   suelta en otra línea («Cotización dólar BNA», «Equivalente: USD 2,67», «no se aceptan dólares»,
+   *   la firma o el asunto de un correo) NO nombra la moneda del total;
+   * - sin texto verificable, las citas (evidence) de moneda, total y subtotal, y cada lectura que
+   *   funcionó tiene que nombrar la moneda en sus propias citas (si una sola lo hace, es true).
+   * Nunca las notas del lector (readerNotes): son palabras del modelo. false para cualquier otra moneda,
+   * o sin moneda leída. Si es true: con currencyMarker de otra moneda, ACU-2 escala siempre; si no, y
+   * para el país del proveedor el «$» es otra moneda (el peso en CO/MX/CL/AR) o no se sabe el país,
+   * ACU-2 escala y la guardia rechaza. La verificación siempre la llena; es opcional solo para leer
+   * registros guardados antes de que existiera (la guardia la exige: si falta, las señales están
+   * incompletas y no aprueba).
    */
   currencyOnlyDollarSign?: boolean;
+  /**
+   * ACU-2, solo cuando currencyOnlyDollarSign es true: qué escribe el documento junto al total en lugar
+   * de la moneda leída. "$" = un «$» solo; "" = nada (ni código ni símbolo); otro código ISO = el total
+   * nombra otra moneda («R$ 2.800» leído como USD → "BRL"), y entonces nunca se paga. Opcional: sin ella
+   * (registros viejos) se trata como "$".
+   */
+  currencyMarker?: string;
 }
 
 export interface ReadingAssessment {

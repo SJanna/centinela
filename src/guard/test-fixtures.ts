@@ -176,6 +176,7 @@ export function emptySignals(): ReadingSignals {
     ingestWarnings: [],
     voidDocumentMarkers: [],
     currencyOnlyDollarSign: false,
+    currencyMarker: "",
   };
 }
 

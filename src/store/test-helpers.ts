@@ -184,6 +184,7 @@ export function makeRecord(spec: RecordSpec): DecisionRecord {
         ingestWarnings: [],
         voidDocumentMarkers: [],
         currencyOnlyDollarSign: false,
+        currencyMarker: "",
       },
     },
     companySnapshot: spec.company ?? makeCompany(),

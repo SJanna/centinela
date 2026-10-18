@@ -95,7 +95,7 @@ function digest(reading: ReadingAssessment): string[] {
     s.paidDocumentMarkers?.length ? `ya-pagado:${s.paidDocumentMarkers.length}(${[...new Set(s.paidDocumentMarkers.map((m) => m.source))].join("/")})` : null,
     s.ingestWarnings?.length ? `avisos-entrada:${s.ingestWarnings.length}` : null,
     s.voidDocumentMarkers?.length ? `no-cobrable:${s.voidDocumentMarkers.length}(«${s.voidDocumentMarkers[0].text.slice(0, 40)}»)` : null,
-    s.currencyOnlyDollarSign ? "moneda-solo-$" : null,
+    s.currencyOnlyDollarSign ? `moneda-solo-$(${s.currencyMarker === undefined ? "$" : s.currencyMarker === "" ? "nada" : s.currencyMarker})` : null,
   ].filter(Boolean);
   out.push(`    señales: ${sig.length ? sig.join(" · ") : "(ninguna)"}`);
   return out;

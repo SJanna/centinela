@@ -78,6 +78,7 @@ describe("assessReadings · campos críticos (LEC-1)", () => {
       ingestWarnings: [],
       voidDocumentMarkers: [],
       currencyOnlyDollarSign: false,
+      currencyMarker: "",
     });
   });
 
@@ -671,7 +672,7 @@ describe("documento que no es un cobro (voidDocumentMarkers → LEC-1)", () => {
   it("marca el sello «ANULADA» del texto aunque las dos lecturas digan «invoice»", () => {
     const voided = `${SAMPLE_INVOICE_TEXT}\nANULADA\nReemplazada por DS-0459`;
     const a = assessReadings(makeDoc({ plainText: voided }), okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
-    expect(a.signals.voidDocumentMarkers).toEqual([{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" }]);
+    expect(a.signals.voidDocumentMarkers).toEqual([{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado", kind: "void" }]);
   });
 
   it("una factura normal y una foto sin texto no traen marcas", () => {
@@ -727,6 +728,69 @@ describe("moneda escrita solo con «$» (currencyOnlyDollarSign → ACU-2)", () 
   it("sin texto verificable el texto plano no cuenta (p. ej. un correo con una foto adjunta)", () => {
     const mail = photo({ kind: "email", plainText: "Adjunto la factura de octubre por USD 2.400." });
     expect(assessReadings(mail, okResult(dollarReading()), okResult(dollarReading(), "segunda")).signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("texto que solo pone «$»: currencyMarker «$»; sin ningún símbolo, vacío; con «R$» leído como USD, BRL", () => {
+    const signals = (text: string) => assessReadings(makeDoc({ plainText: text }), okResult(dollarReading()), okResult(dollarReading(), "segunda")).signals;
+    expect(signals(dollarText).currencyMarker).toBe("$");
+    const bare = signals(SAMPLE_INVOICE_TEXT.replace(/USD /g, ""));
+    expect(bare.currencyOnlyDollarSign).toBe(true);
+    expect(bare.currencyMarker).toBe("");
+    const real = signals(SAMPLE_INVOICE_TEXT.replace(/USD /g, "R$ "));
+    expect(real.currencyOnlyDollarSign).toBe(true);
+    expect(real.currencyMarker).toBe("BRL");
+    expect(assessReadings(makeDoc(), okResult(makeExtraction()), null).signals.currencyMarker).toBe("");
+  });
+
+  // Hallazgo SEG-1/F1: una mención del dólar en otra línea no dice en qué moneda está el total.
+  it.each([
+    ["una cotización de referencia", "Cotización dólar BNA (referencia): $ 1.050,00"],
+    ["una negación", "Pagos únicamente en pesos; no se aceptan dólares."],
+    ["un equivalente aproximado", "Equivalente aproximado: USD 2,67"],
+    ["un tipo de cambio", "Tipo de cambio BNA: 1 USD = 1.050 ARS"],
+    ["la TRM del día", "TRM del día: $ 3.950,00 COP/USD"],
+    ["la firma de un correo", "Pampa Ops SRL · Cotizamos en USD para clientes del exterior"],
+    ["una moneda de referencia", "Moneda de referencia: USD"],
+  ])("con texto verificable, %s en otra línea no nombra la moneda del total", (_name, line) => {
+    const a = assessReadings(makeDoc({ plainText: `${dollarText}\n${line}` }), okResult(dollarReading()), okResult(dollarReading(), "segunda"));
+    expect(a.signals.currencyOnlyDollarSign).toBe(true);
+    expect(a.signals.currencyMarker).toBe("$");
+  });
+
+  it.each([
+    ["en la línea del total", dollarText.replace("Total a pagar: $ 2.400,00", "Total a pagar: $ 2.400,00 USD")],
+    ["en un campo «Moneda:»", `Moneda: USD\n${dollarText}`],
+    ["en un campo con la etiqueta en otra línea (PDF)", `CURRENCY\nUSD\n${dollarText}`],
+    ["en «Valores en USD»", `Todos los valores en USD\n${dollarText}`],
+    ["en el total en letras", `${dollarText}\nSON: DOS MIL CUATROCIENTOS DÓLARES`],
+    ["con la etiqueta en la línea de arriba", dollarText.replace("Total a pagar: $ 2.400,00", "Total a pagar (USD)\n2.400,00")],
+    ["con «Dlls» (México)", dollarText.replace("Total a pagar: $ 2.400,00", "Total a pagar: $ 2.400,00 Dlls")],
+    ["con «U.S.D.»", dollarText.replace("Total a pagar: $ 2.400,00", "Total a pagar: U.S.D. 2.400,00")],
+  ])("con texto verificable, la moneda escrita %s: false", (_name, text) => {
+    expect(assessReadings(makeDoc({ plainText: text }), okResult(dollarReading()), okResult(dollarReading(), "segunda")).signals.currencyOnlyDollarSign).toBe(false);
+  });
+
+  it("si el total no aparece como número en el texto, cuenta lo escrito junto a las citas que sí aparecen", () => {
+    const spaced = dollarText.replace("Total a pagar: $ 2.400,00", "Total a pagar: $ 2 . 4 0 0 , 0 0").replace(/\$ 2\.400,00/g, "$ 2 . 4 0 0 , 0 0");
+    const quoted = (total: string) => makeExtraction({ currency: field("USD", "$"), subtotal: field(2400, null), total: field(2400, total) });
+    const a = assessReadings(makeDoc({ plainText: spaced }), okResult(quoted("Total a pagar: $ 2 . 4 0 0 , 0 0")), null);
+    expect(a.signals.currencyOnlyDollarSign).toBe(true);
+    const named = spaced.replace("Total a pagar: $ 2 . 4 0 0 , 0 0", "Total a pagar: USD 2 . 4 0 0 , 0 0");
+    expect(assessReadings(makeDoc({ plainText: named }), okResult(quoted("Total a pagar: USD 2 . 4 0 0 , 0 0")), null).signals.currencyOnlyDollarSign).toBe(false);
+  });
+
+  it("sin texto verificable, «$ 2.400 Dlls» o «U.S.D.» en las citas nombran el dólar; «R$» da otra moneda", () => {
+    const quoted = (total: string) => makeExtraction({ currency: field("USD", "$"), subtotal: field(2400, null), total: field(2400, total) });
+    for (const q of ["TOTAL $ 2,400.00 Dlls", "TOTAL U.S.D. 2,400.00"]) {
+      expect(assessReadings(photo(), okResult(quoted(q)), okResult(quoted(q), "segunda")).signals.currencyOnlyDollarSign).toBe(false);
+    }
+    const real = assessReadings(photo(), okResult(quoted("TOTAL R$ 2.400,00")), okResult(quoted("TOTAL R$ 2.400,00"), "segunda")).signals;
+    expect(real.currencyOnlyDollarSign).toBe(true);
+    expect(real.currencyMarker).toBe("BRL");
+    const noSymbol = { ...quoted("TOTAL 2,400.00"), currency: field("USD", "Moneda") };
+    const bare = assessReadings(photo(), okResult(noSymbol), okResult(noSymbol, "segunda")).signals;
+    expect(bare.currencyOnlyDollarSign).toBe(true);
+    expect(bare.currencyMarker).toBe("");
   });
 
   it("otras monedas (BRL, PEN, EUR) o sin moneda leída: false", () => {

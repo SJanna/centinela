@@ -714,7 +714,13 @@ export function digestLines(d: ReadingDigest): string[] {
       : null,
     s.ingestWarnings?.length ? `avisos de entrada: ${s.ingestWarnings.length}` : null,
     s.voidDocumentMarkers?.length ? `no cobrable: ${s.voidDocumentMarkers.map((m) => `«${m.text}»`).join(", ")}` : null,
-    s.currencyOnlyDollarSign ? "moneda escrita solo con «$»" : null,
+    s.currencyOnlyDollarSign
+      ? s.currencyMarker === ""
+        ? "total sin moneda escrita"
+        : s.currencyMarker && s.currencyMarker !== "$"
+          ? `junto al total otra moneda (${s.currencyMarker})`
+          : "moneda escrita solo con «$»"
+      : null,
   ].filter(Boolean);
   if (signals.length > 0) lines.push(`señales: ${signals.join(" · ")}`);
   return lines;

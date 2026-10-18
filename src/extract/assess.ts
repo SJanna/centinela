@@ -21,7 +21,7 @@ import { formatMoney, normalizeAccount, normalizeName, toCents } from "../core/n
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
 import { detectVoidDocumentMarkers } from "./void-markers";
-import { currencyOnlyAsDollarSign } from "./currency-written";
+import { DOLLAR_SIGN_CURRENCIES, currencyMarkerIn, declaresCurrency, namesCurrency } from "./currency-written";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
 /** Clave en readersDisagreeOn cuando las dos lecturas imputan la factura a meses distintos. */
@@ -315,33 +315,136 @@ export function collectPaidDocumentMarkers(
  */
 export function collectVoidDocumentMarkers(doc: NormalizedDoc): NonNullable<ReadingSignals["voidDocumentMarkers"]> {
   if (!doc.plainText) return [];
-  return detectVoidDocumentMarkers(doc.plainText).map((m) => ({ text: m.text, reason: m.reason }));
+  return detectVoidDocumentMarkers(doc.plainText).map((m) => ({ text: m.text, reason: m.reason, kind: m.kind }));
+}
+
+/** Cómo escribe el documento la moneda del total: currencyOnlyDollarSign y currencyMarker de las señales. */
+export interface CurrencyWriting {
+  /** true si la moneda leída es USD/COP/MXN/CLP/ARS y el documento no la nombra junto al total. */
+  onlyDollarSign: boolean;
+  /** Si onlyDollarSign: "$" (un «$» solo), "" (nada) u otro código ISO («R$» → "BRL"). Si no, "". */
+  marker: string;
+}
+
+const NOT_ONLY_DOLLAR: CurrencyWriting = { onlyDollarSign: false, marker: "" };
+
+/** Primera palabra después de un importe que puede ser su moneda («2.800,00 USD», «$2,800.00 Dlls», «2,800.00 US Dollars»). */
+function currencyWordAfter(after: string): string {
+  const first = /^[^\S\n]*[^\s\d(),;|]{1,12}/.exec(after);
+  if (!first) return "";
+  const word = first[0].trim().toLowerCase();
+  if (!/^(?:us|u\.s\.|pesos?|dolares|dólares|dollars?)$/.test(word)) return first[0];
+  const second = /^[^\S\n]+[^\s\d(),;|]{1,12}/.exec(after.slice(first[0].length));
+  return second ? first[0] + second[0] : first[0];
 }
 
 /**
- * ¿La moneda leída solo aparece como «$»? Para USD/COP/MXN/CLP/ARS, true si el documento no la nombra
- * de forma explícita (código ISO, «US$», «dólares», «pesos argentinos»…; currency-written.ts):
- * - Con texto verificable (hasVerifiableText): cuenta solo el texto plano. Una cita que está en el
- *   texto ya está incluida; una que no está no son palabras del documento.
+ * Lo que el documento escribe junto a cada aparición de un importe: en su línea, desde el número
+ * anterior (o el comienzo de la línea) hasta el importe y la palabra que lo sigue; si antes del
+ * importe no hay letras (la etiqueta quedó en la línea de arriba, como en «TOTAL» / «$ 4.800»), también
+ * la línea anterior. «Importe Total $ 2.800,00» → «Importe Total $ 2.800,00»; «1 COP 12.000.000 COP
+ * 12.000.000» → « COP 12.000.000 COP».
+ */
+export function amountSegments(text: string, value: number | null | undefined): string[] {
+  if (value == null || !Number.isFinite(value) || value === 0) return [];
+  const target = toCents(Math.abs(value));
+  const out = new Set<string>();
+  for (const pattern of NUMBER_PATTERNS) {
+    for (const m of text.matchAll(pattern)) {
+      if (!numberReadings(m[0]).some((n) => Number.isFinite(n) && toCents(n) === target)) continue;
+      const start = m.index;
+      const end = start + m[0].length;
+      const lineStart = start === 0 ? 0 : text.lastIndexOf("\n", start - 1) + 1;
+      const nl = text.indexOf("\n", end);
+      const lineEnd = nl === -1 ? text.length : nl;
+      const before = text.slice(lineStart, start);
+      let cut = 0;
+      for (const n of before.matchAll(/\d(?:[\d.,'’]*\d)?/g)) cut = n.index + n[0].length;
+      let prefix = before.slice(cut);
+      if (!/\p{L}/u.test(prefix) && lineStart > 0) {
+        const prevStart = lineStart === 1 ? 0 : text.lastIndexOf("\n", lineStart - 2) + 1;
+        const prev = text.slice(prevStart, lineStart - 1);
+        if (prev.length <= 60 && !/\d/.test(prev)) prefix = `${prev}\n${prefix}`;
+      }
+      out.add(`${prefix}${m[0]}${currencyWordAfter(text.slice(end, lineEnd))}`);
+    }
+  }
+  return [...out];
+}
+
+/** Dónde aparece una cita en el texto (sin partir números), en posiciones del texto original. */
+function quoteSpans(text: string, quote: string | null | undefined): string[] {
+  const canonQuote = canonicalText(quote ?? "");
+  if (canonQuote.length === 0) return [];
+  let canon = "";
+  const map: number[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = canonicalText(text[i]);
+    for (let k = 0; k < c.length; k++) map.push(i);
+    canon += c;
+  }
+  const out: string[] = [];
+  const checkStart = isDigit(canonQuote[0]);
+  const checkEnd = isDigit(canonQuote[canonQuote.length - 1]);
+  for (let i = canon.indexOf(canonQuote); i !== -1; i = canon.indexOf(canonQuote, i + 1)) {
+    if (checkStart && isDigit(canon[i - 1])) continue;
+    if (checkEnd && isDigit(canon[i + canonQuote.length])) continue;
+    const start = map[i];
+    const end = map[i + canonQuote.length - 1] + 1;
+    const nl = text.indexOf("\n", end);
+    out.push(`${text.slice(start, end)}${currencyWordAfter(text.slice(end, nl === -1 ? text.length : nl))}`);
+  }
+  return out;
+}
+
+/**
+ * ¿La moneda leída solo aparece como «$» (o sin nada) junto al total? Para USD/COP/MXN/CLP/ARS (las
+ * que se escriben con «$» solo), onlyDollarSign es true si el documento no la nombra de forma explícita
+ * (código ISO, «US$», «dólares», «pesos argentinos», «Dlls»…; currency-written.ts) donde cobra:
+ * - Con texto verificable (hasVerifiableText) cuenta SOLO esto del texto plano: (a) un campo que
+ *   declara la moneda («Moneda: USD», «CURRENCY» / «USD», «Valores en USD», el total en letras «SON: …
+ *   PESOS M/CTE»), y (b) lo escrito junto a cada aparición del total y del subtotal leídos
+ *   (amountSegments: la etiqueta y la moneda en su línea). Si el importe no aparece en el texto, junto
+ *   a las citas del total y del subtotal de las dos lecturas que sí aparecen (quoteSpans). Una mención
+ *   suelta en otra línea no cuenta: «Cotización dólar BNA: $ 1.050», «Equivalente: USD 2,67», «no se
+ *   aceptan dólares», la firma del correo «Cotizamos en USD», el asunto, los nombres de adjuntos.
  * - Sin texto verificable (una foto, un PDF escaneado, un correo con una imagen): cuentan las citas
  *   de moneda, total y subtotal, y CADA lectura que funcionó tiene que nombrar la moneda en sus
  *   propias citas. Si una de las dos solo copió «$ 4.800», no hay acuerdo sobre lo que dice el
- *   documento, y una cita inventada por un solo lector no basta para pagar.
+ *   documento, y una cita inventada por un solo lector no basta para pagar. Límite: si las dos lecturas
+ *   inventan «USD» en sus citas de una foto, no hay texto contra el cual comprobarlo.
  * Las notas del lector (readerNotes) nunca cuentan: son palabras del modelo. El motor (ACU-2) y la
- * guardia deciden con el país del proveedor si ese «$» es la moneda pactada.
+ * guardia deciden con el país del proveedor si ese «$» es la moneda pactada. marker dice qué escribe
+ * el documento en su lugar (currencyMarkerIn): "$", "" (nada) u otra moneda.
  */
+export function assessCurrencyWriting(doc: NormalizedDoc, data: InvoiceData | null, readings: Array<ReaderResult | null>): CurrencyWriting {
+  if (data == null || data.currency == null) return NOT_ONLY_DOLLAR;
+  const code = data.currency.trim().toUpperCase();
+  if (!DOLLAR_SIGN_CURRENCIES.includes(code)) return NOT_ONLY_DOLLAR;
+  const extractions = readings.flatMap((r) => (r?.ok ? [r.extraction] : []));
+  if (hasVerifiableText(doc) && doc.plainText != null) {
+    const text = doc.plainText;
+    if (declaresCurrency(code, text)) return NOT_ONLY_DOLLAR;
+    let segments = [...amountSegments(text, data.total), ...amountSegments(text, data.subtotal)];
+    if (segments.length === 0) {
+      segments = extractions.flatMap((e) => [...quoteSpans(text, e.total?.evidence), ...quoteSpans(text, e.subtotal?.evidence)]);
+    }
+    if (segments.some((s) => namesCurrency(code, s))) return NOT_ONLY_DOLLAR;
+    return { onlyDollarSign: true, marker: currencyMarkerIn(code, segments) };
+  }
+  const quotesOf = (e: Extraction) => [e.currency?.evidence, e.total?.evidence, e.subtotal?.evidence];
+  const names = (e: Extraction) => quotesOf(e).some((q) => namesCurrency(code, q) || declaresCurrency(code, q));
+  if (extractions.length > 0 && extractions.every(names)) return NOT_ONLY_DOLLAR;
+  return { onlyDollarSign: true, marker: currencyMarkerIn(code, extractions.flatMap(quotesOf)) };
+}
+
+/** Compatibilidad: solo el booleano de assessCurrencyWriting. */
 export function currencyWrittenOnlyAsDollarSign(
   doc: NormalizedDoc,
   data: InvoiceData | null,
   readings: Array<ReaderResult | null>,
 ): boolean {
-  if (data == null || data.currency == null) return false;
-  if (hasVerifiableText(doc)) return currencyOnlyAsDollarSign(data.currency, [doc.plainText]);
-  const extractions = readings.flatMap((r) => (r?.ok ? [r.extraction] : []));
-  if (extractions.length === 0) return currencyOnlyAsDollarSign(data.currency, []);
-  return extractions.some((e) =>
-    currencyOnlyAsDollarSign(data.currency, [e.currency?.evidence, e.total?.evidence, e.subtotal?.evidence]),
-  );
+  return assessCurrencyWriting(doc, data, readings).onlyDollarSign;
 }
 
 export const INGEST_WARNING_WITHOUT_MESSAGE = "La entrada dejó un aviso sin detalle: parte del archivo no se pudo leer o no coincide con lo leído";
@@ -387,6 +490,14 @@ const CURRENCY_ALIASES: Record<string, string[]> = {
   BRL: ["r$", "real", "reais"],
   PEN: ["s/", "sol"],
   EUR: ["€", "euro"],
+};
+
+/**
+ * Formas que solo cuentan como palabra (sobre minúsculas sin tildes): «$ 2,800.00 Dlls» (México),
+ * «U.S.D.», «DOL» (código de AFIP). Las mismas que reconoce currency-written.ts para la señal de «$».
+ */
+const CURRENCY_WORD_ALIASES: Record<string, RegExp[]> = {
+  USD: [/\bdll?s\b/, /(?<![a-z])u\.\s?s\.\s?d\b/, /\bdol\b/],
 };
 
 /**
@@ -439,7 +550,8 @@ function valueFound(field: CriticalField, value: string | number, doc: Searchabl
     const code = value.toLowerCase().replace(/\s+/g, "");
     if (currencyCodeAppears(code, doc.lower)) return true;
     const aliases = CURRENCY_ALIASES[code.toUpperCase()] ?? [];
-    return aliases.some((alias) => doc.collapsed.includes(alias));
+    if (aliases.some((alias) => doc.collapsed.includes(alias))) return true;
+    return (CURRENCY_WORD_ALIASES[code.toUpperCase()] ?? []).some((re) => re.test(doc.lower));
   }
   const canon = canonicalText(value);
   if (canon.length > 0 && doc.canonical.includes(canon)) return true;
@@ -712,6 +824,7 @@ export function assessReadings(
       )
     : [];
 
+  const currency = assessCurrencyWriting(doc, data, [primary, secondary]);
   const signals: ReadingSignals = {
     missingCriticalFields,
     illegibleCriticalFields,
@@ -722,7 +835,8 @@ export function assessReadings(
     paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
     ingestWarnings: collectIngestWarnings(doc),
     voidDocumentMarkers: collectVoidDocumentMarkers(doc),
-    currencyOnlyDollarSign: currencyWrittenOnlyAsDollarSign(doc, data, [primary, secondary]),
+    currencyOnlyDollarSign: currency.onlyDollarSign,
+    currencyMarker: currency.marker,
   };
 
   return { primary, secondary, data, signals };

@@ -581,7 +581,7 @@ describe("ACU-2 · moneda pactada", () => {
 });
 
 describe("LEC-1 · documento que no es un cobro (voidDocumentMarkers)", () => {
-  const VOID = { text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" };
+  const VOID = { text: "ANULADA", reason: "Dice que el documento está anulado o cancelado", kind: "void" as const };
 
   it("falla si el texto dice que la factura está anulada, aunque las dos lecturas digan «invoice»", () => {
     const d = decide(engineInput(acmeInvoice(), { signals: { voidDocumentMarkers: [VOID] } }), context());
@@ -612,6 +612,31 @@ describe("LEC-1 · documento que no es un cobro (voidDocumentMarkers)", () => {
     expect(c.params.voidMarkers).toBe(3);
   });
 
+  it("la acción depende de la clase: nota crédito, proforma, «no es una factura»; sin clase (registro viejo), la general", () => {
+    const action = (markers: unknown[]) =>
+      decide(engineInput(acmeInvoice(), { signals: { voidDocumentMarkers: markers as { text: string; reason: string }[] } }), context()).humanAction;
+    const credit = action([{ text: "CREDIT NOTE", reason: "Es una nota crédito", kind: "credit_note" }]);
+    expect(credit).toContain("Registrar la nota crédito como saldo a favor de la empresa y descontarla del próximo cobro del proveedor; una nota crédito no se paga.");
+    expect(credit).not.toContain("reemplace a esta");
+    const draft = action([{ text: "PROFORMA INVOICE", reason: "Es una proforma", kind: "draft" }]);
+    expect(draft).toContain("Pedir al proveedor la factura definitiva; un borrador o una proforma no se paga.");
+    expect(draft).not.toContain("reemplace a esta");
+    expect(action([{ text: "No es una factura", reason: "x", kind: "not_invoice" }])).toContain(
+      "Pedir al proveedor la factura o la cuenta de cobro: este documento dice que no es una factura y no se paga.",
+    );
+    const old = action([{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" }]);
+    expect(old).toContain("Revisar el documento con el proveedor: no es un cobro válido y no se paga.");
+    const both = action([
+      { text: "PROFORMA INVOICE", reason: "Es una proforma", kind: "draft" },
+      { text: "This proforma is not a tax invoice.", reason: "No es factura", kind: "not_invoice" },
+    ]);
+    expect(both).toContain("Pedir al proveedor la factura definitiva");
+    expect(both).toContain("Pedir al proveedor la factura o la cuenta de cobro");
+    // Una clase desconocida cuenta como sin clase: también falla.
+    const weird = decide(engineInput(acmeInvoice(), { signals: { voidDocumentMarkers: [{ text: "X", reason: "y", kind: "otra" }] as unknown as [] } }), context());
+    expect(check(weird, "LEC-1").status).toBe("fail");
+  });
+
   it("una marca sin texto también hace fallar LEC-1 (no se descarta)", () => {
     const signals = { voidDocumentMarkers: [{ text: 42, reason: null }] as unknown as { text: string; reason: string }[] };
     const c = check(decide(engineInput(acmeInvoice(), { signals }), context()), "LEC-1");
@@ -636,7 +661,8 @@ describe("ACU-2 · moneda escrita solo con «$» (currencyOnlyDollarSign)", () =
     const others = context().company.vendors.filter((v) => v.id !== "v-bufete");
     return context({ vendors: [...others, { ...base, country }] });
   }
-  const dollarOnly = { signals: { currencyOnlyDollarSign: true } };
+  const dollarOnly = { signals: { currencyOnlyDollarSign: true, currencyMarker: "$" } };
+  const nothingWritten = { signals: { currencyOnlyDollarSign: true, currencyMarker: "" } };
 
   it("proveedor de Colombia, acuerdo en USD y la factura solo pone «$»: escala (el «$» es el peso colombiano)", () => {
     const d = decide(engineInput(bufeteInvoice(), dollarOnly), context());
@@ -700,6 +726,48 @@ describe("ACU-2 · moneda escrita solo con «$» (currencyOnlyDollarSign)", () =
     expect(c.explanation).toBe("La factura está en USD, la moneda pactada.");
     const notABoolean = engineInput(bufeteInvoice(), { signals: { currencyOnlyDollarSign: "sí" as unknown as boolean } });
     expect(check(decide(notABoolean, bufeteFrom("AR")), "ACU-2").status).toBe("pass");
+  });
+
+  it("registro sin currencyMarker: se trata como «$» solo", () => {
+    const input = engineInput(bufeteInvoice(), dollarOnly);
+    delete input.reading.signals.currencyMarker;
+    const c = check(decide(input, bufeteFrom("AR")), "ACU-2");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("La factura solo escribe «$»");
+  });
+
+  it("sin nada escrito junto al total no dice que haya un «$»: proveedor de Argentina, escala", () => {
+    const d = decide(engineInput(bufeteInvoice(), nothingWritten), bufeteFrom("AR"));
+    const c = check(d, "ACU-2");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe(
+      "La factura no escribe la moneda junto al total (ni el código ni «$»). Para un proveedor de Argentina un importe sin moneda se entiende en el peso argentino (ARS), no USD: no se puede confirmar que cobre en la moneda pactada.",
+    );
+    expect(c.explanation).not.toContain("solo escribe «$»");
+    expect(c.params).toMatchObject({ currencyOnlyDollarSign: true, currencyMarker: "", vendorCountry: "AR", bareDollarMeans: "ARS" });
+    expect(d.outcome).toBe("ESCALAR");
+  });
+
+  it("sin nada escrito: EE. UU. pasa (sin decir «$»); Brasil no (su moneda no es el dólar); sin país, no evaluable", () => {
+    const us = check(decide(engineInput(bufeteInvoice(), nothingWritten), bufeteFrom("US")), "ACU-2");
+    expect(us.status).toBe("pass");
+    expect(us.explanation).toBe("La factura está en USD, la moneda pactada (sin moneda escrita junto al total, que para un proveedor de Estados Unidos es USD).");
+    const br = check(decide(engineInput(bufeteInvoice(), nothingWritten), bufeteFrom("BR")), "ACU-2");
+    expect(br.status).toBe("fail");
+    expect(br.explanation).toContain("Para un proveedor de Brasil un importe sin moneda no se puede dar por USD");
+    expect(check(decide(engineInput(bufeteInvoice(), nothingWritten), bufeteFrom("")), "ACU-2").status).toBe("not_evaluable");
+  });
+
+  it("junto al total la factura escribe otra moneda («R$» leído como USD): falla aunque el país sea de dólares", () => {
+    const other = { signals: { currencyOnlyDollarSign: true, currencyMarker: "BRL" } };
+    for (const country of ["BR", "US", "CO"]) {
+      const c = check(decide(engineInput(bufeteInvoice(), other), bufeteFrom(country)), "ACU-2");
+      expect(c.status).toBe("fail");
+      expect(c.explanation).toBe(
+        "La factura no dice USD junto al total: lo que escribe es de otra moneda (BRL). No se puede confirmar que cobre en USD, la moneda pactada.",
+      );
+      expect(c.params).toMatchObject({ currencyMarker: "BRL" });
+    }
   });
 
   it("si la moneda leída ya es otra, falla por moneda distinta (la señal no cambia nada)", () => {

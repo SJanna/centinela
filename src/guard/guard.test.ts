@@ -762,17 +762,50 @@ describe("G5a · moneda escrita solo con «$» (currencyOnlyDollarSign)", () => 
   function pampaIn(country: string): Company {
     return { ...COMPANY, vendors: COMPANY.vendors.map((v) => (v.id === "v-pampa" ? { ...v, country } : v)) };
   }
-  const dollarOnly = { signals: { currencyOnlyDollarSign: true } };
+  const dollarOnly = { signals: { currencyOnlyDollarSign: true, currencyMarker: "$" } };
+  const nothingWritten = { signals: { currencyOnlyDollarSign: true, currencyMarker: "" } };
 
   it("Pampa Ops (Argentina), USD 2.800 leído de «$ 2.800,00»: rechaza aunque el motor haya dicho PAGAR", () => {
     const input = makeInput(pampaChat(), dollarOnly);
-    expectOnly(guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)), "la factura solo escribe «$»: para un proveedor de AR es ARS, no USD");
+    expectOnly(
+      guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)),
+      "la factura solo escribe «$»: para un proveedor de Argentina (AR) el «$» es el peso argentino (ARS), no USD",
+    );
+  });
+
+  it("registro sin currencyMarker: se trata como «$» solo", () => {
+    const input = makeInput(pampaChat(), { signals: { currencyOnlyDollarSign: true } });
+    delete input.reading.signals.currencyMarker;
+    expectOnly(guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)), "la factura solo escribe «$»: para un proveedor de Argentina (AR)");
+  });
+
+  it("sin nada escrito junto al total: no dice «$»; Argentina rechaza, EE. UU. aprueba, Brasil rechaza", () => {
+    const input = makeInput(pampaChat(), nothingWritten);
+    expectOnly(
+      guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)),
+      "la factura no escribe la moneda junto al total: para un proveedor de Argentina (AR) un importe sin moneda es el peso argentino (ARS), no USD",
+    );
+    expectApproved(guardPayment(input, makeCtx({ company: pampaIn("US") }), makeDecision(input, pampaDecision)));
+    expectOnly(
+      guardPayment(input, makeCtx({ company: pampaIn("BR") }), makeDecision(input, pampaDecision)),
+      "la factura no escribe la moneda junto al total: para un proveedor de Brasil (BR) no se puede dar por USD",
+    );
+  });
+
+  it("junto al total dice otra moneda («R$» leído como USD): rechaza en cualquier país", () => {
+    const input = makeInput(pampaChat(), { signals: { currencyOnlyDollarSign: true, currencyMarker: "BRL" } });
+    for (const country of ["AR", "US", "BR"]) {
+      expectOnly(
+        guardPayment(input, makeCtx({ company: pampaIn(country) }), makeDecision(input, pampaDecision)),
+        "la factura no dice USD junto al total sino otra moneda (BRL)",
+      );
+    }
   });
 
   it("Datos del Sur (Chile) por horas en USD con «$» solo: rechaza (el «$» es CLP)", () => {
     const input = makeInput(hourly("datossur", 35), dollarOnly);
     const d = makeDecision(input, { ...hourlyIds.datossur, agreementPeriod: "2026-10", amountUsd: 2100 });
-    expectOnly(guardPayment(input, makeCtx(), d), "para un proveedor de CL es CLP, no USD");
+    expectOnly(guardPayment(input, makeCtx(), d), "para un proveedor de Chile (CL) el «$» es el peso chileno (CLP), no USD");
   });
 
   it("sin país del proveedor no se sabe qué es el «$»: rechaza", () => {
@@ -799,7 +832,7 @@ describe("G5a · moneda escrita solo con «$» (currencyOnlyDollarSign)", () => 
     const cloud = makeInput(cloudOctober(), dollarOnly);
     expectApproved(guardPayment(cloud, makeCtx(), makeDecision(cloud, cloudDecision)));
     const { input: camilaInput } = camila();
-    const cop = { ...camilaInput, reading: { ...camilaInput.reading, signals: { ...camilaInput.reading.signals, currencyOnlyDollarSign: true } } };
+    const cop = { ...camilaInput, reading: { ...camilaInput.reading, signals: { ...camilaInput.reading.signals, currencyOnlyDollarSign: true, currencyMarker: "$" } } };
     expectApproved(guardPayment(cop, makeCtx(), makeDecision(cop, camilaDecision)));
     const pampaBr = makeInput(pampaChat(), dollarOnly);
     expectApproved(guardPayment(pampaBr, makeCtx({ company: pampaIn("BR") }), makeDecision(pampaBr, pampaDecision)));

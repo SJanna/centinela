@@ -59,9 +59,17 @@ describe("buildTrace: verificación", () => {
   });
 
   it("muestra la moneda escrita solo con «$» aunque el motor la haya dado por buena", () => {
-    const record = withSignals({ currencyOnlyDollarSign: true });
+    const record = withSignals({ currencyOnlyDollarSign: true, currencyMarker: "$" });
     const text = verification(record);
     expect(text).toContain(`moneda escrita solo con «$» (leída como ${record.reading.data?.currency}) · la revisa ACU-2 con el país del proveedor`);
+    expect(verification(withSignals({ currencyOnlyDollarSign: true, currencyMarker: undefined }))).toContain("moneda escrita solo con «$»");
     expect(verification(withSignals({ currencyOnlyDollarSign: false }))).not.toContain("moneda escrita solo con «$»");
+  });
+
+  it("sin moneda escrita junto al total no dice «$»; con otra moneda, no se paga", () => {
+    const nothing = verification(withSignals({ currencyOnlyDollarSign: true, currencyMarker: "" }));
+    expect(nothing).toContain("el total no escribe la moneda");
+    expect(nothing).not.toContain("«$»");
+    expect(verification(withSignals({ currencyOnlyDollarSign: true, currencyMarker: "BRL" }))).toContain("junto al total la factura escribe otra moneda (BRL)");
   });
 });

@@ -4,7 +4,7 @@
  * usados y (si no pasa) la instrucción para la persona que revise.
  */
 import { OUTCOME_LABEL } from "../core/checks";
-import { bareDollarMeaning } from "../core/currency";
+import { bareDollarMeaning, localDollarSignCurrency } from "../core/currency";
 import { normalizeAccount, toCents, monthOf } from "../core/normalize";
 import {
   CRITICAL_FIELDS,
@@ -20,6 +20,7 @@ import {
   type ReaderResult,
   type ReadingSignals,
   type Vendor,
+  type VoidDocumentKind,
 } from "../core/schemas";
 import {
   agreementCoversPeriod,
@@ -262,6 +263,11 @@ const VOID_PROBLEM = "El documento no es un cobro válido";
 /** Cuántas marcas de documento no cobrable se citan en la explicación (el resto se cuenta). */
 const VOID_QUOTES_SHOWN = 2;
 const ACTION_VOID = "Confirmar con el proveedor si hay una factura vigente que reemplace a esta; esta no se paga.";
+const ACTION_CREDIT_NOTE =
+  "Registrar la nota crédito como saldo a favor de la empresa y descontarla del próximo cobro del proveedor; una nota crédito no se paga.";
+const ACTION_DRAFT = "Pedir al proveedor la factura definitiva; un borrador o una proforma no se paga.";
+const ACTION_NOT_INVOICE = "Pedir al proveedor la factura o la cuenta de cobro: este documento dice que no es una factura y no se paga.";
+const ACTION_NOT_PAYABLE = "Revisar el documento con el proveedor: no es un cobro válido y no se paga.";
 const ACTION_RECEIPT = "Confirmar con el proveedor si hay un cobro pendiente: un recibo es de algo ya pagado y no se paga otra vez.";
 const ACTION_OTHER_DOCUMENT =
   "Revisar el documento original: solo se pagan facturas y cuentas de cobro. Si es un cobro, pedir al proveedor la factura o la cuenta de cobro.";
@@ -295,26 +301,53 @@ function paidProblem(quotes: readonly string[], readersSayReceipt: boolean): str
   return `${PAID_PROBLEM}: ${shown.join(", ")}${more}${alsoReaders}`;
 }
 
+/** Marca de documento no cobrable ya limpia: texto, motivo y clase (null si el registro no la trae). */
+interface VoidMarkerView {
+  text: string;
+  reason: string;
+  kind: VoidDocumentKind | null;
+}
+
+const VOID_KINDS: readonly VoidDocumentKind[] = ["void", "credit_note", "draft", "not_invoice"];
+
 /**
  * Marcas de documento que no es un cobro válido (anulado, borrador, proforma, nota crédito, «no es una
  * factura»). La señal la produce otro módulo y es opcional en registros viejos: si no es una lista, no
  * hay marcas. Una marca sin texto se conserva con su motivo (descartarla dejaría pasar el pago).
  */
-function voidMarkersOf(input: EngineInput): { text: string; reason: string }[] {
+function voidMarkersOf(input: EngineInput): VoidMarkerView[] {
   const raw: unknown = input.reading.signals.voidDocumentMarkers;
   if (!Array.isArray(raw)) return [];
-  const out: { text: string; reason: string }[] = [];
+  const out: VoidMarkerView[] = [];
   for (const m of raw as unknown[]) {
     const text = typeof (m as { text?: unknown })?.text === "string" ? (m as { text: string }).text.replace(/\s+/g, " ").trim() : "";
     const reason = typeof (m as { reason?: unknown })?.reason === "string" ? (m as { reason: string }).reason.replace(/\s+/g, " ").trim() : "";
-    if (out.some((o) => o.text === text && o.reason === reason)) continue;
-    out.push({ text, reason });
+    const rawKind: unknown = (m as { kind?: unknown })?.kind;
+    const kind = VOID_KINDS.find((k) => k === rawKind) ?? null;
+    if (out.some((o) => o.text === text && o.reason === reason && o.kind === kind)) continue;
+    out.push({ text, reason, kind });
   }
   return out;
 }
 
+/**
+ * Qué se le pide a la persona según la clase de documento no cobrable: una anulada se reemplaza, un
+ * borrador o una proforma espera la factura definitiva, una nota crédito es un saldo a favor. Sin clase
+ * (registros viejos), la acción general.
+ */
+function voidActions(markers: readonly VoidMarkerView[]): string[] {
+  const kinds = new Set(markers.map((m) => m.kind));
+  const out: string[] = [];
+  if (kinds.has("void")) out.push(ACTION_VOID);
+  if (kinds.has("credit_note")) out.push(ACTION_CREDIT_NOTE);
+  if (kinds.has("draft")) out.push(ACTION_DRAFT);
+  if (kinds.has("not_invoice")) out.push(ACTION_NOT_INVOICE);
+  if (kinds.has(null)) out.push(ACTION_NOT_PAYABLE);
+  return out;
+}
+
 /** «El documento no es un cobro válido: «ANULADA» (Dice que el documento está anulado o cancelado) y 1 más». */
-function voidProblem(markers: readonly { text: string; reason: string }[]): string {
+function voidProblem(markers: readonly VoidMarkerView[]): string {
   const shown = markers.slice(0, VOID_QUOTES_SHOWN).map((m) => {
     const quote = m.text !== "" ? `«${truncate(m.text, 100)}»` : "una marca sin texto";
     const why = m.reason !== "" ? ` (${stripFinalPeriod(truncate(m.reason, 120))})` : "";
@@ -436,7 +469,7 @@ const lec1: Evaluator = (f, input) => {
   const all = unique([...missing, ...illegible, ...notFound]);
   const actions: string[] = [];
   if (ingestWarnings.length > 0) actions.push(ACTION_INGEST);
-  if (voidMarkers.length > 0) actions.push(ACTION_VOID);
+  actions.push(...voidActions(voidMarkers));
   if (documentKind != null) actions.push(documentKind === "receipt" ? ACTION_RECEIPT : ACTION_OTHER_DOCUMENT);
   if (all.length > 0) actions.push(`Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`);
   return fail(`${parts.join(". ")}.`, actions.join(" "), {
@@ -1049,6 +1082,56 @@ const LOCAL_DOLLAR_NAME: Record<string, string> = {
 const ACTION_DOLLAR_SIGN = (currency: string) =>
   `Pedir al proveedor que confirme la moneda (que la factura diga ${currency}) antes de pagar.`;
 
+/**
+ * Qué escribe la factura junto al total en lugar de la moneda (señal currencyMarker): "$" (un «$»
+ * solo; también si el registro no la trae), "" (nada) u otro código ISO.
+ */
+function currencyMarkerOf(raw: unknown): string {
+  return typeof raw === "string" ? raw.trim().toUpperCase() : "$";
+}
+
+/**
+ * ACU-2 cuando la factura no nombra la moneda pactada junto al total (currencyOnlyDollarSign): con
+ * otra moneda escrita, falla; con «$» solo, ese «$» tiene que ser la moneda pactada en el país del
+ * proveedor (src/core/currency.ts); sin nada escrito, tiene que ser la moneda local de un país que la
+ * escribe con «$». Sin país, sin evaluar.
+ */
+function dollarSignVerdict(cur: string, vendor: Vendor, rawMarker: unknown, base: CheckResult["params"]): Evaluation {
+  const marker = currencyMarkerOf(rawMarker);
+  const country = typeof vendor.country === "string" ? vendor.country.trim().toUpperCase() : "";
+  const countryName = COUNTRY_NAME[country] ?? country;
+  const action = ACTION_DOLLAR_SIGN(cur);
+  if (marker !== "$" && marker !== "") {
+    return fail(
+      `La factura no dice ${cur} junto al total: lo que escribe es de otra moneda (${truncate(marker, 12)}). No se puede confirmar que cobre en ${cur}, la moneda pactada.`,
+      action,
+      { ...base, currencyOnlyDollarSign: true, currencyMarker: truncate(marker, 12), vendorCountry: country || null, bareDollarMeans: null },
+    );
+  }
+  const bare = marker === "$";
+  // Un «$» solo: lo que significa en el país. Nada escrito: la moneda local, solo si se escribe con «$».
+  const means = bare ? bareDollarMeaning(country) : country ? localDollarSignCurrency(country) : null;
+  const params = { ...base, currencyOnlyDollarSign: true, currencyMarker: marker, vendorCountry: country || null, bareDollarMeans: means };
+  const written = bare ? "La factura solo escribe «$» y no dice la moneda" : "La factura no escribe la moneda junto al total (ni el código ni «$»)";
+  if (country === "") {
+    return notEvaluable(`${written}, y no se sabe el país del proveedor: no se puede confirmar que cobre en ${cur}, la moneda pactada.`, action, params);
+  }
+  if (means === cur) {
+    const how = bare ? `escrita solo con «$», que para un proveedor de ${countryName} es ${cur}` : `sin moneda escrita junto al total, que para un proveedor de ${countryName} es ${cur}`;
+    return pass(`La factura está en ${cur}, la moneda pactada (${how}).`, params);
+  }
+  if (means == null) {
+    return fail(
+      `${written}. Para un proveedor de ${countryName} un importe sin moneda no se puede dar por ${cur}: no se puede confirmar que cobre en la moneda pactada.`,
+      action,
+      params,
+    );
+  }
+  const localName = LOCAL_DOLLAR_NAME[means] ?? means;
+  const meaning = bare ? `el «$» es ${localName}` : `un importe sin moneda se entiende en ${localName}`;
+  return fail(`${written}. Para un proveedor de ${countryName} ${meaning}, no ${cur}: no se puede confirmar que cobre en la moneda pactada.`, action, params);
+}
+
 const acu2: Evaluator = (f, input) => {
   if (f.data == null) return derived(NO_DATA);
   if (f.vendor == null) return derived(NO_VENDOR, { agreementId: null });
@@ -1067,34 +1150,12 @@ const acu2: Evaluator = (f, input) => {
   }
   const params = { agreementId: a.id, invoiceCurrency: cur, agreementCurrency: agreed };
   if (cur === agreed) {
-    // La moneda leída coincide con la pactada, pero ¿la factura la escribe o solo pone «$»? Para un
-    // proveedor de Argentina, «$ 2.800» son pesos: leerlo como USD pagaría mil veces lo cobrado.
-    // Registros viejos sin la señal: como antes.
+    // La moneda leída coincide con la pactada, pero ¿la factura la escribe junto al total o solo pone
+    // «$»? Para un proveedor de Argentina, «$ 2.800» son pesos: leerlo como USD pagaría mil veces lo
+    // cobrado. Registros viejos sin la señal: como antes.
     const signal: unknown = input.reading.signals.currencyOnlyDollarSign;
     if (signal !== true) return pass(`La factura está en ${cur}, la moneda pactada.`, { ...params, currencyOnlyDollarSign: signal === false ? false : null });
-    const country = typeof f.vendor.country === "string" ? f.vendor.country.trim().toUpperCase() : "";
-    const means = bareDollarMeaning(country);
-    const dollarParams = { ...params, currencyOnlyDollarSign: true, vendorCountry: country || null, bareDollarMeans: means };
-    if (means == null) {
-      return notEvaluable(
-        `La factura solo escribe «$» y no dice la moneda, y no se sabe el país del proveedor: no se puede confirmar que cobre en ${cur}, la moneda pactada.`,
-        ACTION_DOLLAR_SIGN(cur),
-        dollarParams,
-      );
-    }
-    if (means !== cur) {
-      const countryName = COUNTRY_NAME[country] ?? country;
-      const localName = LOCAL_DOLLAR_NAME[means] ?? means;
-      return fail(
-        `La factura solo escribe «$» y no dice la moneda. Para un proveedor de ${countryName} el «$» es ${localName}, no ${cur}: no se puede confirmar que cobre en la moneda pactada.`,
-        ACTION_DOLLAR_SIGN(cur),
-        dollarParams,
-      );
-    }
-    return pass(
-      `La factura está en ${cur}, la moneda pactada (escrita solo con «$», que para un proveedor de ${COUNTRY_NAME[country] ?? country} es ${cur}).`,
-      dollarParams,
-    );
+    return dollarSignVerdict(cur, f.vendor, input.reading.signals.currencyMarker, params);
   }
   return fail(
     `La factura está en ${cur} pero el acuerdo «${a.description}» es en ${agreed}.`,

@@ -55,9 +55,17 @@ export { detectPaidDocumentMarkers } from "./paid-markers";
 export type { PaidMarker } from "./paid-markers";
 
 export { detectVoidDocumentMarkers } from "./void-markers";
-export type { VoidMarker } from "./void-markers";
+export type { VoidMarker, VoidKind } from "./void-markers";
 
-export { bareDollarMeaning, currencyOnlyAsDollarSign, namesCurrency, DOLLAR_SIGN_CURRENCIES } from "./currency-written";
+export {
+  bareDollarMeaning,
+  currencyMarkerIn,
+  currencyOnlyAsDollarSign,
+  declaresCurrency,
+  hasBareDollarSign,
+  namesCurrency,
+  DOLLAR_SIGN_CURRENCIES,
+} from "./currency-written";
 
 export {
   assessReadings,
@@ -70,6 +78,8 @@ export {
   collectIngestWarnings,
   collectVoidDocumentMarkers,
   currencyWrittenOnlyAsDollarSign,
+  assessCurrencyWriting,
+  amountSegments,
   INGEST_WARNING_WITHOUT_MESSAGE,
   RECEIPT_READING_REASON,
   findEvidenceNotFound,

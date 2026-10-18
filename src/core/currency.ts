@@ -39,3 +39,13 @@ export function bareDollarMeaning(country: string | null | undefined): string | 
   if (!c) return null;
   return Object.prototype.hasOwnProperty.call(LOCAL_DOLLAR_SIGN, c) ? LOCAL_DOLLAR_SIGN[c] : "USD";
 }
+
+/**
+ * La moneda local de un país que la escribe con «$» (ISO 3166 alfa-2), o null si el país no está en la
+ * tabla. Para una factura que no escribe ninguna moneda junto al total: en Argentina se entiende el
+ * peso; en Brasil no se puede dar por hecho el dólar (la moneda local es el real).
+ */
+export function localDollarSignCurrency(country: string | null | undefined): string | null {
+  const c = typeof country === "string" ? country.trim().toUpperCase() : "";
+  return c !== "" && Object.prototype.hasOwnProperty.call(LOCAL_DOLLAR_SIGN, c) ? LOCAL_DOLLAR_SIGN[c] : null;
+}

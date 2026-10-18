@@ -111,7 +111,15 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
   }
   // Se muestra aunque el motor la haya dado por buena (un proveedor de EE. UU. escribe «$» y es USD).
   if (s.currencyOnlyDollarSign === true) {
-    verifyDetails.push({ text: `moneda escrita solo con «$»${reading.data?.currency ? ` (leída como ${reading.data.currency})` : ""} · la revisa ACU-2 con el país del proveedor`, tone: "warn" });
+    const read = reading.data?.currency ? ` (leída como ${reading.data.currency})` : "";
+    const marker = typeof s.currencyMarker === "string" ? s.currencyMarker.trim().toUpperCase() : "$";
+    if (marker === "$") {
+      verifyDetails.push({ text: `moneda escrita solo con «$»${read} · la revisa ACU-2 con el país del proveedor`, tone: "warn" });
+    } else if (marker === "") {
+      verifyDetails.push({ text: `el total no escribe la moneda${read} · la revisa ACU-2 con el país del proveedor`, tone: "warn" });
+    } else {
+      verifyDetails.push({ text: `junto al total la factura escribe otra moneda (${marker})${read} · no se paga`, tone: "bad" });
+    }
   }
   steps.push({
     n: "04",

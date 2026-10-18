@@ -232,6 +232,7 @@ export function noSignals(overrides: Partial<ReadingSignals> = {}): ReadingSigna
     ingestWarnings: [],
     voidDocumentMarkers: [],
     currencyOnlyDollarSign: false,
+    currencyMarker: "",
     ...overrides,
   };
 }

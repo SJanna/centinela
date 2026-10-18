@@ -745,21 +745,60 @@ const GUARD_BARE_DOLLAR: Readonly<Record<string, string>> = {
   NZ: "NZD", AU: "AUD", CA: "CAD", SG: "SGD", HK: "HKD",
 };
 
+/** Nombres para los mensajes de la guardia (copia propia, como la tabla de arriba). Si falta, el código. */
+const GUARD_COUNTRY_NAME: Readonly<Record<string, string>> = {
+  US: "Estados Unidos", EC: "Ecuador", SV: "El Salvador", PA: "Panamá", PR: "Puerto Rico",
+  CO: "Colombia", MX: "México", CL: "Chile", AR: "Argentina",
+  UY: "Uruguay", DO: "República Dominicana", CU: "Cuba",
+  NZ: "Nueva Zelanda", AU: "Australia", CA: "Canadá", SG: "Singapur", HK: "Hong Kong",
+  BR: "Brasil", PE: "Perú",
+};
+const GUARD_CURRENCY_NAME: Readonly<Record<string, string>> = {
+  USD: "el dólar (USD)", COP: "el peso colombiano (COP)", MXN: "el peso mexicano (MXN)", CLP: "el peso chileno (CLP)",
+  ARS: "el peso argentino (ARS)", UYU: "el peso uruguayo (UYU)", DOP: "el peso dominicano (DOP)", CUP: "el peso cubano (CUP)",
+  NZD: "el dólar neozelandés (NZD)", AUD: "el dólar australiano (AUD)", CAD: "el dólar canadiense (CAD)",
+  SGD: "el dólar de Singapur (SGD)", HKD: "el dólar de Hong Kong (HKD)",
+};
+
+/** «Argentina (AR)»; un país que no está en la tabla, solo su código. */
+function countryLabel(country: string): string {
+  const name = Object.prototype.hasOwnProperty.call(GUARD_COUNTRY_NAME, country) ? GUARD_COUNTRY_NAME[country] : null;
+  return name ? `${name} (${country})` : shown(country, 10);
+}
+
+function currencyLabel(code: string): string {
+  return Object.prototype.hasOwnProperty.call(GUARD_CURRENCY_NAME, code) ? GUARD_CURRENCY_NAME[code] : code;
+}
+
 /**
- * Si la factura solo escribe «$» (señal currencyOnlyDollarSign), ese «$» tiene que ser la moneda
- * leída en el país del proveedor: una factura argentina «$ 2.800» son pesos, no USD 2.800. Sin país
- * conocido, no se puede saber y no se aprueba. Que la señal exista lo exige checkReading.
+ * Si la factura no nombra la moneda leída junto al total (señal currencyOnlyDollarSign), lo que escribe
+ * en su lugar (currencyMarker) tiene que ser esa moneda en el país del proveedor:
+ * - otra moneda («R$» leído como USD): no se aprueba nunca;
+ * - un «$» solo (o un registro sin currencyMarker): una factura argentina «$ 2.800» son pesos, no USD;
+ * - nada escrito: solo vale la moneda local de un país que la escribe con «$» (Brasil: no).
+ * Sin país conocido, no se puede saber y no se aprueba. Que la señal exista lo exige checkReading.
  */
 function checkDollarSign(invoice: GuardInvoice, vendor: Vendor, reading: ReadingAssessment, v: Violations): void {
   if (reading?.signals?.currencyOnlyDollarSign !== true) return;
-  const country = typeof vendor.country === "string" ? vendor.country.trim().toUpperCase() : "";
-  if (country === "") {
-    v.add(`la factura solo escribe «$» y no se sabe el país del proveedor: no se puede confirmar que sea ${invoice.currency}`);
+  const rawMarker: unknown = reading.signals.currencyMarker;
+  const marker = typeof rawMarker === "string" ? rawMarker.trim().toUpperCase() : "$";
+  if (marker !== "$" && marker !== "") {
+    v.add(`la factura no dice ${invoice.currency} junto al total sino otra moneda (${shown(marker, 12)})`);
     return;
   }
-  const means = Object.prototype.hasOwnProperty.call(GUARD_BARE_DOLLAR, country) ? GUARD_BARE_DOLLAR[country] : "USD";
-  if (means !== invoice.currency) {
-    v.add(`la factura solo escribe «$»: para un proveedor de ${shown(country, 10)} es ${means}, no ${invoice.currency}`);
+  const written = marker === "$" ? "la factura solo escribe «$»" : "la factura no escribe la moneda junto al total";
+  const country = typeof vendor.country === "string" ? vendor.country.trim().toUpperCase() : "";
+  if (country === "") {
+    v.add(`${written} y no se sabe el país del proveedor: no se puede confirmar que sea ${invoice.currency}`);
+    return;
+  }
+  const listed = Object.prototype.hasOwnProperty.call(GUARD_BARE_DOLLAR, country) ? GUARD_BARE_DOLLAR[country] : null;
+  const means = marker === "$" ? (listed ?? "USD") : listed;
+  if (means == null) {
+    v.add(`${written}: para un proveedor de ${countryLabel(country)} no se puede dar por ${invoice.currency}`);
+  } else if (means !== invoice.currency) {
+    const what = marker === "$" ? "el «$» es" : "un importe sin moneda es";
+    v.add(`${written}: para un proveedor de ${countryLabel(country)} ${what} ${currencyLabel(means)}, no ${invoice.currency}`);
   }
 }
 
