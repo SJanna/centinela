@@ -10,6 +10,7 @@ export {
   agreementCoversPeriod,
   referenceDateOf,
   billedPeriodOf,
+  previousPeriod,
   computeUsdAmount,
   isAgreementValidOn,
   normalizeInvoiceNumber,
@@ -19,5 +20,6 @@ export {
   type AgreementSelectionStatus,
   type ReferenceDate,
   type BilledPeriod,
+  type BilledPeriodSource,
   type UsdAmount,
 } from "./facts";

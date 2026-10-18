@@ -36,7 +36,10 @@ import {
   normalizeFileHash,
   normalizeInvoiceNumber,
   periodOf,
+  previousPeriod,
   roundCents,
+  type AgreementSelection,
+  type PeriodHint,
   type BillTo,
   type Facts,
   type UsdAmount,
@@ -69,6 +72,11 @@ export interface Evaluation {
    * El resumen y la acción humana se centran en la causa, no en sus consecuencias.
    */
   derived: boolean;
+  /**
+   * Opcional, solo en not_evaluable: cómo nombra el resumen la duda cuando no es falta de datos («no
+   * se sabe qué mes cobra la factura»). Sin ella, el resumen dice «sin datos para evaluar …».
+   */
+  doubt?: string;
 }
 
 export type Evaluator = (facts: Facts, input: EngineInput, ctx: DecisionContext) => Evaluation;
@@ -727,6 +735,134 @@ function paidUnderAnotherAgreement(f: Facts, chosen: Agreement, ctx: DecisionCon
   return null;
 }
 
+/**
+ * Pago del historial de `month` con un acuerdo mensual del proveedor con el que la factura cuadra: el
+ * elegido o cualquier otro que cubra ese mes (misma moneda, monto dentro de lo pactado), esté o no
+ * vigente en la fecha de la factura (un acuerdo renovado no vuelve a pagar el mes pagado con el anterior).
+ */
+function paidInMonth(f: Facts, month: string, chosen: Agreement, ctx: DecisionContext): { prev: HistoryEntry; agreement: Agreement } | null {
+  const data = f.data;
+  const cur = f.currency;
+  const others =
+    data == null || cur == null || !isFiniteNumber(data.total)
+      ? []
+      : (f.vendor?.agreements ?? []).filter(
+          (a) =>
+            a.id !== chosen.id &&
+            a.frequency !== "once" &&
+            agreementCoversPeriod(a, month) &&
+            normalizeCurrency(a.currency) === cur &&
+            amountEvaluation(a, data, cur, data.total as number, ctx).status === "pass",
+        );
+  for (const agreement of [chosen, ...others]) {
+    const prev = f.paid.find((h) => h.agreementId === agreement.id && periodOf(h.agreementPeriod) === month);
+    if (prev) return { prev, agreement };
+  }
+  return null;
+}
+
+const MONTH_DOUBT = "no se sabe qué mes cobra la factura";
+const ACTION_WHICH_MONTH = "Confirmar con el proveedor qué mes cobra esta factura y que ese mes no se haya pagado ya.";
+
+/** «Servicios… mes anterior…» citado según de dónde salió (sin comillas anidadas ni nombres internos). */
+function quoteHint(h: PeriodHint): string {
+  const t = truncate(stripFinalPeriod(h.text ?? ""), 110);
+  if (h.source === "line_item") return `una línea dice «${t}»`;
+  if (h.source === "reader_note") return `una de las lecturas anota «${t}»`;
+  return `«${t}»`;
+}
+
+/** «se refiere a un mes anterior («…»)» o «menciona octubre de 2026 («…»)». */
+function hintSays(h: PeriodHint | undefined): string {
+  if (h == null || h.text == null) return "no se pudo revisar si se refiere a un mes anterior";
+  return `${h.relative ? "se refiere a un mes anterior" : `menciona ${formatPeriod(h.month)}`} (${quoteHint(h)})`;
+}
+
+/** «Por la fecha de emisión (5 de noviembre de 2026)» o, sin emisión, «Tampoco trae fecha de emisión; por la fecha de hoy (…)». */
+function byDateText(sel: AgreementSelection): string {
+  return sel.referenceSource === "now"
+    ? `Tampoco trae fecha de emisión; por la fecha de hoy (${formatDate(sel.referenceDate ?? "")})`
+    : `Por la fecha de emisión (${formatDate(sel.referenceDate ?? "")})`;
+}
+
+/**
+ * DUP-3 cuando la factura NO trae periodo de servicio (Facts.inferred). Se factura a mes vencido
+ * (emitida en noviembre por octubre) o en el mismo mes, así que el mes cobrado puede no ser el de la
+ * fecha:
+ * - el documento se refiere sin lugar a dudas a un mes anterior («servicios del mes anterior»): el
+ *   pago se imputa a ese mes (period); si ese mes ya se pagó, o el de la fecha ya se pagó, no se puede
+ *   descartar un pago doble;
+ * - se refiere a varios meses, o solo lo anota una lectura: no se sabe a qué mes imputarlo; registrarlo
+ *   en el equivocado dejaría el otro libre para otra factura (se escala aunque ninguno esté pagado);
+ * - no se pudo revisar (sin la señal: registros viejos): si el mes anterior a la fecha ya se pagó, no
+ *   se puede descartar que lo cobre otra vez;
+ * - no se refiere a otro mes: el mes de la fecha (se revisa arriba, como siempre). Una factura mensual
+ *   emitida el 5 de noviembre sin periodo ni referencia cobra noviembre (así están etiquetadas las del
+ *   set de estrés): escalar siempre que octubre esté pagado escalaría casi cada factura mensual sin periodo.
+ * El mes SIGUIENTE no es candidato: un cobro por adelantado ya lo frena ACU-1 (future_period) cuando el
+ * mes no ha empezado, y una factura de fin de mes sin periodo cuenta como del mes de su fecha.
+ */
+function inferredPeriodMayBePaid(f: Facts, chosen: Agreement, ctx: DecisionContext): Evaluation | null {
+  const sel = f.selection;
+  const inferred = f.inferred;
+  const period = f.period;
+  if (period == null || inferred == null || sel?.referenceDate == null) return null;
+  const ref = inferred.reference;
+  const dateMonth = inferred.dateMonth;
+  const byDate = byDateText(sel);
+  const base = { agreementId: chosen.id, frequency: "monthly", period, inferredPeriod: dateMonth, periodSource: f.periodSource };
+
+  if (ref.kind === "ambiguous") {
+    const first = ref.hints[0];
+    const listed = ref.periods
+      .map((month) => {
+        const h = ref.hints.find((x) => x.month === month);
+        return h ? `${formatPeriod(month)} (${quoteHint(h)})` : formatPeriod(month);
+      });
+    const what =
+      ref.reason === "several_months"
+        ? `se refiere a varios meses anteriores a su fecha: ${listEs(listed)}`
+        : `${quoteHint(first)}, que se referiría a ${formatPeriod(first.month)}, pero el documento no lo dice de forma que se pueda comprobar`;
+    return {
+      ...notEvaluable(
+        `La factura no dice qué mes cobra y ${what}. ${byDate} sería ${formatPeriod(dateMonth)}. No se sabe a qué mes imputar el pago: registrarlo en el mes equivocado dejaría el otro libre para cobrarlo otra vez.`,
+        ACTION_WHICH_MONTH,
+        { ...base, candidatePeriods: [dateMonth, ...ref.periods].join(","), periodHint: first.text },
+      ),
+      doubt: MONTH_DOUBT,
+    };
+  }
+
+  if (ref.kind === "single" && f.periodSource === "document_reference") {
+    // El de la fecha también es candidato (la referencia la detecta código, sin modelo).
+    const hit = paidInMonth(f, dateMonth, chosen, ctx);
+    if (hit == null) return null;
+    return {
+      ...notEvaluable(
+        `La factura no dice qué mes cobra y ${hintSays(ref.hints[0])}: se imputaría a ${formatPeriod(period)}. ${byDate} también puede ser de ${formatPeriod(dateMonth)}, y ${formatPeriod(dateMonth)} del acuerdo «${hit.agreement.description}» ya se pagó (factura ${hit.prev.invoiceId}): no se puede descartar un pago doble.`,
+        `Confirmar con el proveedor qué mes cobra esta factura; si es ${formatPeriod(dateMonth)}, ya se pagó.`,
+        { ...base, previousPeriod: period, paidPeriod: dateMonth, previousInvoiceId: hit.prev.invoiceId, paidAgreementId: hit.agreement.id, periodHint: ref.hints[0].text },
+      ),
+      doubt: MONTH_DOUBT,
+    };
+  }
+
+  if (ref.kind === "unchecked") {
+    const previous = previousPeriod(dateMonth);
+    const hit = paidInMonth(f, previous, chosen, ctx);
+    if (hit == null) return null;
+    return {
+      ...notEvaluable(
+        `La factura no dice qué mes cobra y no se pudo revisar si se refiere a un mes anterior. ${byDate} puede ser de ${formatPeriod(dateMonth)} o de ${formatPeriod(previous)}, y ${formatPeriod(previous)} del acuerdo «${hit.agreement.description}» ya se pagó (factura ${hit.prev.invoiceId}): no se puede descartar un pago doble.`,
+        `Confirmar con el proveedor qué mes cobra esta factura; si es ${formatPeriod(previous)}, ya se pagó.`,
+        { ...base, previousPeriod: previous, paidPeriod: previous, previousInvoiceId: hit.prev.invoiceId, paidAgreementId: hit.agreement.id, periodHint: null },
+      ),
+      doubt: MONTH_DOUBT,
+    };
+  }
+  return null;
+}
+
 const dup3: Evaluator = (f, _input, ctx) => {
   if (f.data == null) return derived(NO_DATA);
   if (f.vendor == null) {
@@ -775,6 +911,30 @@ const dup3: Evaluator = (f, _input, ctx) => {
     );
   }
   const prev = f.paid.find((h) => h.agreementId === agreement.id && periodOf(h.agreementPeriod) === period);
+  const ref = f.inferred?.reference;
+  if (prev && f.periodSource === "document_reference" && ref?.kind === "single" && f.inferred != null && f.selection != null) {
+    // El mes lo dedujo el código de lo que dice el documento, no lo escribe la factura: lo confirma una persona.
+    const dateMonth = f.inferred.dateMonth;
+    return {
+      ...notEvaluable(
+        `La factura no dice qué mes cobra y ${hintSays(ref.hints[0])}. ${byDateText(f.selection)} puede ser de ${formatPeriod(dateMonth)} o de ${formatPeriod(period)}, y ${formatPeriod(period)} del acuerdo «${agreement.description}» ya se pagó (factura ${prev.invoiceId}): no se puede descartar un pago doble.`,
+        `Confirmar con el proveedor qué mes cobra esta factura; si es ${formatPeriod(period)}, ya se pagó.`,
+        {
+          agreementId: agreement.id,
+          frequency: "monthly",
+          period,
+          inferredPeriod: dateMonth,
+          previousPeriod: period,
+          paidPeriod: period,
+          previousInvoiceId: prev.invoiceId,
+          paidAgreementId: agreement.id,
+          periodSource: "document_reference",
+          periodHint: ref.hints[0].text,
+        },
+      ),
+      doubt: MONTH_DOUBT,
+    };
+  }
   if (prev) {
     return fail(
       `El periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» ya se pagó (factura ${prev.invoiceId}).`,
@@ -782,6 +942,8 @@ const dup3: Evaluator = (f, _input, ctx) => {
       { agreementId: agreement.id, frequency: "monthly", period, previousInvoiceId: prev.invoiceId },
     );
   }
+  const inferred = inferredPeriodMayBePaid(f, agreement, ctx);
+  if (inferred) return inferred;
   const doubts = periodDoubts(f, agreement, ctx);
   if (doubts.length > 0) {
     return notEvaluable(
@@ -792,6 +954,22 @@ const dup3: Evaluator = (f, _input, ctx) => {
   }
   const other = paidUnderAnotherAgreement(f, agreement, ctx);
   if (other) return other;
+  if (f.periodSource === "document_reference" && ref?.kind === "single" && f.inferred != null) {
+    const h = ref.hints[0];
+    const why = h.relative ? "se refiere al mes anterior a su fecha" : `menciona ${formatPeriod(period)}`;
+    return pass(
+      `El periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» no se ha pagado. La factura no lo escribe como periodo, pero ${why} (${quoteHint(h)}); ${formatPeriod(f.inferred.dateMonth)}, el mes de su fecha, tampoco se ha pagado.`,
+      {
+        agreementId: agreement.id,
+        frequency: "monthly",
+        period,
+        previousInvoiceId: null,
+        inferredPeriod: f.inferred.dateMonth,
+        periodSource: "document_reference",
+        periodHint: h.text,
+      },
+    );
+  }
   return pass(`El periodo ${formatPeriod(period)} del acuerdo «${agreement.description}» no se ha pagado.`, {
     agreementId: agreement.id,
     frequency: "monthly",
@@ -934,6 +1112,13 @@ const prv2: Evaluator = (f, input) => {
 function referenceText(date: string, source: "issue_date" | "now" | null): string {
   const base = `el ${formatDate(date)}`;
   return source === "now" ? `${base} (la factura no trae fecha de emisión; se usa la fecha actual)` : base;
+}
+
+/** Si el mes facturado no lo escribe la factura sino que se deduce de lo que dice («servicios del mes anterior»). */
+function impliedText(sel: AgreementSelection): string {
+  return sel.billedPeriodSource === "document_reference"
+    ? " (la factura no lo escribe como periodo; se deduce de lo que dice el documento)"
+    : "";
 }
 
 const ACTION_DATE = "Confirmar la fecha de emisión de la factura para revisar la vigencia del acuerdo.";
@@ -1112,7 +1297,7 @@ const agreementInForce: Evaluator = (f, _input, ctx) => {
       const period = sel.billedPeriod ?? "";
       const which = c != null ? ` «${c.description}» (${describeValidity(c)})` : "";
       return fail(
-        `El periodo facturado, ${formatPeriod(period)}, está fuera de la vigencia del acuerdo${which}: no se paga un servicio de antes de que empiece ni de después de que termine.`,
+        `El periodo facturado, ${formatPeriod(period)}${impliedText(sel)}, está fuera de la vigencia del acuerdo${which}: no se paga un servicio de antes de que empiece ni de después de que termine.`,
         "Confirmar con el proveedor qué mes se está cobrando; si el acuerdo se renovó o amplió, actualizar la ficha antes de pagar.",
         {
           ...params,
@@ -1144,7 +1329,7 @@ const agreementInForce: Evaluator = (f, _input, ctx) => {
       const a = sel.agreement;
       if (a == null || sel.referenceDate == null || sel.billedPeriod == null) return derived(NO_AGREEMENT);
       return pass(
-        `Acuerdo vigente ${referenceText(sel.referenceDate, sel.referenceSource)}: «${a.description}» (${describeValidity(a)}). El periodo facturado, ${formatPeriod(sel.billedPeriod)}, está dentro de su vigencia.`,
+        `Acuerdo vigente ${referenceText(sel.referenceDate, sel.referenceSource)}: «${a.description}» (${describeValidity(a)}). El periodo facturado, ${formatPeriod(sel.billedPeriod)}${impliedText(sel)}, está dentro de su vigencia.`,
         { ...params, agreementId: a.id, validFrom: a.validFrom, validTo: a.validTo },
       );
     }

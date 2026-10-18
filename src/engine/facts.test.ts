@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Agreement, Vendor } from "../core/schemas";
-import { agreementPeriodOf, computeUsdAmount, matchVendor, normalizeInvoiceNumber, selectAgreement } from "./index";
+import { agreementPeriodOf, computeUsdAmount, matchVendor, normalizeInvoiceNumber, previousPeriod, selectAgreement } from "./index";
 import { ACME, BUFETE, NOPAL, ROBLE, RULES, acmeInvoice, bufeteInvoice } from "./test-fixtures";
 
 const VENDORS = [ACME, NOPAL, BUFETE, ROBLE];
@@ -83,6 +83,26 @@ describe("selectAgreement", () => {
     expect(s).toMatchObject({ status: "selected", referenceDate: "2026-10-20", referenceSource: "now", billedPeriod: "2026-10" });
     expect(selectAgreement(ACME, acmeInvoice({ issueDate: null })).status).toBe("no_date");
     expect(selectAgreement(ACME, acmeInvoice({ issueDate: "  " }), "no es fecha").status).toBe("no_date");
+  });
+
+  it("dice de dónde salió el mes facturado: periodo de servicio o fecha de referencia", () => {
+    expect(selectAgreement(ACME, acmeInvoice())).toMatchObject({ billedPeriod: "2026-10", billedPeriodSource: "service_period" });
+    expect(selectAgreement(ACME, acmeInvoice({ servicePeriod: null }))).toMatchObject({
+      status: "selected",
+      billedPeriod: "2026-10",
+      billedPeriodSource: "reference_date",
+    });
+    expect(selectAgreement(BUFETE, bufeteInvoice({ servicePeriod: "2026-09" }))).toMatchObject({
+      status: "period_outside",
+      billedPeriodSource: "service_period",
+    });
+    expect(selectAgreement(ACME, acmeInvoice({ issueDate: "05/10/2026" })).billedPeriodSource).toBeNull();
+  });
+
+  it("previousPeriod: mes anterior, cruzando el año", () => {
+    expect(previousPeriod("2026-11")).toBe("2026-10");
+    expect(previousPeriod("2026-10")).toBe("2026-09");
+    expect(previousPeriod("2027-01")).toBe("2026-12");
   });
 
   it("fecha de emisión presente pero inválida → invalid_date (no se usa now)", () => {

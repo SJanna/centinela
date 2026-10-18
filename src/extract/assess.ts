@@ -30,6 +30,7 @@ import {
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
 import { detectVoidDocumentMarkers } from "./void-markers";
+import { detectEarlierPeriodMarkers, type EarlierPeriodMarker, type EarlierPeriodSource } from "./period-markers";
 import { voidMarkersInNotes } from "./void-notes";
 import { DOLLAR_SIGN_CURRENCIES, currencyMarkerIn, declaresCurrency, namesCurrency } from "./currency-written";
 
@@ -387,6 +388,42 @@ export function collectVoidDocumentMarkers(
     for (const note of voidMarkersInNotes(reading.extraction.readerNotes)) {
       out.push({ text: `${reading.readerId} anota: «${note.text}»`, reason: `Una lectura anota que el documento ${note.reason}`, kind: note.kind });
     }
+  }
+  return out;
+}
+
+/**
+ * Señal de factura que cobra un mes anterior al de su fecha (src/extract/period-markers.ts): sobre el
+ * texto plano del documento (si lo hay), la descripción de cada línea y la nota de cada lectura que
+ * funcionó, cada marca con su origen. En una imagen o un PDF sin texto solo cuentan las líneas y las
+ * notas de las lecturas (ver docs/ARCHITECTURE.md, DUP-3: suponer el mes anterior escalaba facturas
+ * legítimas). El mes de emisión es el
+ * de la lectura principal (o, si no lo trae, el de la segunda). Solo la usan DUP-3 y la guardia cuando
+ * la factura no trae periodo de servicio.
+ */
+export function collectEarlierPeriodMarkers(
+  doc: NormalizedDoc,
+  data: InvoiceData | null,
+  readings: Array<ReaderResult | null> = [],
+): NonNullable<ReadingSignals["earlierPeriodMarkers"]> {
+  const ok = readings.filter((r): r is Extract<ReaderResult, { ok: true }> => r?.ok === true);
+  const issueDates = [data?.issueDate, ...ok.map((r) => r.extraction.issueDate.value)];
+  const issue = issueDates.find((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d.trim()));
+  const issueMonth = issue ? issue.trim().slice(0, 7) : null;
+  const out: NonNullable<ReadingSignals["earlierPeriodMarkers"]> = [];
+  const seen = new Set<string>();
+  const add = (m: EarlierPeriodMarker, source: EarlierPeriodSource, readerId?: string) => {
+    const key = `${source}|${readerId ?? ""}|${m.period ?? ""}|${m.month ?? ""}|${m.text}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ ...m, source, ...(readerId != null ? { readerId } : {}) });
+  };
+  for (const m of detectEarlierPeriodMarkers(doc.plainText, issueMonth, "document")) add(m, "document");
+  for (const r of ok) {
+    for (const line of r.extraction.lineItems ?? []) {
+      for (const m of detectEarlierPeriodMarkers(line.description, issueMonth, "line_item")) add(m, "line_item", r.readerId);
+    }
+    for (const m of detectEarlierPeriodMarkers(r.extraction.readerNotes, issueMonth, "reader_note")) add(m, "reader_note", r.readerId);
   }
   return out;
 }
@@ -946,6 +983,7 @@ export function assessReadings(
     voidDocumentMarkers: collectVoidDocumentMarkers(doc, [primary, secondary]),
     currencyOnlyDollarSign: currency.onlyDollarSign,
     currencyMarker: currency.marker,
+    earlierPeriodMarkers: collectEarlierPeriodMarkers(doc, data, [primary, secondary]),
   };
 
   return { primary, secondary, data, signals };

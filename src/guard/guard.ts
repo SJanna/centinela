@@ -43,6 +43,8 @@ import {
   guardStoredCents,
   guardTaxId,
   dayAfter,
+  guardMonthLabel,
+  monthBefore,
   monthOfDay,
   roundHalfAwayFromZero,
   sameTaxId,
@@ -111,8 +113,22 @@ interface GuardInvoice {
   account: string;
   /** Fecha con la que se mide la vigencia del acuerdo (emisión, o el día de `now` si no hay). */
   referenceDay: string | null;
-  /** Periodo al que se imputa un acuerdo mensual (periodo de servicio, mes de emisión o mes de `now`). */
+  /**
+   * Periodo al que se imputa un acuerdo mensual: el periodo de servicio; si la factura no lo trae, el
+   * mes anterior a su fecha al que se refiere («servicios del mes anterior»); si no, el mes de emisión
+   * o el de `now`.
+   */
   period: string | null;
+  /** De dónde salió `period`: periodo de servicio, una referencia a un mes anterior, o la fecha. */
+  periodFrom: "service_period" | "earlier_reference" | "date";
+  /** Con periodFrom "earlier_reference": true si la referencia es «el mes anterior» (sin nombrarlo). */
+  periodRelative: boolean;
+  /**
+   * Otros meses que la factura sin periodo de servicio podría estar cobrando y que tampoco pueden estar
+   * ya pagados: el de su fecha si se imputa a un mes anterior ("date"), o el anterior a su fecha si no
+   * se pudo revisar si se refiere a él (sin la señal; "previous"). Vacío si trae periodo de servicio.
+   */
+  otherPeriods: { month: string; why: "date" | "previous" }[];
 }
 
 interface RulesCents {
@@ -226,7 +242,7 @@ function evaluate(input: EngineInput, ctx: DecisionContext, decision: Decision):
   } else skipped = true;
 
   // G9 · duplicados
-  checkDuplicates(input, ctx.history, invoice, vendor, fitting, v);
+  checkDuplicates(input, ctx.history, invoice, vendor, fitting, rules, v);
 
   // G10 · el monto en USD de la decisión coincide con el recalculado
   const decisionCents = guardCents(decision.amountUsd);
@@ -511,7 +527,29 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     if (servicePeriod === null) v.add(`el periodo de servicio no es válido (${shown(data.servicePeriod, 40)})`);
   }
   const referenceDay = issueDay ?? today;
-  const period = servicePeriod ?? (referenceDay ? monthOfDay(referenceDay) : null);
+  const datePeriod = referenceDay ? monthOfDay(referenceDay) : null;
+  let period = servicePeriod ?? datePeriod;
+  let periodFrom: GuardInvoice["periodFrom"] = servicePeriod !== null ? "service_period" : "date";
+  let periodRelative = false;
+  const otherPeriods: GuardInvoice["otherPeriods"] = [];
+  if (isAbsent(data.servicePeriod) && datePeriod !== null) {
+    // Sin periodo escrito: ¿a qué mes anterior a su fecha se refiere? Uno solo → ese es el que se cobra
+    // (y el de la fecha tampoco puede estar pagado); varios → no se sabe; ninguno sin haber podido
+    // revisarlo → el mes anterior tampoco puede estar pagado.
+    const earlier = earlierMonthsOf(reading, [primary, secondary], datePeriod);
+    if (earlier.months.length > 1) {
+      v.add(
+        `la factura no dice qué mes cobra y se refiere a varios meses anteriores (${earlier.months.map(guardMonthLabel).join(", ")}): no se sabe a qué mes imputar el pago`,
+      );
+    } else if (earlier.months.length === 1) {
+      period = earlier.months[0];
+      periodFrom = "earlier_reference";
+      periodRelative = earlier.relative;
+      otherPeriods.push({ month: datePeriod, why: "date" });
+    } else if (!earlier.checked) {
+      otherPeriods.push({ month: monthBefore(datePeriod), why: "previous" });
+    }
+  }
 
   // Nada del futuro: ni una emisión posterior a hoy ni un mes que todavía no empieza (se pagaría un
   // servicio no prestado). Hoy = el día más tardío de `now` (escrito o UTC) más uno, por zona horaria.
@@ -531,7 +569,94 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     account,
     referenceDay,
     period,
+    periodFrom,
+    periodRelative,
+    otherPeriods,
   };
+}
+
+/**
+ * Implementación PROPIA de la guardia (no usa src/extract/period-markers.ts ni sus expresiones): ¿una
+ * nota de lector o la descripción de una línea dice que se cobra el mes anterior? Por palabras del
+ * texto en minúsculas y sin tildes: una palabra de mes o periodo seguida (hasta 4 palabras después) de
+ * una de «anterior» («mes inmediato anterior», «mes que acaba de terminar», «month prior to»), o
+ * precedida (hasta 2 palabras antes) de una de «último» («previous month», «el pasado mes», «last full
+ * month»); o «arrears». No cuenta si hay una negación justo antes («no menciona el mes anterior»).
+ */
+const GUARD_PERIOD_WORDS = new Set(["mes", "meses", "periodo", "ciclo", "mensualidad", "month", "months", "period", "cycle"]);
+const GUARD_AFTER_WORDS = new Set([
+  "anterior", "pasado", "passado", "previo", "precedente", "vencido", "terminado", "terminar", "termino",
+  "finalizado", "finalizo", "concluido", "concluyo", "cerrado", "cerro", "transcurrido",
+  "prior", "before", "preceding", "ended", "finished", "closed",
+]);
+const GUARD_LEADING_WORDS = new Set(["previous", "prior", "preceding", "last", "past", "ultimo", "pasado"]);
+const GUARD_NEGATIONS = new Set(["no", "sin", "ni", "not", "without", "nor"]);
+
+function foldText(raw: unknown): string {
+  return typeof raw === "string" ? raw.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
+}
+
+function guardSaysEarlierMonth(raw: unknown): boolean {
+  for (const sentence of foldText(raw).split(/[.;:!?\n]+/)) {
+    const words = sentence.split(/[^a-z0-9]+/).filter((w) => w !== "");
+    for (let i = 0; i < words.length; i++) {
+      if (words[i] === "arrears") return true;
+      if (!GUARD_PERIOD_WORDS.has(words[i])) continue;
+      const after = words.slice(i + 1, i + 5).some((w) => GUARD_AFTER_WORDS.has(w));
+      const leading = words.slice(Math.max(0, i - 2), i).some((w) => GUARD_LEADING_WORDS.has(w));
+      if (!after && !leading) continue;
+      if (words.slice(Math.max(0, i - 5), i).some((w) => GUARD_NEGATIONS.has(w))) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Mes (1-12) sin año ubicado contra el mes de la fecha: la última vez que cayó antes. null si es ese mismo mes. */
+function guardMonthBefore(month: number, datePeriod: string): string | null {
+  const year = Number(datePeriod.slice(0, 4));
+  const current = Number(datePeriod.slice(5, 7));
+  if (month === current) return null;
+  return `${month < current ? year : year - 1}-${String(month).padStart(2, "0")}`;
+}
+
+/**
+ * Meses anteriores al de la fecha (`datePeriod`) a los que se refiere la factura sin periodo de
+ * servicio: los de la señal earlierPeriodMarkers de la verificación (un mes con nombre; el anterior si
+ * la marca es relativa o trae algo raro) y el anterior si una nota o una línea de cualquiera de las
+ * lecturas lo dice. `relative`: true si el mes encontrado es el anterior por una referencia sin nombre.
+ * `checked`: false si no se pudo revisar (sin la señal: registros viejos).
+ */
+function earlierMonthsOf(
+  reading: ReadingAssessment,
+  extractions: Array<Extraction | null>,
+  datePeriod: string,
+): { months: string[]; relative: boolean; checked: boolean } {
+  const before = monthBefore(datePeriod);
+  const found = new Map<string, boolean>();
+  const note = (month: string | null, relative: boolean) => {
+    if (month === null || month >= datePeriod) return;
+    found.set(month, (found.get(month) ?? false) || relative);
+  };
+  const markers: unknown = reading?.signals?.earlierPeriodMarkers;
+  const signalOk = Array.isArray(markers);
+  if (signalOk) {
+    for (const m of markers as unknown[]) {
+      const o = m !== null && typeof m === "object" ? (m as { period?: unknown; month?: unknown }) : {};
+      const named = typeof o.period === "string" ? guardPeriod(o.period) : null;
+      if (named !== null) note(named, false);
+      else if (o.period == null && typeof o.month === "number" && Number.isInteger(o.month) && o.month >= 1 && o.month <= 12) {
+        note(guardMonthBefore(o.month, datePeriod), false);
+      } else note(before, true);
+    }
+  }
+  for (const e of extractions) {
+    if (e === null) continue;
+    const texts = [e.readerNotes, ...(Array.isArray(e.lineItems) ? e.lineItems.map((l) => l?.description) : [])];
+    if (texts.some(guardSaysEarlierMonth)) note(before, true);
+  }
+  const months = Array.from(found.keys()).sort().reverse();
+  return { months, relative: months.length === 1 && found.get(months[0]) === true, checked: signalOk };
 }
 
 // ───────────────────────── G2b · Destinatario ─────────────────────────
@@ -987,6 +1112,7 @@ function checkDuplicates(
   invoice: GuardInvoice | null,
   vendor: Vendor | null,
   fitting: Agreement[] | null,
+  rules: RulesCents | null,
   v: Violations,
 ): void {
   if (!Array.isArray(history)) return; // ya reportado
@@ -1029,7 +1155,35 @@ function checkDuplicates(
     for (const h of paidSameAgreement) {
       const p = guardPeriod(h.agreementPeriod);
       if (p === null) v.add(`el historial tiene un pago del acuerdo ${a.id} sin periodo válido`);
-      else if (p === invoice.period) v.add(`el periodo ${p} del acuerdo ${a.id} ya se pagó`);
+      else if (p === invoice.period) {
+        if (invoice.periodFrom !== "earlier_reference") v.add(`el periodo ${p} del acuerdo ${a.id} ya se pagó`);
+        else if (invoice.periodRelative) v.add(`la factura no dice qué mes cobra y el mes anterior a su fecha (${guardMonthLabel(p)}) ya se pagó`);
+        else v.add(`la factura no dice qué mes cobra y el mes que menciona (${guardMonthLabel(p)}) ya se pagó`);
+      }
     }
+  }
+
+  // Sin periodo escrito, los otros meses que la factura puede estar cobrando tampoco pueden estar
+  // pagados, con ningún acuerdo mensual del proveedor que cubra ese mes y con el que la factura cuadre
+  // (vigente o no en la fecha: un acuerdo renovado no vuelve a pagar el mes pagado con el anterior).
+  if (invoice.otherPeriods.length === 0) return;
+  const agreements = Array.isArray(vendor.agreements) ? vendor.agreements : [];
+  for (const { month, why } of invoice.otherPeriods) {
+    const related = agreements.filter(
+      (a) =>
+        a.frequency === "monthly" &&
+        (fitting.includes(a) ||
+          (coversPeriod(a, month) &&
+            guardCurrency(a.currency) === invoice.currency &&
+            rules !== null &&
+            amountProblems(a, invoice, rules.tolerancePct).length === 0)),
+    );
+    const hit = paid.find((h) => related.some((a) => a.id === h.agreementId) && guardPeriod(h.agreementPeriod) === month);
+    if (!hit) continue;
+    v.add(
+      why === "previous"
+        ? `la factura no dice qué mes cobra y el mes anterior a su fecha (${guardMonthLabel(month)}) ya se pagó`
+        : `la factura no dice qué mes cobra y el mes de su fecha (${guardMonthLabel(month)}) ya se pagó`,
+    );
   }
 }

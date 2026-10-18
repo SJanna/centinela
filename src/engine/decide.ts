@@ -40,6 +40,8 @@ interface Evaluated {
   check: CheckResult;
   action: string | null;
   derived: boolean;
+  /** Cómo nombra el resumen la duda de una comprobación sin evaluar que no es falta de datos. */
+  doubt: string | null;
 }
 
 /** Quita el punto doble que deja un nombre terminado en punto ("S.A.S."). */
@@ -63,9 +65,12 @@ function buildSummary(outcome: Outcome, evaluated: readonly Evaluated[], facts: 
   }
   const failed = checks.filter((c) => c.status === "fail");
   // Las que quedaron sin evaluar solo por otra que ya no pasó no se nombran: el resumen va a la causa.
-  const missing = evaluated.filter((x) => x.check.status === "not_evaluable" && !x.derived).map((x) => x.check);
+  const pending = evaluated.filter((x) => x.check.status === "not_evaluable" && !x.derived);
+  const missing = pending.filter((x) => x.doubt == null).map((x) => x.check);
+  const doubts = pending.filter((x) => x.doubt != null);
   const parts: string[] = [];
   if (failed.length > 0) parts.push(`no cumple ${joinTitles(failed)}`);
+  for (const x of doubts) parts.push(`${x.doubt} (${quoteTitle(x.check)})`);
   if (missing.length > 0) {
     if (missing.length <= MAX_LISTED_NOT_EVALUABLE) {
       parts.push(`sin datos para evaluar ${joinTitles(missing)}`);
@@ -93,7 +98,7 @@ export function decide(input: EngineInput, ctx: DecisionContext): Decision {
       explanation: tidy(e.explanation),
       params: e.params,
     };
-    return { check, action: e.action, derived: e.derived };
+    return { check, action: e.action, derived: e.derived, doubt: e.status === "not_evaluable" ? (e.doubt ?? null) : null };
   });
   const checks = evaluated.map((x) => x.check);
   const outcome = aggregateOutcome(checks);

@@ -28,6 +28,7 @@ import {
   passChecks,
   testaDecision,
   testaOctober,
+  type InvoiceSpec,
 } from "./test-fixtures";
 
 function expectApproved(r: ReturnType<typeof guardPayment>) {
@@ -673,6 +674,151 @@ describe("G9 · duplicados", () => {
     const { input, decision } = camila();
     const history = [entry({ vendorId: "v-camila", invoiceNumber: null, agreementId: "a-camila-mensual", agreementPeriod: "2026-09", amountUsd: 3000 })];
     expectOnly(guardPayment(input, makeCtx({ history }), decision), "un pago de este proveedor sin número de factura");
+  });
+
+  describe("sin periodo escrito y con referencia a un mes anterior (DUP-B)", () => {
+    const septemberPaid = (over: Partial<HistoryEntry> = {}) =>
+      entry({ vendorId: "v-camila", invoiceNumber: "CR-2026-009", agreementId: "a-camila-mensual", agreementPeriod: "2026-09", amountUsd: 3000, decidedAt: "2026-09-20T10:00:00Z", ...over });
+    const MESSAGE = "la factura no dice qué mes cobra y el mes anterior a su fecha (septiembre de 2026) ya se pagó";
+    const WRONG_MONTH = "la decisión imputa el periodo 2026-10, pero la factura es del 2026-09";
+    const RELATIVE: Partial<ReadingSignals> = {
+      earlierPeriodMarkers: [{ text: "Servicios prestados durante el mes anterior", period: null, source: "document" }],
+    };
+    const arrears = (over: Partial<InvoiceSpec> = {}, signals: Partial<ReadingSignals> = RELATIVE) =>
+      makeInput(camilaOctober({ servicePeriod: null, ...over }), { signals });
+    /** Lo que decide un motor correcto: imputa septiembre, el mes que la factura cobra. */
+    const september = { ...camilaDecision, agreementPeriod: "2026-09" };
+
+    it("aprueba el pago imputado al mes anterior si ni ese mes ni el de la fecha están pagados", () => {
+      const input = arrears();
+      expectApproved(guardPayment(input, makeCtx(), makeDecision(input, september)));
+      expectApproved(guardPayment(input, makeCtx({ history: [septemberPaid({ agreementPeriod: "2026-08" })] }), makeDecision(input, september)));
+    });
+
+    it("rechaza el mes de emisión aunque nada esté pagado: dejaría el mes cobrado libre para otra factura", () => {
+      const input = arrears();
+      expectOnly(guardPayment(input, makeCtx(), makeDecision(input, camilaDecision)), WRONG_MONTH);
+    });
+
+    it("rechaza si el mes anterior ya se pagó, imputado a cualquiera de los dos meses", () => {
+      const input = arrears();
+      const ctx = makeCtx({ history: [septemberPaid()] });
+      expectOnly(guardPayment(input, ctx, makeDecision(input, september)), MESSAGE);
+      const blind = guardPayment(input, ctx, makeDecision(input, camilaDecision));
+      expect(blind.violations).toEqual([WRONG_MONTH, MESSAGE]);
+    });
+
+    it("rechaza si el mes de la fecha ya se pagó (la referencia la detecta código: también puede cobrar ese)", () => {
+      const input = arrears();
+      expectOnly(
+        guardPayment(input, makeCtx({ history: [septemberPaid({ agreementPeriod: "2026-10" })] }), makeDecision(input, september)),
+        "la factura no dice qué mes cobra y el mes de su fecha (octubre de 2026) ya se pagó",
+      );
+    });
+
+    it("la ve por su cuenta en la nota de una lectura o en una línea, aunque la señal venga vacía", () => {
+      const input = arrears({}, { earlierPeriodMarkers: [] });
+      const noted: EngineInput = {
+        ...input,
+        reading: {
+          ...input.reading,
+          secondary: okReader("secundario", { ...makeExtraction(camilaOctober({ servicePeriod: null })), readerNotes: "Servicio del mes inmediato anterior a la emisión." }),
+        },
+      };
+      expectOnly(guardPayment(noted, makeCtx({ history: [septemberPaid()] }), makeDecision(noted, september)), MESSAGE);
+      expectOnly(guardPayment(noted, makeCtx(), makeDecision(noted, camilaDecision)), WRONG_MONTH);
+      for (const description of ["Backend development, month prior to the invoice date", "Backend, mes que acaba de terminar", "Backend, last full month"]) {
+        const lines = arrears({ lineItems: [{ description, quantity: 1, unitPrice: 12000000, amount: 12000000 }] }, { earlierPeriodMarkers: [] });
+        expectOnly(guardPayment(lines, makeCtx({ history: [septemberPaid()] }), makeDecision(lines, september)), MESSAGE);
+      }
+    });
+
+    it("una nota que niega la referencia no cuenta", () => {
+      const input = arrears({}, { earlierPeriodMarkers: [] });
+      const noted: EngineInput = {
+        ...input,
+        reading: {
+          ...input.reading,
+          secondary: okReader("secundario", { ...makeExtraction(camilaOctober({ servicePeriod: null })), readerNotes: "No menciona el mes anterior ni otro periodo." }),
+        },
+      };
+      expectApproved(guardPayment(noted, makeCtx({ history: [septemberPaid()] }), makeDecision(noted, camilaDecision)));
+    });
+
+    it("sin la señal (registro viejo) no se sabe si cobra el mes anterior: ese mes tampoco puede estar pagado", () => {
+      const input = arrears({}, {});
+      delete input.reading.signals.earlierPeriodMarkers;
+      expectOnly(guardPayment(input, makeCtx({ history: [septemberPaid()] }), makeDecision(input, camilaDecision)), MESSAGE);
+      expectApproved(guardPayment(input, makeCtx(), makeDecision(input, camilaDecision)));
+    });
+
+    it("un mes con nombre: ese es el mes que se cobra", () => {
+      const input = arrears({}, { earlierPeriodMarkers: [{ text: "Honorarios agosto 2026", period: "2026-08", source: "document" }] });
+      const august = makeDecision(input, { ...camilaDecision, agreementPeriod: "2026-08" });
+      expectOnly(
+        guardPayment(input, makeCtx({ history: [septemberPaid({ agreementPeriod: "2026-08" })] }), august),
+        "la factura no dice qué mes cobra y el mes que menciona (agosto de 2026) ya se pagó",
+      );
+      expectApproved(guardPayment(input, makeCtx({ history: [septemberPaid()] }), august));
+    });
+
+    it("un mes sin año y sin fecha de emisión se ubica contra ctx.now", () => {
+      const input = arrears({ issueDate: null }, { earlierPeriodMarkers: [{ text: "Servicios de septiembre", period: null, month: 9, source: "document" }] });
+      expectOnly(guardPayment(input, makeCtx({ history: [septemberPaid()] }), makeDecision(input, september)), "el mes que menciona (septiembre de 2026) ya se pagó");
+    });
+
+    it("varios meses anteriores: no se sabe a cuál imputar", () => {
+      const input = arrears({}, {
+        earlierPeriodMarkers: [
+          { text: "Servicios del mes anterior", period: null, source: "document" },
+          { text: "Honorarios agosto 2026", period: "2026-08", source: "document" },
+        ],
+      });
+      expectViolation(
+        guardPayment(input, makeCtx(), makeDecision(input, september)),
+        "la factura no dice qué mes cobra y se refiere a varios meses anteriores (septiembre de 2026, agosto de 2026)",
+      );
+    });
+
+    it("sin fecha de emisión cuenta el mes anterior al de ctx.now", () => {
+      const input = arrears({ issueDate: null });
+      expectOnly(guardPayment(input, makeCtx({ history: [septemberPaid()] }), makeDecision(input, september)), MESSAGE);
+    });
+
+    it("cruza el año: emitida en enero, diciembre ya pagado", () => {
+      const input = arrears({ issueDate: "2027-01-05" });
+      const history = [septemberPaid({ agreementPeriod: "2026-12", decidedAt: "2026-12-20T10:00:00Z" })];
+      const d = makeDecision(input, { ...camilaDecision, agreementPeriod: "2026-12" });
+      expectOnly(
+        guardPayment(input, makeCtx({ history, now: "2027-01-08T12:00:00Z" }), d),
+        "la factura no dice qué mes cobra y el mes anterior a su fecha (diciembre de 2026) ya se pagó",
+      );
+    });
+
+    it("el mes anterior pagado con un acuerdo ya vencido del mismo proveedor (renovación) también cuenta", () => {
+      const company: Company = structuredClone(COMPANY);
+      const camilaVendor = company.vendors.find((x) => x.id === "v-camila")!;
+      const old = camilaVendor.agreements.find((a) => a.id === "a-camila-mensual")!;
+      old.validTo = "2026-09-30";
+      camilaVendor.agreements.push({ ...structuredClone(old), id: "a-camila-mensual-2", validFrom: "2026-10-01", validTo: null });
+      // Sin la señal, la guardia supone el mes anterior; el motor imputó octubre al acuerdo nuevo.
+      const input = arrears({}, {});
+      delete input.reading.signals.earlierPeriodMarkers;
+      const d = makeDecision(input, { ...camilaDecision, agreementId: "a-camila-mensual-2" });
+      expectOnly(guardPayment(input, makeCtx({ company, history: [septemberPaid()] }), d), MESSAGE);
+    });
+
+    it("se aprueba con el periodo escrito, sin referencia a otro mes, o con lo pagado de otro proveedor", () => {
+      const stated = makeInput(camilaOctober(), { signals: RELATIVE });
+      expectApproved(guardPayment(stated, makeCtx({ history: [septemberPaid()] }), makeDecision(stated, camilaDecision)));
+      const plain = arrears({}, { earlierPeriodMarkers: [] });
+      expectApproved(guardPayment(plain, makeCtx({ history: [septemberPaid()] }), makeDecision(plain, camilaDecision)));
+      const input = arrears();
+      const decision = makeDecision(input, september);
+      expectApproved(guardPayment(input, makeCtx({ history: [septemberPaid({ outcome: "ESCALAR" })] }), decision));
+      // El mes anterior pagado de OTRO acuerdo (de otro proveedor) no cuenta.
+      expectApproved(guardPayment(input, makeCtx({ history: [entry({ agreementPeriod: "2026-09" })] }), decision));
+    });
   });
 
   it("historial con un pago del acuerdo mensual sin periodo", () => {

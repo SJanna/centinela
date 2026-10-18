@@ -237,6 +237,7 @@ export function noSignals(overrides: Partial<ReadingSignals> = {}): ReadingSigna
     voidDocumentMarkers: [],
     currencyOnlyDollarSign: false,
     currencyMarker: "",
+    earlierPeriodMarkers: [],
     ...overrides,
   };
 }
