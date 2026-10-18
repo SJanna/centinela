@@ -1,0 +1,14 @@
+14/10/2026, 16:02 - Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.
+14/10/2026, 16:02 - Julieta Ferraro: Hola Daniela! Te paso el cobro de octubre, son $ 3.200 como siempre
+14/10/2026, 16:03 - Julieta Ferraro: Factura E N° 00002-00000041
+Proveedora: Julieta Ferraro – CUIT 27-34871256-0
+Fecha de emisión: 14/10/2026
+Período: octubre de 2026
+Desarrollo frontend – honorarios de octubre
+Total: $ 3.200
+14/10/2026, 16:03 - Julieta Ferraro: Datos para la transferencia:
+Titular: Julieta Ferraro
+Banco: Banco Ñandú
+CBU: 4250013820000417735126
+SWIFT: QXNDARBA
+14/10/2026, 16:05 - Daniela Vargas: Gracias Julieta! Se lo paso al equipo de pagos.

@@ -1,0 +1,116 @@
+{
+  "id": "B62",
+  "about": "Correo con el PDF adjunto: membresía de coworking de septiembre COP 2.400.000",
+  "vendorId": "v-guadua",
+  "format": "eml",
+  "template": null,
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#4D7C0F",
+    "accent": "#BEF264",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Casa Guadua",
+    "tagline": "Coworking · Medellín"
+  },
+  "vendor": {
+    "name": "Casa Guadua Coworking S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.583.274-3",
+    "address": [
+      "Calle 10 # 40-21",
+      "El Poblado, Medellín, Antioquia",
+      "Colombia"
+    ],
+    "email": "facturacion@casaguadua.co",
+    "phone": "+57 604 322 8810"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CGC-912",
+  "issueDate": "2026-09-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-16",
+  "servicePeriod": "2026-09",
+  "currency": "COP",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Membresía de coworking – 4 puestos fijos",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 2400000,
+      "amount": 2400000
+    }
+  ],
+  "subtotal": 2400000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 2400000,
+  "payment": {
+    "beneficiaryName": "Casa Guadua Coworking S.A.S.",
+    "bankName": "Banco Guayacán",
+    "accountNumber": "0721-4408-1936",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "QXGUCOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066092549 del 15/01/2026, prefijo CGC, rango 1001 a 9999, vigencia 24 meses.",
+    "CUFE: c60bf9f254d9ddb057f81d1ff69668a1b3c6895f1489c8e9e6e6bdd63b3cb21ab68cefc21bdd64f47c85664d6c003292"
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Juliana Restrepo <juliana.restrepo@casaguadua.co>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "FACTURA ELECTRÓNICA DE VENTA CGC-912 – septiembre de 2026",
+    "date": "Tue, 01 Sep 2026 09:12:00 -0500",
+    "messageId": "<20260901091200.b62@casaguadua.co>",
+    "body": [
+      "Hola, equipo de Andes Labs:",
+      "",
+      "Adjuntamos la factura electrónica de venta CGC-912 correspondiente a septiembre de 2026.",
+      "",
+      "Quedamos atentos a cualquier duda.",
+      "",
+      "Saludos,",
+      "Juliana Restrepo",
+      "Casa Guadua Coworking S.A.S."
+    ]
+  },
+  "attachment": {
+    "filename": "cgc-912.pdf",
+    "template": "latam"
+  },
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura CGC-912 de Casa Guadua Coworking S.A.S. por septiembre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+}

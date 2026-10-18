@@ -1,0 +1,101 @@
+{
+  "id": "B114",
+  "about": "Nota de outubro BRL 14.000 a la cuenta registrada",
+  "vendorId": "v-jabuticaba",
+  "format": "pdf",
+  "template": "nota_servico",
+  "language": "pt",
+  "locale": "pt-BR",
+  "documentType": "invoice",
+  "title": "NOTA FISCAL DE SERVIÇOS ELETRÔNICA – NFS-e",
+  "brand": {
+    "color": "#581C87",
+    "accent": "#E9D5FF",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Jabuticaba Dev",
+    "tagline": "Apps móveis"
+  },
+  "vendor": {
+    "name": "Jabuticaba Dev Ltda",
+    "taxIdLabel": "CNPJ",
+    "taxId": "41.587.236/0001-37",
+    "address": [
+      "Rua dos Pinheiros, 870 – Conj. 41",
+      "Pinheiros, São Paulo – SP, 05422-001",
+      "Brasil"
+    ],
+    "email": "financeiro@jabuticaba.dev.br",
+    "phone": "+55 11 3061 5520"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00000337",
+  "issueDate": "2026-10-08",
+  "issuePlace": null,
+  "issueTime": "10:12:41",
+  "dueDate": "2026-10-23",
+  "servicePeriod": "2026-10",
+  "currency": "BRL",
+  "paymentTerms": "30 dias",
+  "lines": [
+    {
+      "description": "Desenvolvimento mobile – mensalidade fixa",
+      "detail": "Competência outubro de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 14000,
+      "amount": 14000
+    }
+  ],
+  "subtotal": 14000,
+  "tax": {
+    "label": "ISS 0 % (exportação de serviços)",
+    "amount": 0
+  },
+  "total": 14000,
+  "payment": {
+    "beneficiaryName": "Jabuticaba Dev Ltda",
+    "bankName": "Banco Seriema",
+    "accountNumber": "4417-28305-6",
+    "accountLabel": "Agência/Conta",
+    "routingOrSwift": "QXSEBRSP",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Exportação de serviços. Pagamento por transferência bancária."
+  ],
+  "legal": [],
+  "templateData": {
+    "verificationCode": "CF0C-081D",
+    "municipalRegistration": "5.123.456-7",
+    "rps": "RPS N° 337 · Série A · emitido em 08/10/2026",
+    "serviceCode": "01.01 – Análise e desenvolvimento de sistemas",
+    "city": "São Paulo",
+    "state": "SP",
+    "currencyText": "BRL (Real brasileiro)",
+    "customerCountry": "Estados Unidos",
+    "issuerHeader": "PRESTAÇÃO DE SERVIÇOS – DOCUMENTO AUXILIAR",
+    "aliquota": "0,00"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura 00000337 de Jabuticaba Dev Ltda por octubre de 2026: R$ 14.000,00. Pago a Banco Seriema, Agência/Conta 4417-28305-6."
+}

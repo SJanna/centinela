@@ -1,0 +1,118 @@
+{
+  "id": "B36",
+  "about": "Correo con la factura PDF adjunta: plan Business de agosto USD 420, atrasada",
+  "vendorId": "v-kestrel",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#4338CA",
+    "accent": "#A5B4FC",
+    "logo": "check",
+    "initials": "KB",
+    "wordmark": "Kestrelboard",
+    "tagline": "Projects without the busywork"
+  },
+  "vendor": {
+    "name": "Kestrelboard Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "89-2716354",
+    "address": [
+      "1100 Congress Ave, Suite 900",
+      "Austin, TX 78701",
+      "United States"
+    ],
+    "email": "invoices@kestrelboard.com",
+    "phone": "+1 512 555 0148"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "KB-2026-0841",
+  "issueDate": "2026-08-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-08-16",
+  "servicePeriod": "2026-08",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Business plan – project management",
+      "detail": "August 2026 service",
+      "quantity": 14,
+      "unit": "seats",
+      "unitPrice": 30,
+      "amount": 420
+    }
+  ],
+  "subtotal": 420,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 420,
+  "payment": {
+    "beneficiaryName": "Kestrelboard Inc.",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "510833269041",
+    "accountLabel": "Account number",
+    "routingOrSwift": "538120746",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Kestrelboard Inc. · EIN 89-2716354"
+  ],
+  "templateData": {
+    "customerId": "KB-ANDES-14",
+    "plan": "Business · 14 seats",
+    "heroNote": "Thank you for planning with Kestrelboard.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Aisha Grant <aisha.grant@kestrelboard.com>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice KB-2026-0841 – August 2026",
+    "date": "Sat, 01 Aug 2026 09:12:00 -0500",
+    "messageId": "<20260801091200.b36@kestrelboard.com>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Attached is invoice KB-2026-0841 for August 2026.",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Aisha Grant",
+      "Kestrelboard Inc."
+    ]
+  },
+  "attachment": {
+    "filename": "kb-2026-0841.pdf",
+    "template": "saas"
+  },
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura KB-2026-0841 de Kestrelboard Inc. por agosto de 2026: USD 420,00. Pago a Saltmarsh Federal Bank, Account number 510833269041."
+}

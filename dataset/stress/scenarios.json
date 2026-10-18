@@ -1,7 +1,7 @@
 {
   "_doc": "Set de estrés (dataset/stress/build-stress.ts). Cada escenario arranca con historial vacío y procesa sus casos en el orden de casos.csv. 'rulesOverride' reemplaza campos de company.rules solo en ese escenario. Si company.json cambia (companySha256 distinto), hay que regenerar con npm run stress:generate.",
   "seed": 20261017,
-  "companySha256": "6b58438a9859d0767032c7c2e0738668b3e22d1e88a61317fe99889d53f00b50",
+  "companySha256": "180575b669570a6375c6207bb7aa143647ec0b3e78c024c7938f53474d0d3c2f",
   "scenarios": [
     {
       "id": "e01-volumen",
@@ -40,10 +40,13 @@
     {
       "id": "e04-reglas-base",
       "now": "2026-10-20T15:00:00Z",
-      "rulesOverride": {},
+      "rulesOverride": {
+        "periodLimitUsd": 25000,
+        "initialFundUsd": 40000
+      },
       "kind": "reglas_base",
       "split": "train",
-      "description": "Reglas de la empresa sin cambios (límite USD 25.000, fondo USD 40.000)."
+      "description": "Límite USD 25.000 y fondo USD 40.000: las reglas que tenía la empresa cuando se armó el set."
     },
     {
       "id": "e05-volumen",
@@ -248,10 +251,13 @@
     {
       "id": "e23-reglas-base",
       "now": "2026-10-20T15:00:00Z",
-      "rulesOverride": {},
+      "rulesOverride": {
+        "periodLimitUsd": 25000,
+        "initialFundUsd": 40000
+      },
       "kind": "reglas_base",
       "split": "train",
-      "description": "Reglas de la empresa sin cambios (límite USD 25.000, fondo USD 40.000)."
+      "description": "Límite USD 25.000 y fondo USD 40.000: las reglas que tenía la empresa cuando se armó el set."
     },
     {
       "id": "e24-volumen",

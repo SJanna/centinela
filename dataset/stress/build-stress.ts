@@ -86,8 +86,8 @@ async function main(): Promise<void> {
 
   const oracle = oracleCheck(plan, generated);
   console.log(`\nOráculo independiente (dataset/generator/oracle.ts): coincide en ${oracle.agree}/${oracle.total} decisiones.`);
-  console.log("  No modela: recibos, fecha o periodo futuros, periodo fuera de la vigencia, id tributario en conflicto,");
-  console.log("  el mismo número en otro banco ni la tolerancia de los acuerdos por hora; ahí discrepa a propósito.");
+  console.log("  No modela: fecha o periodo futuros, id tributario en conflicto, el mismo número en otro banco ni la");
+  console.log("  tolerancia de los acuerdos por hora; ahí discrepa a propósito.");
   for (const [t, a, tot] of oracle.byTrap.filter(([, a, tot]) => a < tot)) console.log(`  ${t.padEnd(30)} ${a}/${tot}`);
 
   const mb = (b: number) => `${(b / 1024 / 1024).toFixed(1)} MB`;

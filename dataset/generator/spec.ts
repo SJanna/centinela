@@ -67,8 +67,8 @@ const isoMonth = z
   .string()
   .regex(/^\d{4}-\d{2}$/, "periodo YYYY-MM")
   .refine((s) => isCalendarDate(`${s}-01`), "periodo YYYY-MM con un mes que no existe");
-/** Ids del dataset base («B01») y del set de estrés de dataset/stress («S0001»). */
-const caseId = z.string().regex(/^(?:[A-Z]\d{2}|S\d{4})$/, "id de caso tipo B01 (o S0001 en el set de estrés)");
+/** Ids del dataset base («B01», «B110») y del set de estrés de dataset/stress («S0001»). */
+const caseId = z.string().regex(/^(?:[A-Z]\d{2,3}|S\d{4})$/, "id de caso tipo B01 o B110 (o S0001 en el set de estrés)");
 
 export const PartySchema = z.strictObject({
   name: z.string().min(1),
@@ -136,6 +136,11 @@ export const EmailMetaSchema = z.strictObject({
   messageId: z.string().regex(/^<[^<>\s]+@[^<>\s]+>$/),
   /** Cuerpo en texto plano, una entrada por línea. */
   body: z.array(z.string()),
+  /**
+   * Versión HTML del cuerpo (multipart/alternative), una entrada por línea. Solo la llevan los correos
+   * cuya versión HTML dice algo distinto del texto (B76); sin ella, el correo es solo texto.
+   */
+  html: z.array(z.string()).optional(),
 });
 export type EmailMeta = z.infer<typeof EmailMetaSchema>;
 

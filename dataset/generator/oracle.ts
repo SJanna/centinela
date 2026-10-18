@@ -10,18 +10,59 @@
  * - DUP-1 mira cualquier decisión anterior; DUP-2 y DUP-3, solo pagos.
  * - Periodo del acuerdo = servicePeriod o mes de emisión; acuerdos "once" se pagan una sola vez.
  * - ACU-1 también falla si la factura dice a quién va dirigida y no es la compradora (company.buyer y
- *   company.name: otro nombre normalizado u otro id tributario).
+ *   company.name: otro nombre normalizado u otro id tributario), o si el mes facturado queda fuera de
+ *   la vigencia del acuerdo.
+ * - LEC-1 también falla si el documento no es una factura ni una cuenta de cobro (recibo, nota crédito,
+ *   proforma, anulada, borrador) o si el archivo muestra a una persona algo que la lectura no ve
+ *   (`humanOnly`: la versión HTML de un correo, una foto demasiado borrosa).
+ * - ACU-2 también falla si el total solo se escribe con «$» y en el país del proveedor «$» es otra
+ *   moneda (Argentina: pesos).
  */
 import type { CaseRow } from "../../src/core/ports";
 import type { CheckCode, Company, Extraction, Outcome, Rules, Vendor } from "../../src/core/schemas";
 import { CHECK_BY_CODE } from "../../src/core/checks";
 import { normalizeAccount, normalizeName, normalizeTaxId, splitLegalForm, toCents } from "../../src/core/normalize";
 import type { Scenario } from "./cases";
+import { isCopySpec, isDocumentSpec, isPhotoOfSpec, type CaseSpec } from "./spec";
 
 export interface OracleInput {
   caseId: string;
   sha256: string;
   groundTruth: Extraction;
+  /** Lo que el archivo le muestra a una persona y la lectura no (ver `humanOnlyIssues`). */
+  humanOnly?: string[];
+}
+
+/**
+ * Lo que una persona ve en el archivo y la lectura «perfecta» no trae, según la receta (spec): un correo
+ * con versión HTML (las specs solo la llevan cuando dice otra cosa que el texto) o una foto con un
+ * desenfoque que la deja ilegible (sigma 2,5 o más). Cada uno hace fallar LEC-1.
+ */
+export function humanOnlyIssues(spec: CaseSpec, byId: Map<string, CaseSpec>): string[] {
+  const out: string[] = [];
+  const photo = isPhotoOfSpec(spec) ? spec.photo : isDocumentSpec(spec) ? spec.photo : null;
+  if (photo && photo.blur >= 2.5) out.push("foto demasiado borrosa");
+  const doc = isCopySpec(spec) ? byId.get(spec.copyOf) : spec;
+  if (doc && isDocumentSpec(doc) && doc.emailMeta?.html) out.push("versión HTML del correo distinta del texto");
+  return out;
+}
+
+const PAYABLE = new Set(["invoice", "cuenta_de_cobro"]);
+/** Lo que significa un «$» solo según el país del proveedor (los demás países: dólar). */
+const BARE_DOLLAR: Record<string, string> = { CO: "COP", MX: "MXN", CL: "CLP", AR: "ARS", UY: "UYU" };
+
+/** true si la cita de la moneda solo trae «$» (sin el código ni «US$», «R$», «S/»). */
+function onlyDollarSign(evidence: string | null, currency: string): boolean {
+  if (evidence == null) return false;
+  if (new RegExp(`\\b${currency}\\b`).test(evidence) || /U\$S|US\$|R\$|S\//.test(evidence)) return false;
+  return /(^|[^A-Za-z])\$/.test(evidence);
+}
+
+/** ¿El mes YYYY-MM se cruza con la vigencia del acuerdo? */
+function periodInAgreement(period: string, a: { validFrom: string; validTo: string | null }): boolean {
+  const [y, m] = period.split("-").map(Number);
+  const last = `${period}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, "0")}`;
+  return last >= a.validFrom && (a.validTo == null || `${period}-01` <= a.validTo);
 }
 
 export interface OracleResult {
@@ -87,7 +128,8 @@ export function evaluateScenario(company: Company, scenario: Scenario, cases: Or
 
     // Lectura
     const critical = [gt.vendorName, gt.invoiceNumber, gt.currency, gt.total, gt.payment.accountNumber];
-    set("LEC-1", critical.every((f) => f.value != null && f.legible) ? "pass" : "fail");
+    const readable = critical.every((f) => f.value != null && f.legible);
+    set("LEC-1", readable && PAYABLE.has(gt.documentType) && (c.humanOnly ?? []).length === 0 ? "pass" : "fail");
     set("LEC-2", "pass");
     const linesCents = gt.lineItems.reduce((s, l) => s + toCents(l.amount), 0);
     const taxCents = gt.tax.value == null ? 0 : toCents(gt.tax.value);
@@ -115,10 +157,19 @@ export function evaluateScenario(company: Company, scenario: Scenario, cases: Or
     const date = gt.issueDate.value ?? scenario.now.slice(0, 10);
     if (!billToIsBuyer(company, gt)) set("ACU-1", "fail");
     else if (!agreement) set("ACU-1", "not_evaluable");
-    else set("ACU-1", date >= agreement.validFrom && (agreement.validTo == null || date <= agreement.validTo) ? "pass" : "fail");
+    else {
+      const inForce = date >= agreement.validFrom && (agreement.validTo == null || date <= agreement.validTo);
+      const billed = gt.servicePeriod.value;
+      const covered = agreement.frequency === "once" || billed == null || periodInAgreement(billed, agreement);
+      set("ACU-1", inForce && covered ? "pass" : "fail");
+    }
     const currency = gt.currency.value;
     if (!agreement || !currency) set("ACU-2", "not_evaluable");
-    else set("ACU-2", currency === agreement.currency ? "pass" : "fail");
+    else {
+      const bare = onlyDollarSign(gt.currency.evidence, currency);
+      const meaning = bare && vendor ? (BARE_DOLLAR[vendor.country] ?? "USD") : currency;
+      set("ACU-2", currency === agreement.currency && meaning === currency ? "pass" : "fail");
+    }
     const total = gt.total.value;
     if (!agreement || total == null) set("ACU-3", "not_evaluable");
     else if (agreement.kind === "hourly") {

@@ -7,7 +7,7 @@
  *     inventan. Cualquier discrepancia es un defecto: se corrige haciendo el MOTOR más estricto o
  *     arreglando un error real de la guardia, nunca aflojando la guardia sin una razón de la
  *     especificación.
- * (b) Los 41 casos de dataset/ con lectores simulados, por escenario y con historial acumulado:
+ * (b) Los 138 casos de dataset/ con lectores simulados, por escenario y con historial acumulado:
  *     normalizeFile → readInvoice → decide → guardPayment. Cada caso da su decision_esperada, sus
  *     codigos_esperados quedan en «fail» y la guardia aprueba todos los PAGAR.
  * (c) La guardia compara ids tributarios con la misma semántica que taxIdsEquivalent del núcleo.
@@ -766,8 +766,8 @@ describe("dataset/ con lectores simulados: decisión esperada, códigos esperado
     secondary: createSimulatedReader({ id: "simulado-segunda", manifest }),
   };
 
-  it("hay 41 casos y cada uno tiene su archivo en el manifiesto", () => {
-    expect(rows).toHaveLength(41);
+  it("hay 138 casos y cada uno tiene su archivo en el manifiesto", () => {
+    expect(rows).toHaveLength(138);
     expect(rows.map((r) => r.id).sort()).toEqual(manifest.map((m) => m.caseId).sort());
   });
 

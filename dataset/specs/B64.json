@@ -1,0 +1,95 @@
+{
+  "id": "B64",
+  "about": "Fee mensual de marketing de crecimiento de septiembre COP 14.000.000",
+  "vendorId": "v-mochila",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
+  "brand": {
+    "color": "#EA580C",
+    "accent": "#FDBA74",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Mochila Growth",
+    "tagline": "Marketing de crecimiento"
+  },
+  "vendor": {
+    "name": "Mochila Growth S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.642.719-4",
+    "address": [
+      "Calle 93 # 13-24, Oficina 501",
+      "Chicó, Bogotá D.C.",
+      "Colombia"
+    ],
+    "email": "facturas@mochilagrowth.co",
+    "phone": "+57 601 745 3310"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "MG-2026-117",
+  "issueDate": "2026-09-25",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-10",
+  "servicePeriod": "2026-09",
+  "currency": "COP",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Marketing de crecimiento – fee mensual",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 14000000,
+      "amount": 14000000
+    }
+  ],
+  "subtotal": 14000000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 14000000,
+  "payment": {
+    "beneficiaryName": "Mochila Growth S.A.S.",
+    "bankName": "Banco Guayacán",
+    "accountNumber": "0915-3302-7748",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "QXGUCOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764068018528 del 15/01/2026, prefijo MG, rango 1001 a 9999, vigencia 24 meses.",
+    "CUFE: c80bfd1852dfeab8537eb9e7fc7e1764837e432b59c406ae1896ae6b013461a4d07624f1b3fb853e9bf2cec5c63ab9c5"
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura MG-2026-117 de Mochila Growth S.A.S. por septiembre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
+}

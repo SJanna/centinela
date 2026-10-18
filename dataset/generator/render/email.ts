@@ -127,11 +127,33 @@ export function buildEml(meta: EmailMeta, attachment: EmailAttachment | null): B
     encodeQuotedPrintable(body),
   ].join(CRLF);
 
-  if (!attachment) {
-    return Buffer.from([...headers, textPart, ""].join(CRLF), "utf8");
+  const id = meta.messageId.replace(/[^A-Za-z0-9]/g, "").slice(0, 24);
+  // Con versión HTML: multipart/alternative (texto y HTML). Sin ella, el cuerpo es solo texto (como antes).
+  let bodyPart = textPart;
+  if (meta.html) {
+    const alt = `----=_Alt_${id}`;
+    bodyPart = [
+      `Content-Type: multipart/alternative; boundary="${alt}"`,
+      "",
+      `--${alt}`,
+      textPart,
+      "",
+      `--${alt}`,
+      "Content-Type: text/html; charset=utf-8",
+      "Content-Transfer-Encoding: quoted-printable",
+      "",
+      encodeQuotedPrintable(meta.html.join("\n")),
+      "",
+      `--${alt}--`,
+      "",
+    ].join(CRLF);
   }
 
-  const boundary = `----=_Part_${meta.messageId.replace(/[^A-Za-z0-9]/g, "").slice(0, 24)}`;
+  if (!attachment) {
+    return Buffer.from([...headers, bodyPart, ""].join(CRLF), "utf8");
+  }
+
+  const boundary = `----=_Part_${id}`;
   const parts = [
     ...headers,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
@@ -139,7 +161,7 @@ export function buildEml(meta: EmailMeta, attachment: EmailAttachment | null): B
     "This is a multi-part message in MIME format.",
     "",
     `--${boundary}`,
-    textPart,
+    bodyPart,
     "",
     `--${boundary}`,
     `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,

@@ -1,0 +1,102 @@
+{
+  "id": "B50",
+  "about": "Foto de celular, nítida, de la factura de septiembre PEN 6.000 a la cuenta registrada",
+  "vendorId": "v-inca",
+  "format": "jpg",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA",
+  "brand": {
+    "color": "#B45309",
+    "accent": "#FCD34D",
+    "logo": "sun",
+    "initials": null,
+    "wordmark": "Inca Contenidos",
+    "tagline": "Marketing de contenidos"
+  },
+  "vendor": {
+    "name": "Inca Contenidos S.A.C.",
+    "taxIdLabel": "RUC",
+    "taxId": "20601234567",
+    "address": [
+      "Av. José Larco 1232, Oficina 504",
+      "Miraflores, Lima 15074",
+      "Perú"
+    ],
+    "email": "facturacion@incacontenidos.pe",
+    "phone": "+51 1 715 3320"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "F001-000238",
+  "issueDate": "2026-09-28",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-13",
+  "servicePeriod": "2026-09",
+  "currency": "PEN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Marketing de contenidos – plan mensual",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 6000,
+      "amount": 6000
+    }
+  ],
+  "subtotal": 6000,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 6000,
+  "payment": {
+    "beneficiaryName": "Inca Contenidos S.A.C.",
+    "bankName": "BCP",
+    "accountNumber": "191-2345678-0-12",
+    "accountLabel": "Cta. cte. soles N°",
+    "routingOrSwift": "BCPLPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Representación impresa de la Factura Electrónica. Consulte su validez en el portal de la SUNAT con el RUC del emisor, la serie y el número.",
+    "Resumen: zAwDZEHoylH1dg=="
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": {
+    "angle": -1.8,
+    "surface": "wood",
+    "blur": 0.5,
+    "quality": 78,
+    "seed": 4861,
+    "folded": false
+  },
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Foto de celular del documento impreso. Factura F001-000238 de Inca Contenidos S.A.C. por septiembre de 2026: S/ 6.000,00. Pago a BCP, Cta. cte. soles N° 191-2345678-0-12."
+}

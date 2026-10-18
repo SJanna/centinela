@@ -1,0 +1,141 @@
+{
+  "id": "B113",
+  "about": "Correo (cuerpo): 36 h × PEN 95 = PEN 3.420 de traducción",
+  "vendorId": "v-lucuma",
+  "format": "eml",
+  "template": null,
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "Factura electrónica",
+  "brand": {
+    "color": "#C2410C",
+    "accent": "#FED7AA",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Lúcuma",
+    "tagline": "Traducción y localización"
+  },
+  "vendor": {
+    "name": "Lúcuma Traducciones E.I.R.L.",
+    "taxIdLabel": "RUC",
+    "taxId": "20608812470",
+    "address": [
+      "Calle Berlín 360, Of. 2",
+      "Miraflores, Lima",
+      "Perú"
+    ],
+    "email": "hola@lucumatraducciones.pe",
+    "phone": "+51 987 220 415"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "E001-000112",
+  "issueDate": "2026-10-15",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-30",
+  "servicePeriod": "2026-10",
+  "currency": "PEN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Traducción y localización – horas",
+      "detail": "Servicio de octubre de 2026",
+      "quantity": 36,
+      "unit": "h",
+      "unitPrice": 95,
+      "amount": 3420
+    }
+  ],
+  "subtotal": 3420,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 3420,
+  "payment": {
+    "beneficiaryName": "Lúcuma Traducciones E.I.R.L.",
+    "bankName": "Banco Totora",
+    "accountNumber": "305-7720391-1-52",
+    "accountLabel": "Cta. cte. N°",
+    "routingOrSwift": "QXTOPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Andrea Salazar <andrea.salazar@lucumatraducciones.pe>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Factura electrónica E001-000112 – octubre de 2026",
+    "date": "Thu, 15 Oct 2026 09:12:00 -0500",
+    "messageId": "<20261015091200.b113@lucumatraducciones.pe>",
+    "body": [
+      "Hola, equipo de Andes Labs:",
+      "",
+      "Les enviamos la factura electrónica de octubre de 2026, según el acuerdo vigente.",
+      "",
+      "Factura electrónica N° E001-000112",
+      "Proveedor: Lúcuma Traducciones E.I.R.L. – RUC 20608812470",
+      "Fecha de emisión: 15/10/2026",
+      "Vencimiento: 30/10/2026",
+      "Periodo: octubre de 2026",
+      "",
+      "Concepto:",
+      "Traducción y localización – horas: 36 h × S/ 95.00 = S/ 3,420.00",
+      "Subtotal: S/ 3,420.00",
+      "IGV 0 % (exportación de servicios): S/ 0.00",
+      "Total: S/ 3,420.00 PEN",
+      "",
+      "Datos bancarios:",
+      "Titular: Lúcuma Traducciones E.I.R.L.",
+      "Banco: Banco Totora",
+      "Cta. cte. N°: 305-7720391-1-52",
+      "SWIFT: QXTOPEPL",
+      "",
+      "Quedamos atentos a cualquier duda.",
+      "",
+      "Saludos,",
+      "Andrea Salazar",
+      "Lúcuma Traducciones E.I.R.L."
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "invoiceNumber": "Factura electrónica N° E001-000112",
+    "vendorName": "Proveedor: Lúcuma Traducciones E.I.R.L.",
+    "vendorTaxId": "RUC 20608812470",
+    "issueDate": "Fecha de emisión: 15/10/2026",
+    "dueDate": "Vencimiento: 30/10/2026",
+    "servicePeriod": "Periodo: octubre de 2026",
+    "subtotal": "Subtotal: S/ 3,420.00",
+    "tax": "IGV 0 % (exportación de servicios): S/ 0.00",
+    "total": "Total: S/ 3,420.00",
+    "currency": "Total: S/ 3,420.00 PEN",
+    "beneficiaryName": "Titular: Lúcuma Traducciones E.I.R.L.",
+    "bankName": "Banco: Banco Totora",
+    "accountNumber": "Cta. cte. N°: 305-7720391-1-52",
+    "routingOrSwift": "SWIFT: QXTOPEPL"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el detalle en el cuerpo. Factura E001-000112 de Lúcuma Traducciones E.I.R.L. por octubre de 2026: S/ 3.420,00. Pago a Banco Totora, Cta. cte. N° 305-7720391-1-52."
+}

@@ -1,0 +1,97 @@
+{
+  "id": "B88",
+  "about": "«Proforma invoice – not a tax invoice» de octubre USD 3.400",
+  "vendorId": "v-ferrovane",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "other",
+  "title": "Proforma invoice",
+  "brand": {
+    "color": "#334155",
+    "accent": "#94A3B8",
+    "logo": "peak",
+    "initials": "FV",
+    "wordmark": "Ferrovane",
+    "tagline": "Reserved compute"
+  },
+  "vendor": {
+    "name": "Ferrovane Compute LLC",
+    "taxIdLabel": "EIN",
+    "taxId": "19-7745210",
+    "address": [
+      "2600 Commerce St, Suite 300",
+      "Dallas, TX 75226",
+      "United States"
+    ],
+    "email": "ar@ferrovane.cloud",
+    "phone": "+1 214 555 0190"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "PF-2026-0188",
+  "issueDate": "2026-09-28",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-13",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Reserved compute – 8 vCPU nodes (monthly)",
+      "detail": "October 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3400,
+      "amount": 3400
+    }
+  ],
+  "subtotal": 3400,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 3400,
+  "payment": {
+    "beneficiaryName": "Ferrovane Compute LLC",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "884166200317",
+    "accountLabel": "Account number",
+    "routingOrSwift": "627481935",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "PROFORMA – this is not a tax invoice. The final invoice for October will be issued on October 1, 2026."
+  ],
+  "legal": [
+    "Ferrovane Compute LLC · EIN 19-7745210"
+  ],
+  "templateData": {
+    "customerId": "FV-ANDES-06",
+    "plan": "Reserved · 6 nodes",
+    "heroNote": "Thank you for running on Ferrovane.",
+    "paymentSubtitle": "ACH or domestic wire"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura PF-2026-0188 de Ferrovane Compute LLC por octubre de 2026: USD 3.400,00. Pago a Saltmarsh Federal Bank, Account number 884166200317. Es una proforma, no la factura definitiva."
+}

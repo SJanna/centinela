@@ -1,7 +1,8 @@
 /**
  * Detector de documento ya pagado (src/extract/paid-markers.ts) contra los archivos del dataset, con el
  * texto plano que produce la entrada real (normalizeFile):
- * - cero marcas en los 41 archivos de dataset/generated (ninguno es un recibo) y en TODAS las facturas
+ * - en los 138 archivos de dataset/generated, marcas solo en B87 (la versión HTML del correo dice
+ *   «Paid – thank you»; el recibo B29 es una imagen, sin texto plano) y cero en TODAS las facturas
  *   legítimas del set de estrés (decision_esperada PAGAR), ni en las demás trampas que no son recibos;
  * - detecta todos los recibos del set de estrés que tienen texto (PDF, correo, chat; las imágenes no
  *   tienen texto plano y dependen de la lectura).
@@ -34,14 +35,14 @@ async function markersOf(dir: string, entry: ManifestEntry): Promise<string[] | 
 }
 
 describe("detector de documento ya pagado · dataset", () => {
-  it("cero marcas en los 41 archivos de dataset/generated", async () => {
+  it("en los 138 archivos de dataset/generated solo marca B87 (correo cuya versión HTML dice que ya se pagó)", async () => {
     const dir = path.join("dataset", "generated");
     const manifest = manifestOf(dir);
-    expect(manifest).toHaveLength(41);
+    expect(manifest).toHaveLength(138);
     const found: string[] = [];
     for (const entry of manifest) found.push(...((await markersOf(dir, entry)) ?? []));
-    expect(found).toEqual([]);
-  }, 60_000);
+    expect(found).toEqual(["B87: «Paid – thank you! We charged $96.00 to your Visa ending 4417 on October 2, 2026. Amount due: $0.00.»"]);
+  }, 120_000);
 
   describe.skipIf(!stressGenerated)("set de estrés", () => {
     const load = () => {

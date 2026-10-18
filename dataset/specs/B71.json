@@ -1,0 +1,148 @@
+{
+  "id": "B71",
+  "about": "Chat de WhatsApp: 40 h × PEN 95 = PEN 3.800 de traducción (septiembre), con datos de transferencia",
+  "vendorId": "v-lucuma",
+  "format": "txt",
+  "template": null,
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "Factura electrónica",
+  "brand": {
+    "color": "#C2410C",
+    "accent": "#FED7AA",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Lúcuma",
+    "tagline": "Traducción y localización"
+  },
+  "vendor": {
+    "name": "Lúcuma Traducciones E.I.R.L.",
+    "taxIdLabel": "RUC",
+    "taxId": "20608812470",
+    "address": [
+      "Calle Berlín 360, Of. 2",
+      "Miraflores, Lima",
+      "Perú"
+    ],
+    "email": "hola@lucumatraducciones.pe",
+    "phone": "+51 987 220 415"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "E001-000104",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "PEN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Traducción y localización – horas",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 40,
+      "unit": "h",
+      "unitPrice": 95,
+      "amount": 3800
+    }
+  ],
+  "subtotal": 3800,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 3800,
+  "payment": {
+    "beneficiaryName": "Lúcuma Traducciones E.I.R.L.",
+    "bankName": "Banco Totora",
+    "accountNumber": "305-7720391-1-52",
+    "accountLabel": "Cta. cte. N°",
+    "routingOrSwift": "QXTOPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": [
+    {
+      "date": "30/09/2026",
+      "time": "09:12",
+      "sender": null,
+      "text": "Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos."
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:13",
+      "sender": "Andrea Salazar (Lúcuma)",
+      "text": "Buen día Tomás! ¿Cómo va todo?"
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:14",
+      "sender": "Tomás Rivero",
+      "text": "Hola! Todo bien, cuéntame"
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:15",
+      "sender": "Andrea Salazar (Lúcuma)",
+      "text": "Te paso la factura electrónica de septiembre de 2026"
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:16",
+      "sender": "Andrea Salazar (Lúcuma)",
+      "text": "Factura electrónica N° E001-000104\nProveedor: Lúcuma Traducciones E.I.R.L. – RUC 20608812470\nFecha de emisión: 30/09/2026\nVencimiento: 15/10/2026\nPeriodo: septiembre de 2026\nTraducción y localización – horas: 40 h × S/ 95.00 = S/ 3,800.00\nSubtotal: S/ 3,800.00\nIGV 0 % (exportación de servicios): S/ 0.00\nTotal: S/ 3,800.00 PEN"
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:17",
+      "sender": "Andrea Salazar (Lúcuma)",
+      "text": "Datos para la transferencia:\nTitular: Lúcuma Traducciones E.I.R.L.\nBanco: Banco Totora\nCta. cte. N°: 305-7720391-1-52\nSWIFT: QXTOPEPL"
+    },
+    {
+      "date": "30/09/2026",
+      "time": "09:18",
+      "sender": "Tomás Rivero",
+      "text": "Perfecto, se lo paso al equipo de pagos. Gracias!"
+    }
+  ],
+  "evidence": {
+    "invoiceNumber": "Factura electrónica N° E001-000104",
+    "vendorName": "Proveedor: Lúcuma Traducciones E.I.R.L.",
+    "vendorTaxId": "RUC 20608812470",
+    "issueDate": "Fecha de emisión: 30/09/2026",
+    "dueDate": "Vencimiento: 15/10/2026",
+    "servicePeriod": "Periodo: septiembre de 2026",
+    "subtotal": "Subtotal: S/ 3,800.00",
+    "tax": "IGV 0 % (exportación de servicios): S/ 0.00",
+    "total": "Total: S/ 3,800.00",
+    "currency": "Total: S/ 3,800.00 PEN",
+    "beneficiaryName": "Titular: Lúcuma Traducciones E.I.R.L.",
+    "bankName": "Banco: Banco Totora",
+    "accountNumber": "Cta. cte. N°: 305-7720391-1-52",
+    "routingOrSwift": "SWIFT: QXTOPEPL"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Chat estilo WhatsApp. Factura E001-000104 de Lúcuma Traducciones E.I.R.L. por septiembre de 2026: S/ 3.800,00. Pago a Banco Totora, Cta. cte. N° 305-7720391-1-52."
+}

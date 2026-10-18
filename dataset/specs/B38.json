@@ -1,0 +1,95 @@
+{
+  "id": "B38",
+  "about": "Contabilidad y planillas de agosto PEN 3.200, atrasada",
+  "vendorId": "v-quipu",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA",
+  "brand": {
+    "color": "#A16207",
+    "accent": "#FDE68A",
+    "logo": "bars",
+    "initials": null,
+    "wordmark": "Quipu Contable",
+    "tagline": "Contabilidad y planillas"
+  },
+  "vendor": {
+    "name": "Quipu Contable S.A.C.",
+    "taxIdLabel": "RUC",
+    "taxId": "20614378250",
+    "address": [
+      "Av. José Larco 1232, Of. 703",
+      "Miraflores, Lima",
+      "Perú"
+    ],
+    "email": "facturacion@quipucontable.pe",
+    "phone": "+51 1 445 7720"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "E001-000412",
+  "issueDate": "2026-08-31",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-15",
+  "servicePeriod": "2026-08",
+  "currency": "PEN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Contabilidad y planillas – plan mensual",
+      "detail": "Servicio de agosto de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3200,
+      "amount": 3200
+    }
+  ],
+  "subtotal": 3200,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 3200,
+  "payment": {
+    "beneficiaryName": "Quipu Contable S.A.C.",
+    "bankName": "Banco Totora",
+    "accountNumber": "305-4418820-0-37",
+    "accountLabel": "Cta. cte. N°",
+    "routingOrSwift": "QXTOPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Representación impresa de la Factura Electrónica. Consulte su validez en el portal de la SUNAT con el RUC del emisor, la serie y el número.",
+    "Resumen: 1AwP/Fj8dj5qbg=="
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura E001-000412 de Quipu Contable S.A.C. por agosto de 2026: S/ 3.200,00. Pago a Banco Totora, Cta. cte. N° 305-4418820-0-37."
+}

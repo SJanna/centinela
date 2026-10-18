@@ -1,0 +1,96 @@
+{
+  "id": "B47",
+  "about": "Diseño de septiembre: 52 h × MXN 900 = MXN 46.800",
+  "vendorId": "v-nopal",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-MX",
+  "documentType": "invoice",
+  "title": "FACTURA · CFDI 4.0",
+  "brand": {
+    "color": "#15803D",
+    "accent": "#BBF7D0",
+    "logo": "cactus",
+    "initials": null,
+    "wordmark": "Estudio Nopal",
+    "tagline": "Diseño de producto"
+  },
+  "vendor": {
+    "name": "Estudio Nopal S. de R.L.",
+    "taxIdLabel": "RFC",
+    "taxId": "ENO210415AB3",
+    "address": [
+      "Calle Colima 220, Int. 3, Col. Roma Norte",
+      "Cuauhtémoc, 06700 Ciudad de México",
+      "México"
+    ],
+    "email": "facturas@estudionopal.mx",
+    "phone": "+52 55 5584 2190"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "A-312",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "MXN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Diseño de producto (UX/UI) – horas",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 52,
+      "unit": "h",
+      "unitPrice": 900,
+      "amount": 46800
+    }
+  ],
+  "subtotal": 46800,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 46800,
+  "payment": {
+    "beneficiaryName": "Estudio Nopal S. de R.L.",
+    "bankName": "BBVA México",
+    "accountNumber": "012180001234567891",
+    "accountLabel": "CLABE",
+    "routingOrSwift": "BCMRMXMM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): C40BF6CC-80D5-A5C6-C354-3D893A9D3087"
+  ],
+  "templateData": {
+    "code": "qr",
+    "subtitle": "Serie A · Folio 312"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura A-312 de Estudio Nopal S. de R.L. por septiembre de 2026: $46.800,00 MXN. Pago a BBVA México, CLABE 012180001234567891."
+}

@@ -1,6 +1,7 @@
 /**
  * Conjuntos de casos del banco de pruebas:
- * - «base»: dataset/casos.csv + dataset/generated (41 casos etiquetados a mano).
+ * - «base»: dataset/casos.csv + dataset/generated (138 casos etiquetados; los 97 de B24–B120 se arman
+ *   con dataset/generator/base-extension.ts).
  * - «stress»: dataset/stress/casos.csv + dataset/stress/generated (2000 casos con la etiqueta definida
  *   por construcción; se generan con npm run stress:generate y no se versionan).
  *

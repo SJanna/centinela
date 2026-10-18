@@ -18,7 +18,7 @@
  * Un caso es correcto si la decisión es la esperada y cada código esperado quedó en `fail` o
  * `not_evaluable`.
  *
- * Conjuntos (eval/datasets.ts): «base» (dataset/, 41 casos) o «stress» (dataset/stress/, 2000 casos
+ * Conjuntos (eval/datasets.ts): «base» (dataset/, 138 casos) o «stress» (dataset/stress/, 2000 casos
  * generados con npm run stress:generate). Los escenarios pueden correr en paralelo (`concurrency`);
  * los casos de un escenario siempre van en orden. Con `sample` se evalúa una muestra estratificada:
  * los casos anteriores de cada escenario que no están en la muestra se procesan solo como historial,

@@ -1,0 +1,95 @@
+{
+  "id": "B68",
+  "about": "Captura de la factura de septiembre: 62 h × USD 45 = USD 2.790",
+  "vendorId": "v-ombu",
+  "format": "png",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-AR",
+  "documentType": "invoice",
+  "title": "FACTURA E",
+  "brand": {
+    "color": "#166534",
+    "accent": "#BBF7D0",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Ombú Interactive",
+    "tagline": "Diseño UX/UI"
+  },
+  "vendor": {
+    "name": "Ombú Interactive SRL",
+    "taxIdLabel": "CUIT",
+    "taxId": "30-71638245-0",
+    "address": [
+      "Thames 1820, Piso 2",
+      "C1414DDH Palermo, Ciudad Autónoma de Buenos Aires",
+      "Argentina"
+    ],
+    "email": "administracion@ombu.com.ar",
+    "phone": "+54 11 4774 9031"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00004-00000219",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Diseño UX/UI – horas",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 62,
+      "unit": "h",
+      "unitPrice": 45,
+      "amount": 2790
+    }
+  ],
+  "subtotal": 2790,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 2790,
+  "payment": {
+    "beneficiaryName": "Ombú Interactive SRL",
+    "bankName": "Banco Ñandú",
+    "accountNumber": "4250013820000855210347",
+    "accountLabel": "CBU",
+    "routingOrSwift": "QXNDARBA",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Comprobante autorizado · CAE N° 00036047011996 · Vto. CAE: 30 días desde la emisión."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Comprobante autorizado AFIP"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura de pantalla. Factura 00004-00000219 de Ombú Interactive SRL por septiembre de 2026: USD 2.790,00. Pago a Banco Ñandú, CBU 4250013820000855210347."
+}

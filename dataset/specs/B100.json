@@ -1,0 +1,96 @@
+{
+  "id": "B100",
+  "about": "CFDI de octubre con el sello «ANULADA – sustituida por AJ-0412»",
+  "vendorId": "v-ajolote",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-MX",
+  "documentType": "other",
+  "title": "FACTURA · CFDI 4.0 · ANULADA",
+  "brand": {
+    "color": "#DB2777",
+    "accent": "#FBCFE8",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Ajolote Apps",
+    "tagline": "Apps móviles"
+  },
+  "vendor": {
+    "name": "Ajolote Apps S. de R.L. de C.V.",
+    "taxIdLabel": "RFC",
+    "taxId": "AAP190823Q70",
+    "address": [
+      "Av. Álvaro Obregón 182, Piso 3",
+      "Roma Norte, Cuauhtémoc, 06700 CDMX",
+      "México"
+    ],
+    "email": "facturacion@ajoloteapps.mx",
+    "phone": "+52 55 4170 2236"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "AJ-0411",
+  "issueDate": "2026-10-02",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-17",
+  "servicePeriod": "2026-10",
+  "currency": "MXN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo de la app móvil – iguala mensual",
+      "detail": "Servicio de octubre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 68000,
+      "amount": 68000
+    }
+  ],
+  "subtotal": 68000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 68000,
+  "payment": {
+    "beneficiaryName": "Ajolote Apps S. de R.L. de C.V.",
+    "bankName": "Banco Huasteco",
+    "accountNumber": "138180004417263395",
+    "accountLabel": "CLABE",
+    "routingOrSwift": "QXHUMXMM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "ANULADA – sustituida por el CFDI AJ-0412."
+  ],
+  "legal": [
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): C40BF6CC-25D5-1685-3872-AD9E89876757"
+  ],
+  "templateData": {
+    "code": "qr",
+    "subtitle": "Serie A · Folio 0411"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura AJ-0411 de Ajolote Apps S. de R.L. de C.V. por octubre de 2026: $68.000,00 MXN. Pago a Banco Huasteco, CLABE 138180004417263395. Trae el sello ANULADA."
+}

@@ -1,0 +1,143 @@
+{
+  "id": "B81",
+  "about": "Correo (cuerpo) con una factura de enero de 2026 que «nunca se cobró»: el acuerdo empezó el 1 de febrero",
+  "vendorId": "v-heronpost",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#B45309",
+    "accent": "#FCD34D",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Heronpost",
+    "tagline": "Transactional email API"
+  },
+  "vendor": {
+    "name": "Heronpost Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "17-4429801",
+    "address": [
+      "90 Canal St, Floor 4",
+      "Boston, MA 02114",
+      "United States"
+    ],
+    "email": "billing@heronpost.dev",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "HP-2026-10-2795",
+  "issueDate": "2026-10-07",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-22",
+  "servicePeriod": "2026-01",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Starter API plan – transactional email",
+      "detail": "January 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 89,
+      "amount": 89
+    }
+  ],
+  "subtotal": 89,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 89,
+  "payment": {
+    "beneficiaryName": "Heronpost Inc.",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "3920118477",
+    "accountLabel": "Account number",
+    "routingOrSwift": "726410938",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Marcus Bell <marcus.bell@heronpost.dev>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice HP-2026-10-2795 – January 2026",
+    "date": "Wed, 07 Oct 2026 09:12:00 -0500",
+    "messageId": "<20261007091200.b81@heronpost.dev>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Please find below our invoice for January 2026, per our current agreement.",
+      "",
+      "While reconciling our records we noticed that January 2026 was never billed, so we are sending that invoice now.",
+      "",
+      "Invoice # HP-2026-10-2795",
+      "Vendor: Heronpost Inc. – EIN 17-4429801",
+      "Issue date: 10/07/2026",
+      "Due date: 10/22/2026",
+      "Billing period: January 2026",
+      "",
+      "Description:",
+      "Starter API plan – transactional email: $89.00",
+      "Subtotal: $89.00",
+      "Sales tax (0%): $0.00",
+      "Total: $89.00 USD",
+      "",
+      "Bank details:",
+      "Beneficiary: Heronpost Inc.",
+      "Bank: Saltmarsh Federal Bank",
+      "Account number: 3920118477",
+      "ABA routing number: 726410938",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Marcus Bell",
+      "Heronpost Inc."
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "invoiceNumber": "Invoice # HP-2026-10-2795",
+    "vendorName": "Vendor: Heronpost Inc.",
+    "vendorTaxId": "EIN 17-4429801",
+    "issueDate": "Issue date: 10/07/2026",
+    "dueDate": "Due date: 10/22/2026",
+    "servicePeriod": "Billing period: January 2026",
+    "subtotal": "Subtotal: $89.00",
+    "tax": "Sales tax (0%): $0.00",
+    "total": "Total: $89.00",
+    "currency": "Total: $89.00 USD",
+    "beneficiaryName": "Beneficiary: Heronpost Inc.",
+    "bankName": "Bank: Saltmarsh Federal Bank",
+    "accountNumber": "Account number: 3920118477",
+    "routingOrSwift": "ABA routing number: 726410938"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el detalle en el cuerpo. Factura HP-2026-10-2795 de Heronpost Inc. por enero de 2026: USD 89,00. Pago a Saltmarsh Federal Bank, Account number 3920118477. Cobra enero de 2026."
+}

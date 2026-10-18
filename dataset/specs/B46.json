@@ -1,0 +1,148 @@
+{
+  "id": "B46",
+  "about": "Cobro de septiembre USD 2.800 por chat, que llegó tarde (otro número que B05)",
+  "vendorId": "v-pampa",
+  "format": "txt",
+  "template": null,
+  "language": "es",
+  "locale": "es-AR",
+  "documentType": "invoice",
+  "title": "Factura E",
+  "brand": {
+    "color": "#1E40AF",
+    "accent": "#93C5FD",
+    "logo": "orbit",
+    "initials": null,
+    "wordmark": "Pampa Ops",
+    "tagline": "DevOps gestionado"
+  },
+  "vendor": {
+    "name": "Pampa Ops SRL",
+    "taxIdLabel": "CUIT",
+    "taxId": "30-71234567-8",
+    "address": [
+      "Av. Corrientes 1847, Piso 6 B",
+      "C1045AAD Ciudad Autónoma de Buenos Aires",
+      "Argentina"
+    ],
+    "email": "administracion@pampaops.com.ar",
+    "phone": "+54 11 5263 0418"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "0003-00000866",
+  "issueDate": "2026-09-29",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-14",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "DevOps gestionado – abono mensual",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 2800,
+      "amount": 2800
+    }
+  ],
+  "subtotal": 2800,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 2800,
+  "payment": {
+    "beneficiaryName": "Pampa Ops SRL",
+    "bankName": "Banco Galicia",
+    "accountNumber": "0070999030004123456789",
+    "accountLabel": "CBU",
+    "routingOrSwift": "GABAARBA",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": [
+    {
+      "date": "29/09/2026",
+      "time": "09:12",
+      "sender": null,
+      "text": "Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos."
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:13",
+      "sender": "Martín Ferreyra (Pampa Ops)",
+      "text": "Buen día Daniela! ¿Cómo va todo?"
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:14",
+      "sender": "Daniela Vargas",
+      "text": "Hola! Todo bien, cuéntame"
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:15",
+      "sender": "Martín Ferreyra (Pampa Ops)",
+      "text": "Te paso la factura E de septiembre de 2026"
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:16",
+      "sender": "Martín Ferreyra (Pampa Ops)",
+      "text": "Factura E N° 0003-00000866\nProveedor: Pampa Ops SRL – CUIT 30-71234567-8\nFecha de emisión: 29/09/2026\nVencimiento: 14/10/2026\nPeriodo: septiembre de 2026\nDevOps gestionado – abono mensual: USD 2.800,00\nSubtotal: USD 2.800,00\nIVA 0 % (exportación de servicios): USD 0,00\nTotal: USD 2.800,00"
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:17",
+      "sender": "Martín Ferreyra (Pampa Ops)",
+      "text": "Datos para la transferencia:\nTitular: Pampa Ops SRL\nBanco: Banco Galicia\nCBU: 0070999030004123456789\nSWIFT: GABAARBA"
+    },
+    {
+      "date": "29/09/2026",
+      "time": "09:18",
+      "sender": "Daniela Vargas",
+      "text": "Perfecto, se lo paso al equipo de pagos. Gracias!"
+    }
+  ],
+  "evidence": {
+    "invoiceNumber": "Factura E N° 0003-00000866",
+    "vendorName": "Proveedor: Pampa Ops SRL",
+    "vendorTaxId": "CUIT 30-71234567-8",
+    "issueDate": "Fecha de emisión: 29/09/2026",
+    "dueDate": "Vencimiento: 14/10/2026",
+    "servicePeriod": "Periodo: septiembre de 2026",
+    "subtotal": "Subtotal: USD 2.800,00",
+    "tax": "IVA 0 % (exportación de servicios): USD 0,00",
+    "total": "Total: USD 2.800,00",
+    "currency": "Total: USD 2.800,00",
+    "beneficiaryName": "Titular: Pampa Ops SRL",
+    "bankName": "Banco: Banco Galicia",
+    "accountNumber": "CBU: 0070999030004123456789",
+    "routingOrSwift": "SWIFT: GABAARBA"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Chat estilo WhatsApp. Factura 0003-00000866 de Pampa Ops SRL por septiembre de 2026: USD 2.800,00. Pago a Banco Galicia, CBU 0070999030004123456789."
+}

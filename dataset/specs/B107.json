@@ -1,0 +1,130 @@
+{
+  "id": "B107",
+  "about": "Chat: «te paso el cobro de octubre, son $ 3.200» sin decir USD; en Argentina «$» es el peso",
+  "vendorId": "v-ferraro",
+  "format": "txt",
+  "template": null,
+  "language": "es",
+  "locale": "es-AR",
+  "documentType": "invoice",
+  "title": "Factura E",
+  "brand": {
+    "color": "#0E7490",
+    "accent": "#A5F3FC",
+    "logo": "monogram",
+    "initials": "JF",
+    "wordmark": "Julieta Ferraro",
+    "tagline": "Desarrollo frontend"
+  },
+  "vendor": {
+    "name": "Julieta Ferraro",
+    "taxIdLabel": "CUIT",
+    "taxId": "27-34871256-0",
+    "address": [
+      "Av. Corrientes 4120, Piso 6 «B»",
+      "C1194AAU Ciudad Autónoma de Buenos Aires",
+      "Argentina"
+    ],
+    "email": "julieta.ferraro.dev@correo.com.ar",
+    "phone": "+54 9 11 5320 7741"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00002-00000041",
+  "issueDate": "2026-10-14",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": null,
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo frontend – honorarios mensuales en dólares",
+      "detail": "Servicio de octubre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3200,
+      "amount": 3200
+    }
+  ],
+  "subtotal": null,
+  "tax": null,
+  "total": 3200,
+  "payment": {
+    "beneficiaryName": "Julieta Ferraro",
+    "bankName": "Banco Ñandú",
+    "accountNumber": "4250013820000417735126",
+    "accountLabel": "CBU",
+    "routingOrSwift": "QXNDARBA",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": [
+    {
+      "date": "14/10/2026",
+      "time": "16:02",
+      "sender": null,
+      "text": "Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos."
+    },
+    {
+      "date": "14/10/2026",
+      "time": "16:02",
+      "sender": "Julieta Ferraro",
+      "text": "Hola Daniela! Te paso el cobro de octubre, son $ 3.200 como siempre"
+    },
+    {
+      "date": "14/10/2026",
+      "time": "16:03",
+      "sender": "Julieta Ferraro",
+      "text": "Factura E N° 00002-00000041\nProveedora: Julieta Ferraro – CUIT 27-34871256-0\nFecha de emisión: 14/10/2026\nPeríodo: octubre de 2026\nDesarrollo frontend – honorarios de octubre\nTotal: $ 3.200"
+    },
+    {
+      "date": "14/10/2026",
+      "time": "16:03",
+      "sender": "Julieta Ferraro",
+      "text": "Datos para la transferencia:\nTitular: Julieta Ferraro\nBanco: Banco Ñandú\nCBU: 4250013820000417735126\nSWIFT: QXNDARBA"
+    },
+    {
+      "date": "14/10/2026",
+      "time": "16:05",
+      "sender": "Daniela Vargas",
+      "text": "Gracias Julieta! Se lo paso al equipo de pagos."
+    }
+  ],
+  "evidence": {
+    "invoiceNumber": "Factura E N° 00002-00000041",
+    "vendorName": "Proveedora: Julieta Ferraro",
+    "vendorTaxId": "CUIT 27-34871256-0",
+    "issueDate": "Fecha de emisión: 14/10/2026",
+    "servicePeriod": "Período: octubre de 2026",
+    "currency": "Total: $ 3.200",
+    "total": "Total: $ 3.200",
+    "beneficiaryName": "Titular: Julieta Ferraro",
+    "bankName": "Banco: Banco Ñandú",
+    "accountNumber": "CBU: 4250013820000417735126",
+    "routingOrSwift": "SWIFT: QXNDARBA"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Chat estilo WhatsApp. Factura 00002-00000041 de Julieta Ferraro por octubre de 2026: USD 3.200,00. Pago a Banco Ñandú, CBU 4250013820000417735126. El total solo dice «$ 3.200», sin la moneda."
+}

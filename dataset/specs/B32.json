@@ -1,0 +1,97 @@
+{
+  "id": "B32",
+  "about": "Contabilidad e impuestos de agosto USD 1.450, atrasada",
+  "vendorId": "v-marlowe",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#7F1D1D",
+    "accent": "#FCA5A5",
+    "logo": "monogram",
+    "initials": "MT",
+    "wordmark": "Marlowe Tax Partners",
+    "tagline": "Bookkeeping & US tax"
+  },
+  "vendor": {
+    "name": "Marlowe Tax Partners LLC",
+    "taxIdLabel": "EIN",
+    "taxId": "28-3390476",
+    "address": [
+      "1209 Orange St, Suite 210",
+      "Wilmington, DE 19801",
+      "United States"
+    ],
+    "email": "billing@marlowetax.com",
+    "phone": "+1 302 555 0117"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "MTP-0826",
+  "issueDate": "2026-08-31",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-15",
+  "servicePeriod": "2026-08",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Monthly bookkeeping and US tax compliance",
+      "detail": "August 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 1450,
+      "amount": 1450
+    }
+  ],
+  "subtotal": 1450,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 1450,
+  "payment": {
+    "beneficiaryName": "Marlowe Tax Partners LLC",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "153988264470",
+    "accountLabel": "Account number",
+    "routingOrSwift": "546218370",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Marlowe Tax Partners LLC · EIN 28-3390476"
+  ],
+  "templateData": {
+    "customerId": "MTP-ANDES",
+    "plan": "Startup bookkeeping · monthly",
+    "heroNote": "Thank you for your business.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura MTP-0826 de Marlowe Tax Partners LLC por agosto de 2026: USD 1.450,00. Pago a Tallgrass Commerce Bank, Account number 153988264470."
+}

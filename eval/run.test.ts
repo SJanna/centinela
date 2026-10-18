@@ -1,5 +1,5 @@
 /**
- * Banco de pruebas en modo simulado: la lógica de decisión debe acertar los 41 casos sin pagos
+ * Banco de pruebas en modo simulado: la lógica de decisión debe acertar los 138 casos sin pagos
  * indebidos. También se prueban los filtros, el modo caché (sin API) y el reporte.
  */
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -30,13 +30,13 @@ describe("runEval · simulado", () => {
     report = await runEval({ reader: "simulated" });
   });
 
-  it("acierta 41/41 y no hay pagos indebidos", () => {
+  it("acierta 138/138 y no hay pagos indebidos", () => {
     const failures = report.cases
       .filter((c) => !c.correct)
       .map((c) => `${c.caseId}: esperado ${c.expected} [${c.expectedCodes}], obtenido ${c.outcome} [${[...c.failCodes, ...c.notEvaluableCodes]}]`);
     expect(failures).toEqual([]);
-    expect(report.metrics.total.total).toBe(41);
-    expect(report.metrics.total.correct).toBe(41);
+    expect(report.metrics.total.total).toBe(138);
+    expect(report.metrics.total.correct).toBe(138);
     expect(report.metrics.total.improperPayments).toBe(0);
   });
 
@@ -61,7 +61,7 @@ describe("runEval · simulado", () => {
   it("el reporte en Markdown trae resumen, escenarios, detalle y fallos", () => {
     const md = renderMarkdown(report);
     expect(md).toContain("## Resumen");
-    expect(md).toContain("| Aciertos | 41/41 (100,0 %) |");
+    expect(md).toContain("| Aciertos | 138/138 (100,0 %) |");
     expect(md).toContain("| Pagos indebidos | 0 |");
     expect(md).toContain("## Por escenario");
     expect(md).toContain("| B07 | base | train | FRENAR | FRENAR | DUP-1 |");
@@ -121,7 +121,7 @@ describe("runEval · caché y live", () => {
     }
     const report = await runEval({ reader: "cache", cacheDir: dir, profile });
     expect(report.cacheMisses).toBe(0);
-    expect(report.metrics.total.correct).toBe(41);
+    expect(report.metrics.total.correct).toBe(138);
     expect(report.metrics.total.improperPayments).toBe(0);
     expect(report.readerProfile).toBe(profile);
     expect(report.models).toEqual(models);

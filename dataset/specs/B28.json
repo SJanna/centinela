@@ -1,0 +1,141 @@
+{
+  "id": "B28",
+  "about": "Factura de julio USD 96 (24 puestos × USD 4) en el cuerpo del correo, atrasada",
+  "vendorId": "v-sablevault",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#1F2937",
+    "accent": "#9CA3AF",
+    "logo": "pillar",
+    "initials": "SV",
+    "wordmark": "Sablevault",
+    "tagline": "Passwords for teams"
+  },
+  "vendor": {
+    "name": "Sablevault Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "18-9034612",
+    "address": [
+      "77 W Wacker Dr, Suite 2300",
+      "Chicago, IL 60601",
+      "United States"
+    ],
+    "email": "billing@sablevault.com",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "SV-260701",
+  "issueDate": "2026-07-03",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-07-18",
+  "servicePeriod": "2026-07",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Teams plan – password manager",
+      "detail": "July 2026 service",
+      "quantity": 24,
+      "unit": "seats",
+      "unitPrice": 4,
+      "amount": 96
+    }
+  ],
+  "subtotal": 96,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 96,
+  "payment": {
+    "beneficiaryName": "Sablevault Inc.",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "228655071934",
+    "accountLabel": "Account number",
+    "routingOrSwift": "413902768",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Priya Natarajan <priya.natarajan@sablevault.com>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice SV-260701 – July 2026",
+    "date": "Fri, 03 Jul 2026 09:12:00 -0500",
+    "messageId": "<20260703091200.b28@sablevault.com>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Please find below our invoice for July 2026, per our current agreement.",
+      "",
+      "Invoice # SV-260701",
+      "Vendor: Sablevault Inc. – EIN 18-9034612",
+      "Issue date: 07/03/2026",
+      "Due date: 07/18/2026",
+      "Billing period: July 2026",
+      "",
+      "Description:",
+      "Teams plan – password manager: 24 seats × $4.00 = $96.00",
+      "Subtotal: $96.00",
+      "Sales tax (0%): $0.00",
+      "Total: $96.00 USD",
+      "",
+      "Bank details:",
+      "Beneficiary: Sablevault Inc.",
+      "Bank: Tallgrass Commerce Bank",
+      "Account number: 228655071934",
+      "ABA routing number: 413902768",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Priya Natarajan",
+      "Sablevault Inc."
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "invoiceNumber": "Invoice # SV-260701",
+    "vendorName": "Vendor: Sablevault Inc.",
+    "vendorTaxId": "EIN 18-9034612",
+    "issueDate": "Issue date: 07/03/2026",
+    "dueDate": "Due date: 07/18/2026",
+    "servicePeriod": "Billing period: July 2026",
+    "subtotal": "Subtotal: $96.00",
+    "tax": "Sales tax (0%): $0.00",
+    "total": "Total: $96.00",
+    "currency": "Total: $96.00 USD",
+    "beneficiaryName": "Beneficiary: Sablevault Inc.",
+    "bankName": "Bank: Tallgrass Commerce Bank",
+    "accountNumber": "Account number: 228655071934",
+    "routingOrSwift": "ABA routing number: 413902768"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el detalle en el cuerpo. Factura SV-260701 de Sablevault Inc. por julio de 2026: USD 96,00. Pago a Tallgrass Commerce Bank, Account number 228655071934."
+}

@@ -345,7 +345,7 @@ describe("PDF: instrucción en mayúsculas pegada a un título espaciado (mismo 
 });
 
 describe("dataset: sin falsos positivos", () => {
-  it("sobre el texto plano de todos los archivos de dataset/generated solo marca B16, H10 y H05", async () => {
+  it("sobre el texto plano de todos los archivos de dataset/generated solo marca B16, B48, B116, H10 y H05", async () => {
     const dir = fileURLToPath(new URL("../../dataset/generated/", import.meta.url));
     const flagged: string[] = [];
     for (const file of readdirSync(dir).sort()) {
@@ -353,6 +353,7 @@ describe("dataset: sin falsos positivos", () => {
       const doc = await normalizeFile(new Uint8Array(readFileSync(`${dir}${file}`)), file);
       if (doc.plainText && detectSuspiciousInstructions(doc.plainText).length > 0) flagged.push(file.replace(/\..*$/, ""));
     }
-    expect(flagged).toEqual(["B16", "H05", "H10"]);
-  }, 60_000);
+    // B48 anuncia un cambio de banco y B116 esconde una orden en texto blanco: las dos son trampas.
+    expect(flagged).toEqual(["B116", "B16", "B48", "H05", "H10"]);
+  }, 120_000);
 });

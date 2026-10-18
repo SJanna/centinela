@@ -1,0 +1,102 @@
+{
+  "id": "B76",
+  "about": "NFS-e emitida el 05/10 por «serviços do mês anterior», con competência 09/2026 escrita y otro número: septiembre ya se pagó en B45",
+  "vendorId": "v-testa",
+  "format": "pdf",
+  "template": "nota_servico",
+  "language": "pt",
+  "locale": "pt-BR",
+  "documentType": "invoice",
+  "title": "NOTA FISCAL DE SERVIÇOS ELETRÔNICA – NFS-e",
+  "brand": {
+    "color": "#B91C1C",
+    "accent": "#FCA5A5",
+    "logo": "check",
+    "initials": null,
+    "wordmark": "Testa Qualidade",
+    "tagline": "QA & testes"
+  },
+  "vendor": {
+    "name": "Testa Qualidade Ltda",
+    "taxIdLabel": "CNPJ",
+    "taxId": "12.345.678/0001-90",
+    "address": [
+      "Rua Fradique Coutinho, 1450 – Conj. 82",
+      "Pinheiros, São Paulo – SP, 05416-001",
+      "Brasil"
+    ],
+    "email": "financeiro@testaqualidade.com.br",
+    "phone": "+55 11 3061 4420"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00004141",
+  "issueDate": "2026-10-05",
+  "issuePlace": null,
+  "issueTime": "10:12:41",
+  "dueDate": "2026-10-20",
+  "servicePeriod": "2026-09",
+  "currency": "BRL",
+  "paymentTerms": "30 dias",
+  "lines": [
+    {
+      "description": "QA manual e automatizado – mensalidade",
+      "detail": "Competência setembro de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 9500,
+      "amount": 9500
+    }
+  ],
+  "subtotal": 9500,
+  "tax": {
+    "label": "ISS 0 % (exportação de serviços)",
+    "amount": 0
+  },
+  "total": 9500,
+  "payment": {
+    "beneficiaryName": "Testa Qualidade Ltda",
+    "bankName": "Itaú Unibanco",
+    "accountNumber": "0341-45678-9",
+    "accountLabel": "Agência/Conta",
+    "routingOrSwift": "ITAUBRSP",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Exportação de serviços. Pagamento por transferência bancária."
+  ],
+  "legal": [],
+  "templateData": {
+    "verificationCode": "D10C-0B43",
+    "municipalRegistration": "5.123.456-7",
+    "rps": "RPS N° 4141 · Série A · emitido em 05/10/2026",
+    "serviceCode": "01.01 – Análise e desenvolvimento de sistemas",
+    "city": "São Paulo",
+    "state": "SP",
+    "currencyText": "BRL (Real brasileiro)",
+    "customerCountry": "Estados Unidos",
+    "issuerHeader": "PRESTAÇÃO DE SERVIÇOS – DOCUMENTO AUXILIAR",
+    "aliquota": "0,00",
+    "serviceNote": "Serviços do mês anterior (competência 09/2026)."
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura 00004141 de Testa Qualidade Ltda por septiembre de 2026: R$ 9.500,00. Pago a Itaú Unibanco, Agência/Conta 0341-45678-9."
+}

@@ -195,7 +195,7 @@ export function writeGenerated(cases: GeneratedCase[], outDir: string): void {
   fs.mkdirSync(outDir, { recursive: true });
   const keep = new Set([...cases.map((c) => c.file), "manifest.json"]);
   for (const f of fs.readdirSync(outDir)) {
-    if (/^[A-Z]\d{2}\.(pdf|png|jpg|eml|txt)$/.test(f) && !keep.has(f)) fs.rmSync(path.join(outDir, f));
+    if (/^[A-Z]\d{2,3}\.(pdf|png|jpg|eml|txt)$/.test(f) && !keep.has(f)) fs.rmSync(path.join(outDir, f));
   }
   for (const c of cases) fs.writeFileSync(path.join(outDir, c.file), c.bytes);
   fs.writeFileSync(path.join(outDir, "manifest.json"), manifestJson(cases));

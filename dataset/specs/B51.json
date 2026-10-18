@@ -1,0 +1,103 @@
+{
+  "id": "B51",
+  "about": "Foto de la cuenta de cobro de septiembre: 120 h × COP 80.000 = COP 9.600.000",
+  "vendorId": "v-caribe",
+  "format": "jpg",
+  "template": "cuenta_cobro",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "cuenta_de_cobro",
+  "title": "CUENTA DE COBRO",
+  "brand": {
+    "color": "#0891B2",
+    "accent": "#FDE68A",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Soporte Caribe",
+    "tagline": "Atención al cliente"
+  },
+  "vendor": {
+    "name": "Soporte Caribe S.A.S.",
+    "taxIdLabel": "NIT",
+    "taxId": "901.777.888-2",
+    "address": [
+      "Calle 77 # 59-35, Local 12",
+      "Barranquilla, Atlántico",
+      "Colombia"
+    ],
+    "email": "facturacion@soportecaribe.co",
+    "phone": "+57 605 385 9020"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CCB-2198",
+  "issueDate": "2026-09-30",
+  "issuePlace": "Barranquilla",
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "COP",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Soporte al cliente – horas atendidas",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 120,
+      "unit": "h",
+      "unitPrice": 80000,
+      "amount": 9600000
+    }
+  ],
+  "subtotal": 9600000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 9600000,
+  "payment": {
+    "beneficiaryName": "Soporte Caribe S.A.S.",
+    "bankName": "Davivienda",
+    "accountNumber": "0550-4881-2233",
+    "accountLabel": "Cuenta de ahorros N°",
+    "routingOrSwift": "CAFECOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {
+    "concept": "Soporte al cliente – horas atendidas, servicios prestados a ANDES LABS INC. durante septiembre de 2026, conforme al acuerdo vigente.",
+    "currencyText": "pesos colombianos (COP)",
+    "signerName": "Luisa Barrios",
+    "signerRole": "Gerente – Soporte Caribe S.A.S.",
+    "salutation": "Señores"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": {
+    "angle": 2.6,
+    "surface": "desk",
+    "blur": 0.55,
+    "quality": 76,
+    "seed": 4958,
+    "folded": true
+  },
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Foto de celular del documento impreso. Cuenta de cobro CCB-2198 de Soporte Caribe S.A.S. por septiembre de 2026: COP 9.600.000. Pago a Davivienda, Cuenta de ahorros N° 0550-4881-2233."
+}

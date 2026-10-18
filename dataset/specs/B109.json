@@ -1,0 +1,116 @@
+{
+  "id": "B109",
+  "about": "Correo con el PDF adjunto: 80 h × USD 45 = USD 3.600 (el máximo del mes)",
+  "vendorId": "v-ombu",
+  "format": "eml",
+  "template": null,
+  "language": "es",
+  "locale": "es-AR",
+  "documentType": "invoice",
+  "title": "FACTURA E",
+  "brand": {
+    "color": "#166534",
+    "accent": "#BBF7D0",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Ombú Interactive",
+    "tagline": "Diseño UX/UI"
+  },
+  "vendor": {
+    "name": "Ombú Interactive SRL",
+    "taxIdLabel": "CUIT",
+    "taxId": "30-71638245-0",
+    "address": [
+      "Thames 1820, Piso 2",
+      "C1414DDH Palermo, Ciudad Autónoma de Buenos Aires",
+      "Argentina"
+    ],
+    "email": "administracion@ombu.com.ar",
+    "phone": "+54 11 4774 9031"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00004-00000233",
+  "issueDate": "2026-10-15",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-30",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Diseño UX/UI – horas",
+      "detail": "Servicio de octubre de 2026",
+      "quantity": 80,
+      "unit": "h",
+      "unitPrice": 45,
+      "amount": 3600
+    }
+  ],
+  "subtotal": 3600,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 3600,
+  "payment": {
+    "beneficiaryName": "Ombú Interactive SRL",
+    "bankName": "Banco Ñandú",
+    "accountNumber": "4250013820000855210347",
+    "accountLabel": "CBU",
+    "routingOrSwift": "QXNDARBA",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Comprobante autorizado · CAE N° 00036047011996 · Vto. CAE: 30 días desde la emisión."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Comprobante autorizado AFIP"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Tomás Gutiérrez <tomas.gutierrez@ombu.com.ar>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "FACTURA E 00004-00000233 – octubre de 2026",
+    "date": "Thu, 15 Oct 2026 09:12:00 -0300",
+    "messageId": "<20261015091200.b109@ombu.com.ar>",
+    "body": [
+      "Hola, equipo de Andes Labs:",
+      "",
+      "Adjuntamos la factura E 00004-00000233 correspondiente a octubre de 2026.",
+      "",
+      "Quedamos atentos a cualquier duda.",
+      "",
+      "Saludos,",
+      "Tomás Gutiérrez",
+      "Ombú Interactive SRL"
+    ]
+  },
+  "attachment": {
+    "filename": "00004-00000233.pdf",
+    "template": "latam"
+  },
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura 00004-00000233 de Ombú Interactive SRL por octubre de 2026: USD 3.600,00. Pago a Banco Ñandú, CBU 4250013820000855210347."
+}

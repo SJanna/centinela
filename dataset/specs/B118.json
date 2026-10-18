@@ -1,0 +1,97 @@
+{
+  "id": "B118",
+  "about": "Analítica de producto de octubre USD 310",
+  "vendorId": "v-pellucid",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#6D28D9",
+    "accent": "#C4B5FD",
+    "logo": "orbit",
+    "initials": null,
+    "wordmark": "Pellucid",
+    "tagline": "Product analytics"
+  },
+  "vendor": {
+    "name": "Pellucid Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "49-6620374",
+    "address": [
+      "1600 Champa St, Suite 500",
+      "Denver, CO 80202",
+      "United States"
+    ],
+    "email": "billing@pellucid.so",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "PL-410",
+  "issueDate": "2026-10-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-16",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Growth plan – product analytics",
+      "detail": "October 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 310,
+      "amount": 310
+    }
+  ],
+  "subtotal": 310,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 310,
+  "payment": {
+    "beneficiaryName": "Pellucid Inc.",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "726640190358",
+    "accountLabel": "Account number",
+    "routingOrSwift": "452907316",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Pellucid Inc. · EIN 49-6620374"
+  ],
+  "templateData": {
+    "customerId": "PEL-ANDES-310",
+    "plan": "Growth · monthly",
+    "heroNote": "Thanks for measuring what matters with Pellucid.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura PL-410 de Pellucid Inc. por octubre de 2026: USD 310,00. Pago a Saltmarsh Federal Bank, Account number 726640190358."
+}

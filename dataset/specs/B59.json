@@ -1,0 +1,97 @@
+{
+  "id": "B59",
+  "about": "Plan Teams de septiembre USD 96 (24 puestos × USD 4)",
+  "vendorId": "v-sablevault",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#1F2937",
+    "accent": "#9CA3AF",
+    "logo": "pillar",
+    "initials": "SV",
+    "wordmark": "Sablevault",
+    "tagline": "Passwords for teams"
+  },
+  "vendor": {
+    "name": "Sablevault Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "18-9034612",
+    "address": [
+      "77 W Wacker Dr, Suite 2300",
+      "Chicago, IL 60601",
+      "United States"
+    ],
+    "email": "billing@sablevault.com",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "SV-260901",
+  "issueDate": "2026-09-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-16",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Teams plan – password manager",
+      "detail": "September 2026 service",
+      "quantity": 24,
+      "unit": "seats",
+      "unitPrice": 4,
+      "amount": 96
+    }
+  ],
+  "subtotal": 96,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 96,
+  "payment": {
+    "beneficiaryName": "Sablevault Inc.",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "228655071934",
+    "accountLabel": "Account number",
+    "routingOrSwift": "413902768",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Sablevault Inc. · EIN 18-9034612"
+  ],
+  "templateData": {
+    "customerId": "SV-ANDES-24",
+    "plan": "Teams · 24 seats",
+    "heroNote": "Thanks for keeping your team safe with Sablevault.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura SV-260901 de Sablevault Inc. por septiembre de 2026: USD 96,00. Pago a Tallgrass Commerce Bank, Account number 228655071934."
+}

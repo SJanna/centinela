@@ -1,0 +1,97 @@
+{
+  "id": "B25",
+  "about": "Captura del portal: factura de julio USD 89, atrasada",
+  "vendorId": "v-heronpost",
+  "format": "png",
+  "template": "portal",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#B45309",
+    "accent": "#FCD34D",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Heronpost",
+    "tagline": "Transactional email API"
+  },
+  "vendor": {
+    "name": "Heronpost Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "17-4429801",
+    "address": [
+      "90 Canal St, Floor 4",
+      "Boston, MA 02114",
+      "United States"
+    ],
+    "email": "billing@heronpost.dev",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "HP-2026-07-2214",
+  "issueDate": "2026-07-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-07-16",
+  "servicePeriod": "2026-07",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Starter API plan – transactional email",
+      "detail": "July 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 89,
+      "amount": 89
+    }
+  ],
+  "subtotal": 89,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 89,
+  "payment": {
+    "beneficiaryName": "Heronpost Inc.",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "3920118477",
+    "accountLabel": "Account number",
+    "routingOrSwift": "726410938",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [],
+  "templateData": {
+    "url": "dashboard.heronpost.dev/billing/HP-2026-07-2214",
+    "plan": "Starter · monthly",
+    "status": "Open",
+    "paymentTitle": "Pay by bank transfer",
+    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "helpText": "Questions about this invoice?"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura de pantalla. Factura HP-2026-07-2214 de Heronpost Inc. por julio de 2026: USD 89,00. Pago a Saltmarsh Federal Bank, Account number 3920118477."
+}

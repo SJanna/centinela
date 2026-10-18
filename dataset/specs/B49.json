@@ -1,0 +1,119 @@
+{
+  "id": "B49",
+  "about": "Correo en inglés con el PDF adjunto: 48 h × USD 60 = USD 2.880 (septiembre)",
+  "vendorId": "v-datossur",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#BE185D",
+    "accent": "#F9A8D4",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Datos del Sur",
+    "tagline": "Analítica de datos"
+  },
+  "vendor": {
+    "name": "Datos del Sur SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "76.543.210-K",
+    "address": [
+      "Av. Providencia 1208, Oficina 1503",
+      "Providencia, Santiago",
+      "Chile"
+    ],
+    "email": "facturacion@datosdelsur.cl",
+    "phone": "+56 2 2946 7710"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "1279",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Data analytics services – consulting hours",
+      "detail": "September 2026 service",
+      "quantity": 48,
+      "unit": "hours",
+      "unitPrice": 60,
+      "amount": 2880
+    }
+  ],
+  "subtotal": 2880,
+  "tax": {
+    "label": "VAT exempt (export of services)",
+    "amount": 0
+  },
+  "total": 2880,
+  "payment": {
+    "beneficiaryName": "Datos del Sur SpA",
+    "bankName": "Banco de Chile",
+    "accountNumber": "00-123-45678-09",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "BCHICLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Timbre Electrónico SII · Res. 80 de 2014 · Documento tributario electrónico.",
+    "Datos del Sur SpA · Giro: servicios de tecnología y consultoría."
+  ],
+  "templateData": {
+    "customerId": "DDS-ANDES",
+    "plan": "Analytics · hourly",
+    "heroNote": "Gracias por trabajar con Datos del Sur.",
+    "paymentSubtitle": "International wire · USD"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Ignacio Fuentes <ignacio.fuentes@datosdelsur.cl>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice 1279 – September 2026",
+    "date": "Wed, 30 Sep 2026 09:12:00 -0300",
+    "messageId": "<20260930091200.b49@datosdelsur.cl>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Attached is invoice 1279 for September 2026.",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Ignacio Fuentes",
+      "Datos del Sur SpA"
+    ]
+  },
+  "attachment": {
+    "filename": "1279.pdf",
+    "template": "saas"
+  },
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura 1279 de Datos del Sur SpA por septiembre de 2026: USD 2.880,00. Pago a Banco de Chile, Cuenta corriente N° 00-123-45678-09."
+}

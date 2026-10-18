@@ -1,0 +1,118 @@
+{
+  "id": "B119",
+  "about": "Correo con el PDF adjunto: videollamadas de octubre USD 180",
+  "vendorId": "v-gannetline",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#0F766E",
+    "accent": "#5EEAD4",
+    "logo": "check",
+    "initials": "GL",
+    "wordmark": "Gannetline",
+    "tagline": "Video meetings"
+  },
+  "vendor": {
+    "name": "Gannetline Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "78-2295106",
+    "address": [
+      "45 W 25th St, Floor 7",
+      "New York, NY 10010",
+      "United States"
+    ],
+    "email": "billing@gannetline.video",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "GL-26-1001",
+  "issueDate": "2026-10-02",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-17",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Team plan – video meetings",
+      "detail": "October 2026 service",
+      "quantity": 12,
+      "unit": "seats",
+      "unitPrice": 15,
+      "amount": 180
+    }
+  ],
+  "subtotal": 180,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 180,
+  "payment": {
+    "beneficiaryName": "Gannetline Inc.",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "940126673502",
+    "accountLabel": "Account number",
+    "routingOrSwift": "263195847",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Gannetline Inc. · EIN 78-2295106"
+  ],
+  "templateData": {
+    "customerId": "GL-ANDES-12",
+    "plan": "Team · 12 seats",
+    "heroNote": "Thanks for meeting on Gannetline.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Rachel Kim <rachel.kim@gannetline.video>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice GL-26-1001 – October 2026",
+    "date": "Fri, 02 Oct 2026 09:12:00 -0500",
+    "messageId": "<20261002091200.b119@gannetline.video>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Attached is invoice GL-26-1001 for October 2026.",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Rachel Kim",
+      "Gannetline Inc."
+    ]
+  },
+  "attachment": {
+    "filename": "gl-26-1001.pdf",
+    "template": "saas"
+  },
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura GL-26-1001 de Gannetline Inc. por octubre de 2026: USD 180,00. Pago a Tallgrass Commerce Bank, Account number 940126673502."
+}

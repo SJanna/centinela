@@ -1,0 +1,97 @@
+{
+  "id": "B54",
+  "about": "Suscripción Team de septiembre USD 240",
+  "vendorId": "v-quillstack",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#0E7490",
+    "accent": "#67E8F9",
+    "logo": "bars",
+    "initials": "QS",
+    "wordmark": "Quillstack",
+    "tagline": "Docs your team will actually read"
+  },
+  "vendor": {
+    "name": "Quillstack Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "07-3184526",
+    "address": [
+      "2201 Mission St, Suite 410",
+      "San Francisco, CA 94110",
+      "United States"
+    ],
+    "email": "billing@quillstack.io",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "QS-10953",
+  "issueDate": "2026-09-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-16",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Team plan – wiki and documentation",
+      "detail": "September 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 240,
+      "amount": 240
+    }
+  ],
+  "subtotal": 240,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 240,
+  "payment": {
+    "beneficiaryName": "Quillstack Inc.",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "447100392215",
+    "accountLabel": "Account number",
+    "routingOrSwift": "614203857",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Quillstack Inc. · EIN 07-3184526"
+  ],
+  "templateData": {
+    "customerId": "cus_ANDES7731",
+    "plan": "Team · monthly",
+    "heroNote": "Thanks for writing things down with Quillstack.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura QS-10953 de Quillstack Inc. por septiembre de 2026: USD 240,00. Pago a Saltmarsh Federal Bank, Account number 447100392215."
+}

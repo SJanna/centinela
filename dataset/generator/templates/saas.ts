@@ -43,7 +43,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
     else c.text(M + 108, y, value, { size: 9, font: "sansBold", color: INK });
     y += 15;
   };
-  meta("Invoice number", spec.invoiceNumber, "invoiceNumber");
+  meta(td(spec, "numberLabel", "Invoice number"), spec.invoiceNumber, "invoiceNumber");
   meta("Date of issue", formatDate(spec.issueDate, L, "long"), "issueDate");
   if (spec.dueDate) meta("Date due", formatDate(spec.dueDate, L, "long"), "dueDate");
   if (spec.servicePeriod) meta("Billing period", formatPeriod(spec.servicePeriod, L, "range"), "servicePeriod");
@@ -100,7 +100,9 @@ export function renderSaas(spec: DocumentSpec): Canvas {
   y = Math.max(vendorBottom, cy, ry) + 34;
 
   // Monto destacado
-  const heroDate = spec.dueDate ? ` due ${formatDate(spec.dueDate, L, "long")}` : "";
+  // Un recibo o una nota crédito cambian la frase («paid on July 3, 2026») con templateData.heroSuffix.
+  const heroSuffix = spec.templateData.heroSuffix;
+  const heroDate = heroSuffix != null ? ` ${heroSuffix}` : spec.dueDate ? ` due ${formatDate(spec.dueDate, L, "long")}` : "";
   c.text(M, y, `${due(spec.total)}${heroDate}`, { size: 17, font: "sansBold", color: INK, tags: ["total"] });
   y += 18;
   const heroNote = td(spec, "heroNote");
@@ -153,7 +155,7 @@ export function renderSaas(spec: DocumentSpec): Canvas {
   if (spec.subtotal != null) sumRow("Subtotal", money(spec.subtotal), { key: "subtotal" });
   if (spec.tax) sumRow(spec.tax.label, money(spec.tax.amount), { key: "tax" });
   sumRow("Total", money(spec.total), { key: "total", tags: ["total"] });
-  sumRow("Amount due", due(spec.total), { bold: true, tags: ["total"] });
+  sumRow(td(spec, "amountLabel", "Amount due"), due(spec.total), { bold: true, tags: ["total"] });
 
   // Pago
   y += 14;

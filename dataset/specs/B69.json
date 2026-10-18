@@ -1,0 +1,97 @@
+{
+  "id": "B69",
+  "about": "Factura de exportación electrónica de septiembre CLP 2.800.000",
+  "vendorId": "v-copihue",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CL",
+  "documentType": "invoice",
+  "title": "FACTURA DE EXPORTACIÓN ELECTRÓNICA",
+  "brand": {
+    "color": "#B91C1C",
+    "accent": "#FECACA",
+    "logo": "peak",
+    "initials": null,
+    "wordmark": "Copihue",
+    "tagline": "Ingeniería backend"
+  },
+  "vendor": {
+    "name": "Copihue Ingeniería SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "77.418.632-3",
+    "address": [
+      "Av. Providencia 2133, Of. 604",
+      "Providencia, Santiago",
+      "Chile"
+    ],
+    "email": "facturacion@copihue.cl",
+    "phone": "+56 2 2946 1180"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "3318",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "CLP",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo backend – honorario fijo mensual",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 2800000,
+      "amount": 2800000
+    }
+  ],
+  "subtotal": 2800000,
+  "tax": {
+    "label": "IVA exento (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 2800000,
+  "payment": {
+    "beneficiaryName": "Copihue Ingeniería SpA",
+    "bankName": "Banco Lenga",
+    "accountNumber": "07-218-44391-06",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "QXLECLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Timbre Electrónico SII · Res. 80 de 2014 · Documento tributario electrónico.",
+    "Copihue Ingeniería SpA · Giro: servicios de tecnología y consultoría."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Timbre Electrónico SII",
+    "subtitle": "S.I.I. – PROVIDENCIA"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura 3318 de Copihue Ingeniería SpA por septiembre de 2026: CLP 2.800.000. Pago a Banco Lenga, Cuenta corriente N° 07-218-44391-06."
+}

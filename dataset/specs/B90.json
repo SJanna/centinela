@@ -1,0 +1,143 @@
+{
+  "id": "B90",
+  "about": "Recordatorio por correo con la factura «FV 2026/1010» en el cuerpo: el número de B89 escrito de otra forma",
+  "vendorId": "v-ferrovane",
+  "format": "eml",
+  "template": null,
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#334155",
+    "accent": "#94A3B8",
+    "logo": "peak",
+    "initials": "FV",
+    "wordmark": "Ferrovane",
+    "tagline": "Reserved compute"
+  },
+  "vendor": {
+    "name": "Ferrovane Compute LLC",
+    "taxIdLabel": "EIN",
+    "taxId": "19-7745210",
+    "address": [
+      "2600 Commerce St, Suite 300",
+      "Dallas, TX 75226",
+      "United States"
+    ],
+    "email": "ar@ferrovane.cloud",
+    "phone": "+1 214 555 0190"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "FV 2026/1010",
+  "issueDate": "2026-10-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-16",
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Reserved compute – 8 vCPU nodes (monthly)",
+      "detail": "October 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3400,
+      "amount": 3400
+    }
+  ],
+  "subtotal": 3400,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 3400,
+  "payment": {
+    "beneficiaryName": "Ferrovane Compute LLC",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "884166200317",
+    "accountLabel": "Account number",
+    "routingOrSwift": "627481935",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [],
+  "templateData": {},
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": {
+    "from": "Gabe Turner <gabe.turner@ferrovane.cloud>",
+    "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
+    "cc": null,
+    "subject": "Invoice FV 2026/1010 – October 2026",
+    "date": "Wed, 14 Oct 2026 10:05:00 -0500",
+    "messageId": "<20261001091200.b90@ferrovane.cloud>",
+    "body": [
+      "Hi Andes Labs team,",
+      "",
+      "Please find below our invoice for October 2026, per our current agreement.",
+      "",
+      "This is a friendly reminder that the invoice below is still open on our side.",
+      "",
+      "Invoice # FV 2026/1010",
+      "Vendor: Ferrovane Compute LLC – EIN 19-7745210",
+      "Issue date: 10/01/2026",
+      "Due date: 10/16/2026",
+      "Billing period: October 2026",
+      "",
+      "Description:",
+      "Reserved compute – 8 vCPU nodes (monthly): $3,400.00",
+      "Subtotal: $3,400.00",
+      "Sales tax (0%): $0.00",
+      "Total: $3,400.00 USD",
+      "",
+      "Bank details:",
+      "Beneficiary: Ferrovane Compute LLC",
+      "Bank: Saltmarsh Federal Bank",
+      "Account number: 884166200317",
+      "ABA routing number: 627481935",
+      "",
+      "Let us know if you have any questions.",
+      "",
+      "Best regards,",
+      "Gabe Turner",
+      "Ferrovane Compute LLC"
+    ]
+  },
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": {
+    "invoiceNumber": "Invoice # FV 2026/1010",
+    "vendorName": "Vendor: Ferrovane Compute LLC",
+    "vendorTaxId": "EIN 19-7745210",
+    "issueDate": "Issue date: 10/01/2026",
+    "dueDate": "Due date: 10/16/2026",
+    "servicePeriod": "Billing period: October 2026",
+    "subtotal": "Subtotal: $3,400.00",
+    "tax": "Sales tax (0%): $0.00",
+    "total": "Total: $3,400.00",
+    "currency": "Total: $3,400.00 USD",
+    "beneficiaryName": "Beneficiary: Ferrovane Compute LLC",
+    "bankName": "Bank: Saltmarsh Federal Bank",
+    "accountNumber": "Account number: 884166200317",
+    "routingOrSwift": "ABA routing number: 627481935"
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Correo con el detalle en el cuerpo. Factura FV 2026/1010 de Ferrovane Compute LLC por octubre de 2026: USD 3.400,00. Pago a Saltmarsh Federal Bank, Account number 884166200317."
+}

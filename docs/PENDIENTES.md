@@ -2,6 +2,15 @@
 
 En orden de prioridad.
 
+## 18 oct · escenario base de 120 facturas (rama `base-100`)
+
+El escenario base pasó de 23 a 120 facturas (B24–B120: atraso de julio a septiembre y cierre de octubre) y `company.json` sube el límite del mes a USD 150.000 y el fondo a USD 250.000, con 26 proveedores nuevos. Mezcla: 82 PAGAR (68 %), 12 FRENAR (10 %), 26 ESCALAR (22 %). Detalle en [ARCHITECTURE.md](ARCHITECTURE.md#escenario-base-ampliado-b24b120).
+
+- **Revisión humana de las 97 etiquetas nuevas** (invariante 5): son un borrador, como las demás.
+- **Medir las 97 con lectura real** antes de decir «0 pagos indebidos» sobre 120 o 138 casos: `npm run eval:live -- --concurrency=4 --out=live-economico-v6-138` (unos USD 0,30 más; las 41 ya leídas salen de la caché). Las más expuestas a la lectura: B29 y B103 (imágenes sin texto: dependen de que una lectura diga `receipt` u `other`), B91 (destinatario), B86 («rn» → «m»), B107 («$» en un chat) y B97 (foto muy borrosa: la escala la nitidez, sin modelo).
+- **Para quien lleva DEMO, PITCH y el guion del video** (esta rama no los toca): «Reproducir escenario base» ahora reproduce 120 facturas, unos 3 minutos como mínimo (1,47 s por factura en la pantalla, más subida y lectura); el límite del mes es USD 150.000 y el fondo USD 250.000; «0 pagos indebidos en 23 casos» medido con Claude real sigue valiendo para el set de 41, no para el escenario de 120.
+- **Fechas.** La pantalla decide con el reloj de la máquina, no con el «now» del escenario (`/api/invoices` no lo pasa). Por eso ninguna factura nueva se emite después del 16 de octubre (como las de antes) y ninguna trampa nueva depende de la fecha de hoy: la factura de un mes que todavía no empieza del plan original se cambió por una de enero, anterior al contrato (B81).
+
 ## Noche del 17 al 18 de octubre: endurecimiento (resumen)
 
 Todo en commits locales en `main`, sin push. Prompts actuales: `v6`/`v6b`. Detalle de cada ataque en [REDTEAM.md](REDTEAM.md).
@@ -245,5 +254,5 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 
 - ~~**Límite mensual y fondo entre instancias de Vercel.**~~ Cerrado: la base solo inserta un PAGAR si el registro tiene los mismos pagos que el historial con que se decidió (candado de transacción + inserción condicional). Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
 - **«Reiniciar demo» borra el registro.** Es una función de demo. Después de reiniciar, la misma factura se puede volver a pagar.
-- **Autonomía en el escenario base: 52 %.** Es baja a propósito: 11 de las 23 facturas son trampas que deben escalarse. El escenario «reservado» y facturas normales adicionales la suben. Si quieren que el video muestre más autonomía, agreguen casos normales al set.
+- **Autonomía en el escenario base: 78 %.** Con 120 facturas, 94 se deciden solas (82 se pagan y 12 se frenan) y 26 son trampas que deben escalarse. Con las 23 de antes era 52 %.
 - **Texto extraído de títulos con letras espaciadas** sale unido («TOTALAPAGAR») en la pestaña «Texto extraído». No afecta decisiones.

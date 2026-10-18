@@ -1,0 +1,16 @@
+{
+  "id": "B115",
+  "about": "Foto impresa de la nota de B114 (mismo número)",
+  "vendorId": "v-jabuticaba",
+  "format": "jpg",
+  "photoOf": "B114",
+  "photo": {
+    "angle": 3.1,
+    "surface": "desk",
+    "blur": 0.7,
+    "quality": 70,
+    "seed": 11507,
+    "folded": true
+  },
+  "readerNotes": "Foto de la NFS-e 00000337 de Jabuticaba Dev Ltda, impresa y doblada: R$ 14.000,00 por outubro de 2026. Pago a Banco Seriema, agência/conta 4417-28305-6."
+}

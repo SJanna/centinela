@@ -1,0 +1,97 @@
+{
+  "id": "B57",
+  "about": "Plan Organization de septiembre USD 375",
+  "vendorId": "v-mosswire",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#15803D",
+    "accent": "#86EFAC",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Mosswire",
+    "tagline": "Design together"
+  },
+  "vendor": {
+    "name": "Mosswire Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "96-5503128",
+    "address": [
+      "311 SE Morrison St",
+      "Portland, OR 97214",
+      "United States"
+    ],
+    "email": "billing@mosswire.design",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "MW-2026-0912",
+  "issueDate": "2026-09-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-16",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Organization plan – collaborative design",
+      "detail": "September 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 375,
+      "amount": 375
+    }
+  ],
+  "subtotal": 375,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 375,
+  "payment": {
+    "beneficiaryName": "Mosswire Inc.",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "662704153398",
+    "accountLabel": "Account number",
+    "routingOrSwift": "914230577",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Mosswire Inc. · EIN 96-5503128"
+  ],
+  "templateData": {
+    "customerId": "org_andeslabs",
+    "plan": "Organization · monthly",
+    "heroNote": "Thanks for designing with Mosswire.",
+    "paymentSubtitle": "ACH or domestic wire · USD only"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura MW-2026-0912 de Mosswire Inc. por septiembre de 2026: USD 375,00. Pago a Tallgrass Commerce Bank, Account number 662704153398."
+}

@@ -1,0 +1,96 @@
+{
+  "id": "B63",
+  "about": "Cuenta de cobro de septiembre COP 9.600.000",
+  "vendorId": "v-valentina",
+  "format": "pdf",
+  "template": "cuenta_cobro",
+  "language": "es",
+  "locale": "es-CO",
+  "documentType": "cuenta_de_cobro",
+  "title": "CUENTA DE COBRO",
+  "brand": {
+    "color": "#9D174D",
+    "accent": "#F9A8D4",
+    "logo": "monogram",
+    "initials": "VO",
+    "wordmark": "Valentina Ospina",
+    "tagline": "QA y frontend"
+  },
+  "vendor": {
+    "name": "Valentina Ospina Gómez",
+    "taxIdLabel": "NIT",
+    "taxId": "1.036.684.215-6",
+    "address": [
+      "Carrera 70 # 44B-35, Apto 802",
+      "Laureles, Medellín, Antioquia",
+      "Colombia"
+    ],
+    "email": "valentina.ospina.dev@correo.co",
+    "phone": "+57 300 418 2290"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "CC-0015",
+  "issueDate": "2026-09-30",
+  "issuePlace": "Medellín",
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "COP",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "QA y desarrollo frontend – honorarios fijos mensuales",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 9600000,
+      "amount": 9600000
+    }
+  ],
+  "subtotal": 9600000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 9600000,
+  "payment": {
+    "beneficiaryName": "Valentina Ospina Gómez",
+    "bankName": "Banco Guayacán",
+    "accountNumber": "0384-2275-6610",
+    "accountLabel": "Cuenta de ahorros N°",
+    "routingOrSwift": "QXGUCOBB",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [],
+  "templateData": {
+    "concept": "QA y desarrollo frontend – honorarios fijos mensuales, servicios prestados a ANDES LABS INC. durante septiembre de 2026, conforme al acuerdo vigente.",
+    "currencyText": "pesos colombianos (COP)",
+    "signerName": "Valentina Ospina Gómez",
+    "signerRole": "C.C. 1.036.684.215 de Medellín",
+    "salutation": "Señores"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Cuenta de cobro CC-0015 de Valentina Ospina Gómez por septiembre de 2026: COP 9.600.000. Pago a Banco Guayacán, Cuenta de ahorros N° 0384-2275-6610."
+}

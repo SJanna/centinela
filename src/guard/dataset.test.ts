@@ -64,8 +64,13 @@ describe("guardPayment · empresa del dataset", () => {
       })
       .map(({ vendor }) => vendor.id)
       .sort();
+    // Todos menos Northwind (USD 7.200, sobre el umbral) y los contratos terminados (Viejo Roble, Patio Jacaranda).
     expect(approved).toEqual(
-      ["v-bufete", "v-camila", "v-caribe", "v-cloudmetrics", "v-datossur", "v-inca", "v-nopal", "v-pampa", "v-testa"].sort(),
+      company.vendors
+        .map((v) => v.id)
+        .filter((id) => !["v-northwind", "v-roble", "v-jacaranda"].includes(id))
+        .sort(),
     );
+    expect(approved).toHaveLength(34);
   });
 });

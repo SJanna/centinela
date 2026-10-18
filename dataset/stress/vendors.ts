@@ -126,7 +126,7 @@ export function legalFor(country: Country, ctx: { number: string; vendor: string
 
 // ───────────────────────── Registrados ─────────────────────────
 
-interface RegisteredExtra {
+export interface RegisteredExtra {
   /** Spec del dataset base de donde sale la presentación (dirección, marca, rótulos). */
   ref: string;
   country: Country;
@@ -377,7 +377,7 @@ function monthText(period: string | null, lang: Lang): string {
   return `${es[m - 1]} de ${y}`;
 }
 
-function templateDataFor(
+export function templateDataFor(
   x: { country: Country; city: string; signer: { name: string; role: string }; latam?: Record<string, string>; saas: RegisteredExtra["saas"] },
   vendorName: string,
   conceptEs: string,
@@ -440,10 +440,19 @@ function referenceSpecs(): Map<string, DocumentSpec> {
   return cachedRefs;
 }
 
-/** Perfiles de los proveedores registrados, en el orden de company.json. */
+/**
+ * Proveedores con los que se arma el set de estrés: los 11 que tenía company.json cuando se diseñó.
+ * El escenario base de dataset/ agregó otros (B24 en adelante); el set de estrés no los usa, así sus
+ * archivos y sus lecturas guardadas (por huella del archivo) no cambian.
+ */
+export const STRESS_VENDOR_IDS: readonly string[] = Object.keys(REGISTERED);
+
+/** Perfiles de los proveedores registrados del set de estrés (STRESS_VENDOR_IDS), en el orden de company.json. */
 export function registeredProfiles(company: Company): VendorProfile[] {
   const refs = referenceSpecs();
-  return company.vendors.map((v: Vendor) => {
+  const missing = STRESS_VENDOR_IDS.filter((id) => !company.vendors.some((v) => v.id === id));
+  if (missing.length > 0) throw new Error(`Faltan en company.json proveedores del set de estrés: ${missing.join(", ")}`);
+  return company.vendors.filter((v) => Object.prototype.hasOwnProperty.call(REGISTERED, v.id)).map((v: Vendor) => {
     const x = REGISTERED[v.id];
     if (!x) throw new Error(`Falta el perfil de estrés del proveedor ${v.id}`);
     const ref = refs.get(x.ref);

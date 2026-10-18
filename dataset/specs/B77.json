@@ -1,0 +1,93 @@
+{
+  "id": "B77",
+  "about": "«Credit note» por USD 48 de compensación por una caída del servicio el 6 de octubre: no es un cobro",
+  "vendorId": "v-quillstack",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "other",
+  "title": "Credit note",
+  "brand": {
+    "color": "#0E7490",
+    "accent": "#67E8F9",
+    "logo": "bars",
+    "initials": "QS",
+    "wordmark": "Quillstack",
+    "tagline": "Docs your team will actually read"
+  },
+  "vendor": {
+    "name": "Quillstack Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "07-3184526",
+    "address": [
+      "2201 Mission St, Suite 410",
+      "San Francisco, CA 94110",
+      "United States"
+    ],
+    "email": "billing@quillstack.io",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "QS-CN-0091",
+  "issueDate": "2026-10-07",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": null,
+  "servicePeriod": "2026-10",
+  "currency": "USD",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Service credit – outage on October 6, 2026 (SLA 99.9%)",
+      "detail": "20% of the October Team plan",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 48,
+      "amount": 48
+    }
+  ],
+  "subtotal": 48,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 48,
+  "payment": null,
+  "notes": [
+    "This credit note will be applied to your next invoice. No payment is required."
+  ],
+  "legal": [
+    "Quillstack Inc. · EIN 07-3184526"
+  ],
+  "templateData": {
+    "customerId": "cus_ANDES7731",
+    "plan": "Team · monthly",
+    "heroNote": "Thanks for writing things down with Quillstack.",
+    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "numberLabel": "Credit note number",
+    "amountLabel": "Amount credited",
+    "heroSuffix": "credited to your account"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura QS-CN-0091 de Quillstack Inc. por octubre de 2026: USD 48,00. No trae datos bancarios. Es una nota crédito a favor de Andes Labs, no un cobro."
+}

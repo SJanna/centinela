@@ -10,6 +10,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "dataset:generate": "tsx dataset/generator/generate.ts",
+    "dataset:extend": "tsx dataset/generator/extend.ts",
     "eval": "tsx eval/run.ts --reader=simulated",
     "eval:cache": "tsx eval/run.ts --reader=cache",
     "eval:live": "tsx eval/run.ts --reader=live",

@@ -51,12 +51,14 @@ export interface StressScenario {
 }
 
 const BIG_BUDGET = { periodLimitUsd: 500000, initialFundUsd: 1000000 };
+/** Límite del mes y fondo de company.json cuando se armó el set (los escenarios «reglas_base» los conservan). */
+const BASE_RULES_AT_DESIGN = { periodLimitUsd: 25000, initialFundUsd: 40000 };
 
 const KIND_TEXT: Record<ScenarioKind, string> = {
   volumen: "Volumen: límite del mes y fondo amplios para que entren todas las facturas legítimas.",
   limite_bajo: "Límite del mes bajo (USD 18.000): las últimas facturas lo superan.",
   fondo_bajo: "Fondo bajo (USD 18.000): las últimas facturas no alcanzan.",
-  reglas_base: "Reglas de la empresa sin cambios (límite USD 25.000, fondo USD 40.000).",
+  reglas_base: "Límite USD 25.000 y fondo USD 40.000: las reglas que tenía la empresa cuando se armó el set.",
   tolerancia_0: "Tolerancia del monto 0 %: solo el monto exacto del acuerdo.",
   tolerancia_2: "Tolerancia del monto 2 %.",
   umbral_bajo: "Umbral de aprobación más bajo.",
@@ -73,7 +75,9 @@ function rulesFor(kind: ScenarioKind, nth: number): Partial<Rules> {
     case "fondo_bajo":
       return { periodLimitUsd: BIG_BUDGET.periodLimitUsd, initialFundUsd: 18000 };
     case "reglas_base":
-      return {};
+      // Fijas: la empresa subió el límite y el fondo (escenario base de dataset/) y este escenario se
+      // armó con los de entonces. Sin fijarlas, sus etiquetas de límite y fondo cambiarían.
+      return { ...BASE_RULES_AT_DESIGN };
     case "tolerancia_0":
       return { ...BIG_BUDGET, amountTolerancePct: 0 };
     case "tolerancia_2":

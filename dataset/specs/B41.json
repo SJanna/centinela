@@ -1,0 +1,95 @@
+{
+  "id": "B41",
+  "about": "Traducción de agosto: 30 h × PEN 95 = PEN 2.850, atrasada",
+  "vendorId": "v-lucuma",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-PE",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA",
+  "brand": {
+    "color": "#C2410C",
+    "accent": "#FED7AA",
+    "logo": "wave",
+    "initials": null,
+    "wordmark": "Lúcuma",
+    "tagline": "Traducción y localización"
+  },
+  "vendor": {
+    "name": "Lúcuma Traducciones E.I.R.L.",
+    "taxIdLabel": "RUC",
+    "taxId": "20608812470",
+    "address": [
+      "Calle Berlín 360, Of. 2",
+      "Miraflores, Lima",
+      "Perú"
+    ],
+    "email": "hola@lucumatraducciones.pe",
+    "phone": "+51 987 220 415"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "E001-000097",
+  "issueDate": "2026-08-31",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-15",
+  "servicePeriod": "2026-08",
+  "currency": "PEN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Traducción y localización – horas",
+      "detail": "Servicio de agosto de 2026",
+      "quantity": 30,
+      "unit": "h",
+      "unitPrice": 95,
+      "amount": 2850
+    }
+  ],
+  "subtotal": 2850,
+  "tax": {
+    "label": "IGV 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 2850,
+  "payment": {
+    "beneficiaryName": "Lúcuma Traducciones E.I.R.L.",
+    "bankName": "Banco Totora",
+    "accountNumber": "305-7720391-1-52",
+    "accountLabel": "Cta. cte. N°",
+    "routingOrSwift": "QXTOPEPL",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Representación impresa de la Factura Electrónica. Consulte su validez en el portal de la SUNAT con el RUC del emisor, la serie y el número.",
+    "Resumen: yQv+q83hV/CuvA=="
+  ],
+  "templateData": {
+    "code": "qr"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura E001-000097 de Lúcuma Traducciones E.I.R.L. por agosto de 2026: S/ 2.850,00. Pago a Banco Totora, Cta. cte. N° 305-7720391-1-52."
+}

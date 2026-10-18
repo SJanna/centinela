@@ -1,0 +1,103 @@
+{
+  "id": "B103",
+  "about": "Foto de un «BORRADOR – sin timbrar» con las horas de octubre",
+  "vendorId": "v-anaya",
+  "format": "jpg",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-MX",
+  "documentType": "other",
+  "title": "BORRADOR DE FACTURA – SIN TIMBRAR",
+  "brand": {
+    "color": "#0F172A",
+    "accent": "#94A3B8",
+    "logo": "monogram",
+    "initials": "RA",
+    "wordmark": "Rodrigo Anaya",
+    "tagline": "Desarrollo frontend"
+  },
+  "vendor": {
+    "name": "Rodrigo Anaya Villaseñor",
+    "taxIdLabel": "RFC",
+    "taxId": "AAVR880412QX0",
+    "address": [
+      "Calle Manuel López Cotilla 1520, Int. 4",
+      "Col. Americana, 44160 Guadalajara, Jal.",
+      "México"
+    ],
+    "email": "rodrigo.anaya.dev@correo.mx",
+    "phone": "+52 33 1588 0420"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "BOR-1007",
+  "issueDate": "2026-10-09",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-24",
+  "servicePeriod": "2026-10",
+  "currency": "MXN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo frontend – horas",
+      "detail": "Servicio de octubre de 2026",
+      "quantity": 72,
+      "unit": "h",
+      "unitPrice": 750,
+      "amount": 54000
+    }
+  ],
+  "subtotal": 54000,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 54000,
+  "payment": {
+    "beneficiaryName": "Rodrigo Anaya Villaseñor",
+    "bankName": "Banco Mezquital",
+    "accountNumber": "138180007702518846",
+    "accountLabel": "CLABE",
+    "routingOrSwift": "QXMZMXMM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "BORRADOR – sin timbrar. No válido como comprobante fiscal."
+  ],
+  "legal": [
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): C70BFB85-2CDD-704F-BB97-7A81007624A3"
+  ],
+  "templateData": {
+    "code": "qr",
+    "subtitle": "Serie A · Folio 1007"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": {
+    "angle": 1.4,
+    "surface": "wood",
+    "blur": 0.6,
+    "quality": 72,
+    "seed": 10002,
+    "folded": false
+  },
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Foto de celular del documento impreso. Factura BOR-1007 de Rodrigo Anaya Villaseñor por octubre de 2026: $54.000,00 MXN. Pago a Banco Mezquital, CLABE 138180007702518846. Es un borrador sin timbrar."
+}

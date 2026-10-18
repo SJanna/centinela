@@ -272,7 +272,7 @@ export const SCENARIO_LABEL: Record<string, string> = {
 export const PLAYABLE_SCENARIOS = new Set(["base", "reservado"]);
 
 export const SCENARIO_NOTE: Record<string, string> = {
-  base: "Las facturas de octubre en orden: pagos normales, duplicados, cambios de cuenta, montos fuera de lo pactado e instrucciones escondidas.",
+  base: "El cierre de octubre con el atraso de julio a septiembre, 120 facturas en orden: pagos normales, duplicados, cambios de cuenta, montos fuera de lo pactado, documentos que no son un cobro e instrucciones escondidas.",
   reservado: "Casos reservados para medir: formatos nuevos y otras trampas.",
   cierre_mes: "Usa otro límite mensual.",
   fondo_bajo: "Usa otro fondo inicial.",

@@ -1,0 +1,16 @@
+{
+  "id": "B97",
+  "about": "Foto muy borrosa (desenfoque fuerte, nitidez bajo el mínimo) de la cuenta de cobro de octubre",
+  "vendorId": "v-valentina",
+  "format": "jpg",
+  "photoOf": "B98",
+  "photo": {
+    "angle": -3.4,
+    "surface": "fabric",
+    "blur": 3,
+    "quality": 55,
+    "seed": 9707,
+    "folded": false
+  },
+  "readerNotes": "Foto de celular muy desenfocada de la cuenta de cobro CC-0016 de Valentina Ospina Gómez: COP 9.600.000 por octubre de 2026. Pago a la cuenta de ahorros Banco Guayacán 0384-2275-6610."
+}

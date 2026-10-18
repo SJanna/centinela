@@ -187,7 +187,7 @@ describe("empresa", () => {
     await putRules(jsonRequest("PUT", { ...(await (await companyRoute()).json()).company.rules, initialFundUsd: 1 }));
     const res = await resetRoute();
     const { company } = await res.json();
-    expect(company.rules.initialFundUsd).toBe(40000);
+    expect(company.rules.initialFundUsd).toBe(250000);
     expect((await (await listDecisionsRoute(url("/api/decisions"))).json()).decisions).toEqual([]);
   });
 });
@@ -195,7 +195,7 @@ describe("empresa", () => {
 describe("muestras, estado y acceso", () => {
   it("GET /api/samples y /api/samples/[caseId]", async () => {
     const { samples } = await (await samplesRoute()).json();
-    expect(samples).toHaveLength(41);
+    expect(samples).toHaveLength(138);
     expect(samples[0]).toEqual({
       caseId: "B01",
       filename: "B01.pdf",

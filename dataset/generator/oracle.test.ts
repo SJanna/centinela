@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { CheckCode } from "../../src/core/schemas";
 import { readCases, readCompany, readScenarios } from "./cases";
-import { evaluateDataset, type OracleResult } from "./oracle";
+import { evaluateDataset, humanOnlyIssues, type OracleResult } from "./oracle";
+import { loadSpecs } from "./spec";
 import { generatedCases } from "./test-helpers";
 
 const rows = readCases();
@@ -11,7 +12,10 @@ let results: Map<string, OracleResult>;
 
 beforeAll(async () => {
   const cases = await generatedCases();
-  const byCase = new Map(cases.map((c) => [c.caseId, { caseId: c.caseId, sha256: c.sha256, groundTruth: c.groundTruth }]));
+  const specs = new Map(loadSpecs().map((s) => [s.id, s]));
+  const byCase = new Map(
+    cases.map((c) => [c.caseId, { caseId: c.caseId, sha256: c.sha256, groundTruth: c.groundTruth, humanOnly: humanOnlyIssues(specs.get(c.caseId)!, specs) }]),
+  );
   results = new Map(evaluateDataset(company, scenarios, rows, byCase).map((r) => [r.caseId, r]));
 });
 
@@ -30,9 +34,19 @@ const KNOWN_EXTRA_FAILURES: Record<string, CheckCode[]> = {
   B16: [],
   // Si el total dice 2.180 con 30 h × 60, tampoco cuadra con la tarifa.
   B18: ["ACU-3"],
-  // Northwind cobra USD 7.200 por acuerdo: cualquier factura suya supera el umbral de USD 5.000,
-  // y a esa altura del escenario base ya se pagaron USD 21.005 (21.005 + 7.200 > 25.000).
-  B23: ["LIM-1", "LIM-2"],
+  // Northwind cobra USD 7.200 por acuerdo: cualquier factura suya supera el umbral de USD 5.000.
+  // (Con el límite anterior de USD 25.000 también fallaba LIM-2: 21.005 + 7.200 > 25.000.)
+  B23: ["LIM-1"],
+  // Escenario base, B24 en adelante.
+  // La nota crédito de USD 48 tampoco es el monto pactado (USD 240).
+  B77: ["ACU-3"],
+  // Las copias exactas repiten también número y periodo ya pagados.
+  B79: ["DUP-2", "DUP-3"],
+  B120: ["DUP-2", "DUP-3"],
+  // El mismo número en otro formato (correo, foto) también repite el periodo ya pagado.
+  B90: ["DUP-3"],
+  B102: ["DUP-3"],
+  B115: ["DUP-3"],
   // La foto del mismo documento también repite el periodo ya pagado.
   H03: ["DUP-3"],
   // El correo que pide pagar a otra cuenta es, además, una instrucción incrustada.
@@ -72,5 +86,19 @@ describe("oráculo del dataset (lectura perfecta + reglas de company.json)", () 
     expect(results.get("M03")!.amountUsd).toBeCloseTo(1805, 6);
     expect(results.get("B12")!.amountUsd).toBeCloseTo(3400, 6);
     expect(results.get("H08")!.amountUsd).toBeCloseTo(1630.8, 6);
+    expect(results.get("B56")!.amountUsd).toBeCloseTo(423.5, 6);
+  });
+
+  it("el escenario base paga USD 128.081,90: el 85 % del límite del mes (USD 150.000) y nunca toca el fondo", () => {
+    const base = rows.filter((r) => r.escenario === "base").map((r) => results.get(r.id)!);
+    const paid = base.filter((r) => r.outcome === "PAGAR");
+    const cents = paid.reduce((s, r) => s + Math.round((r.amountUsd ?? 0) * 100), 0);
+    expect(base).toHaveLength(120);
+    expect(paid).toHaveLength(82);
+    expect(cents).toBe(12_808_190);
+    expect(cents).toBeLessThan(company.rules.periodLimitUsd * 100 * 0.9);
+    expect(base.some((r) => r.failing.includes("LIM-2") || r.failing.includes("FON-1"))).toBe(false);
+    // Ningún pago supera el umbral de aprobación: las facturas que lo superan escalan (B11, B23).
+    expect(Math.max(...paid.map((r) => r.amountUsd ?? 0))).toBeLessThanOrEqual(company.rules.approvalThresholdUsd);
   });
 });

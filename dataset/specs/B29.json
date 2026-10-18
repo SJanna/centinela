@@ -1,0 +1,93 @@
+{
+  "id": "B29",
+  "about": "Captura de un «Payment receipt» de julio USD 375 que ya se cobró con tarjeta: no es un cobro",
+  "vendorId": "v-mosswire",
+  "format": "png",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "receipt",
+  "title": "Payment receipt",
+  "brand": {
+    "color": "#15803D",
+    "accent": "#86EFAC",
+    "logo": "tree",
+    "initials": null,
+    "wordmark": "Mosswire",
+    "tagline": "Design together"
+  },
+  "vendor": {
+    "name": "Mosswire Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "96-5503128",
+    "address": [
+      "311 SE Morrison St",
+      "Portland, OR 97214",
+      "United States"
+    ],
+    "email": "billing@mosswire.design",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "MW-RC-30417",
+  "issueDate": "2026-07-03",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": null,
+  "servicePeriod": "2026-07",
+  "currency": "USD",
+  "paymentTerms": null,
+  "lines": [
+    {
+      "description": "Organization plan – collaborative design",
+      "detail": "July 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 375,
+      "amount": 375
+    }
+  ],
+  "subtotal": 375,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 375,
+  "payment": null,
+  "notes": [
+    "Payment received on July 3, 2026 — Visa ending 4417. Thank you! No action is needed."
+  ],
+  "legal": [
+    "Mosswire Inc. · EIN 96-5503128"
+  ],
+  "templateData": {
+    "customerId": "org_andeslabs",
+    "plan": "Organization · monthly",
+    "heroNote": "Thanks for designing with Mosswire.",
+    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "numberLabel": "Receipt number",
+    "amountLabel": "Amount paid",
+    "heroSuffix": "paid on July 3, 2026"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura de pantalla. Recibo MW-RC-30417 de Mosswire Inc. por julio de 2026: USD 375,00. No trae datos bancarios. Es un recibo: dice que el pago ya se recibió con tarjeta."
+}

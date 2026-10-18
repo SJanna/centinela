@@ -22,9 +22,11 @@ Más detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Las comprobaciones
 
 ## Resultados
 
-41 facturas de prueba realistas de una empresa ficticia (Andes Labs Inc.), con casos normales y trampas, en [dataset/casos.csv](dataset/casos.csv). 13 forman un set reservado para medir. No es una medición a ciegas: varias pruebas automáticas también usan esos casos. Además, un set de estrés de 2.000 facturas generadas (formatos, idiomas y trampas variadas) y un equipo rojo de 42 ataques.
+138 facturas de prueba realistas de una empresa ficticia (Andes Labs Inc.), con casos normales y trampas, en [dataset/casos.csv](dataset/casos.csv). 13 forman un set reservado para medir. No es una medición a ciegas: varias pruebas automáticas también usan esos casos. Además, un set de estrés de 2.000 facturas generadas (formatos, idiomas y trampas variadas) y un equipo rojo de 42 ataques.
 
-Con Claude real, perfil por defecto (Haiku 5.5 dos veces, prompts `v6`/`v6b`, 18 de octubre de 2026):
+El escenario base tiene 120 facturas: el cierre de octubre con el atraso de julio a septiembre (B24–B120 se sumaron a B01–B23). Se pagan 82 (68 %), se frenan 12 por duplicado (10 %) y escalan 26 trampas (22 %); lo pagado suma USD 128.081,90 del límite del mes de USD 150.000. Las 97 facturas nuevas son, como el resto, un borrador sin revisión humana, y **todavía no se midieron con lecturas reales**: con el lector simulado dan 138 de 138.
+
+Con Claude real, perfil por defecto (Haiku 5.5 dos veces, prompts `v6`/`v6b`, 18 de octubre de 2026). Estas cifras son del set de 41 casos (B01–B23 y los otros escenarios), medido antes de ampliar el escenario base:
 
 | Qué | Resultado |
 |---|---|
@@ -35,7 +37,7 @@ Con Claude real, perfil por defecto (Haiku 5.5 dos veces, prompts `v6`/`v6b`, 18
 | Errores honestos | 17 fotos y descuidos reales (foto girada, cortada, con reflejo, de una pantalla, por WhatsApp; sellos tenues, periodo borroso de un mes ya pagado, factura reenviada): con `economico` 0 pagos indebidos y las 8 legítimas pagan. Con `calidad` se pagaba un periodo borroso ya pagado; quedó cerrado en código ([docs/REDTEAM.md](docs/REDTEAM.md)). |
 | Equipo rojo | 42 ataques (instrucciones escondidas, engaño visual, lógica de pagos, documentos que no son un cobro): 0 pagados. Los 7 que lograron un pago en alguna versión (3 correos con instrucciones o adjuntos que la lectura no veía, una factura dirigida a otra empresa, una proforma, una foto con marca de agua «BORRADOR» y una factura del mes anterior sin periodo escrito) quedaron cerrados en código, con prueba ([docs/REDTEAM.md](docs/REDTEAM.md)). |
 | Costo de lectura | unos USD 0,003 por factura (USD 0,11 las 41) |
-| Pruebas automáticas | 2.207 (Vitest y fast-check), más los bancos de pruebas simulados: 41 de 41 y 2.000 de 2.000 |
+| Pruebas automáticas | 2.304 (Vitest y fast-check), más los bancos de pruebas simulados: 138 de 138 y 2.000 de 2.000 |
 
 Con 23 + 68 trampas leídas con Claude real, «0 pagos indebidos» no prueba que la tasa sea cero: con 95 % de confianza, la real podría llegar a ~3 % (regla de tres: 3 ÷ 91). Por eso existen la guardia y el escalado, y por eso lo que los dos lectores pueden confundir a la vez se revisa en código sin IA (documento ya pagado o anulado, moneda escrita solo con «$», destinatario de la factura, mes que la factura no dice).
 

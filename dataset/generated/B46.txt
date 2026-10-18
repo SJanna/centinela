@@ -1,0 +1,19 @@
+29/09/2026, 09:12 - Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.
+29/09/2026, 09:13 - Martín Ferreyra (Pampa Ops): Buen día Daniela! ¿Cómo va todo?
+29/09/2026, 09:14 - Daniela Vargas: Hola! Todo bien, cuéntame
+29/09/2026, 09:15 - Martín Ferreyra (Pampa Ops): Te paso la factura E de septiembre de 2026
+29/09/2026, 09:16 - Martín Ferreyra (Pampa Ops): Factura E N° 0003-00000866
+Proveedor: Pampa Ops SRL – CUIT 30-71234567-8
+Fecha de emisión: 29/09/2026
+Vencimiento: 14/10/2026
+Periodo: septiembre de 2026
+DevOps gestionado – abono mensual: USD 2.800,00
+Subtotal: USD 2.800,00
+IVA 0 % (exportación de servicios): USD 0,00
+Total: USD 2.800,00
+29/09/2026, 09:17 - Martín Ferreyra (Pampa Ops): Datos para la transferencia:
+Titular: Pampa Ops SRL
+Banco: Banco Galicia
+CBU: 0070999030004123456789
+SWIFT: GABAARBA
+29/09/2026, 09:18 - Daniela Vargas: Perfecto, se lo paso al equipo de pagos. Gracias!

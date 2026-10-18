@@ -1,0 +1,96 @@
+{
+  "id": "B33",
+  "about": "CFDI de la membresía de agosto MXN 14.500, emitido el 28/08 dentro de la vigencia (el contrato terminó el 31/08)",
+  "vendorId": "v-jacaranda",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-MX",
+  "documentType": "invoice",
+  "title": "FACTURA · CFDI 4.0",
+  "brand": {
+    "color": "#7C3AED",
+    "accent": "#DDD6FE",
+    "logo": "sun",
+    "initials": null,
+    "wordmark": "Patio Jacaranda",
+    "tagline": "Cowork · CDMX"
+  },
+  "vendor": {
+    "name": "Patio Jacaranda Cowork S.A. de C.V.",
+    "taxIdLabel": "RFC",
+    "taxId": "PJC170309Q50",
+    "address": [
+      "Calle Durango 247",
+      "Roma Norte, Cuauhtémoc, 06700 CDMX",
+      "México"
+    ],
+    "email": "cobranza@patiojacaranda.mx",
+    "phone": "+52 55 6390 1172"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "PJ-6631",
+  "issueDate": "2026-08-28",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-12",
+  "servicePeriod": "2026-08",
+  "currency": "MXN",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Membresía de cowork – 2 escritorios fijos",
+      "detail": "Servicio de agosto de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 14500,
+      "amount": 14500
+    }
+  ],
+  "subtotal": 14500,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 14500,
+  "payment": {
+    "beneficiaryName": "Patio Jacaranda Cowork S.A. de C.V.",
+    "bankName": "Banco Huasteco",
+    "accountNumber": "152180003318427760",
+    "accountLabel": "CLABE",
+    "routingOrSwift": "QXHUMXMM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): D50C118F-25FF-F78C-74F2-D599BA464AE0"
+  ],
+  "templateData": {
+    "code": "qr",
+    "subtitle": "Serie A · Folio 6631"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura PJ-6631 de Patio Jacaranda Cowork S.A. de C.V. por agosto de 2026: $14.500,00 MXN. Pago a Banco Huasteco, CLABE 152180003318427760."
+}

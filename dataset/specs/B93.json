@@ -1,0 +1,97 @@
+{
+  "id": "B93",
+  "about": "Honorarios de pago único: documentos de la ronda SAFE y actas del directorio, USD 3.800",
+  "vendorId": "v-halvorsen",
+  "format": "pdf",
+  "template": "saas",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#1E3A8A",
+    "accent": "#93C5FD",
+    "logo": "monogram",
+    "initials": "HP",
+    "wordmark": "Halvorsen & Pike",
+    "tagline": "Corporate counsel"
+  },
+  "vendor": {
+    "name": "Halvorsen & Pike LLP",
+    "taxIdLabel": "EIN",
+    "taxId": "29-1186543",
+    "address": [
+      "1000 N King St, Suite 600",
+      "Wilmington, DE 19801",
+      "United States"
+    ],
+    "email": "billing@halvorsenpike.law",
+    "phone": "+1 302 555 0163"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "H&P-24117",
+  "issueDate": "2026-10-02",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-17",
+  "servicePeriod": null,
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "SAFE round documents and board minutes – flat fee",
+      "detail": null,
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3800,
+      "amount": 3800
+    }
+  ],
+  "subtotal": 3800,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 3800,
+  "payment": {
+    "beneficiaryName": "Halvorsen & Pike LLP",
+    "bankName": "Saltmarsh Federal Bank",
+    "accountNumber": "609311472285",
+    "accountLabel": "Account number",
+    "routingOrSwift": "142857369",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [
+    "Halvorsen & Pike LLP · EIN 29-1186543"
+  ],
+  "templateData": {
+    "customerId": "Matter 2026-0412",
+    "plan": "Engagement letter EL-2026-31 · flat fee",
+    "heroNote": "Thank you for trusting Halvorsen & Pike.",
+    "paymentSubtitle": "Wire to our IOLTA trust account · USD"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura H&P-24117 de Halvorsen & Pike LLP: USD 3.800,00. Pago a Saltmarsh Federal Bank, Account number 609311472285."
+}

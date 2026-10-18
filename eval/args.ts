@@ -18,7 +18,7 @@ export const USAGE = `Uso: tsx eval/run.ts [--reader=simulated|cache|live] [--pr
   --profile      perfil de lectura de cache y live (por defecto READER_PROFILE, o economico):
                  economico = Haiku 5.5 (prompt a) + Haiku 5.5 (prompt b);
                  calidad = Sonnet 5.5 (prompt a) + Haiku 5.5 (prompt a).
-  --dataset      base (por defecto): dataset/ (41 casos) · stress: dataset/stress/ (2000 casos,
+  --dataset      base (por defecto): dataset/ (138 casos) · stress: dataset/stress/ (2000 casos,
                  se generan con npm run stress:generate). Caché: dataset/reading-cache o
                  dataset/stress/reading-cache.
   --split        train, holdout o all (por defecto).

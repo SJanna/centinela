@@ -1,0 +1,99 @@
+{
+  "id": "B111",
+  "about": "Prueba de penetración de pago único, USD 4.200 según la cotización",
+  "vendorId": "v-rauli",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-CL",
+  "documentType": "invoice",
+  "title": "FACTURA DE EXPORTACIÓN ELECTRÓNICA",
+  "brand": {
+    "color": "#1E293B",
+    "accent": "#F87171",
+    "logo": "check",
+    "initials": "RC",
+    "wordmark": "Raulí",
+    "tagline": "Ciberseguridad"
+  },
+  "vendor": {
+    "name": "Raulí Ciberseguridad SpA",
+    "taxIdLabel": "RUT",
+    "taxId": "77.563.209-4",
+    "address": [
+      "Av. Apoquindo 4499, Piso 9",
+      "Las Condes, Santiago",
+      "Chile"
+    ],
+    "email": "contacto@rauli.cl",
+    "phone": "+56 2 2840 5531"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "1207",
+  "issueDate": "2026-10-16",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-31",
+  "servicePeriod": null,
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Prueba de penetración de la app y la API – valor único",
+      "detail": null,
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 4200,
+      "amount": 4200
+    }
+  ],
+  "subtotal": 4200,
+  "tax": {
+    "label": "IVA exento (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 4200,
+  "payment": {
+    "beneficiaryName": "Raulí Ciberseguridad SpA",
+    "bankName": "Banco Quillay",
+    "accountNumber": "07-301-58826-13",
+    "accountLabel": "Cuenta corriente N°",
+    "routingOrSwift": "QXQUCLRM",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Timbre Electrónico SII · Res. 80 de 2014 · Documento tributario electrónico.",
+    "Raulí Ciberseguridad SpA · Giro: servicios de tecnología y consultoría."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Timbre Electrónico SII",
+    "subtitle": "S.I.I. – LAS CONDES",
+    "reference": "COT-2026-058",
+    "referenceLabel": "COTIZACIÓN"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura 1207 de Raulí Ciberseguridad SpA: USD 4.200,00. Pago a Banco Quillay, Cuenta corriente N° 07-301-58826-13."
+}

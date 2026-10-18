@@ -1,0 +1,97 @@
+{
+  "id": "B73",
+  "about": "Captura del portal: página de estado de septiembre USD 79",
+  "vendorId": "v-tidewell",
+  "format": "png",
+  "template": "portal",
+  "language": "en",
+  "locale": "en-US",
+  "documentType": "invoice",
+  "title": "Invoice",
+  "brand": {
+    "color": "#0369A1",
+    "accent": "#7DD3FC",
+    "logo": "dots",
+    "initials": null,
+    "wordmark": "Tidewell",
+    "tagline": "Status pages & uptime"
+  },
+  "vendor": {
+    "name": "Tidewell Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "09-5528163",
+    "address": [
+      "420 Dauphine St",
+      "New Orleans, LA 70112",
+      "United States"
+    ],
+    "email": "billing@tidewell.app",
+    "phone": null
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "TW-1909",
+  "issueDate": "2026-09-01",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-09-16",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "Startup plan – status page and uptime checks",
+      "detail": "September 2026 service",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 79,
+      "amount": 79
+    }
+  ],
+  "subtotal": 79,
+  "tax": {
+    "label": "Sales tax (0%)",
+    "amount": 0
+  },
+  "total": 79,
+  "payment": {
+    "beneficiaryName": "Tidewell Inc.",
+    "bankName": "Tallgrass Commerce Bank",
+    "accountNumber": "305517628841",
+    "accountLabel": "Account number",
+    "routingOrSwift": "318402765",
+    "routingLabel": "ABA routing number"
+  },
+  "notes": [
+    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+  ],
+  "legal": [],
+  "templateData": {
+    "url": "app.tidewell.app/billing/TW-1909",
+    "plan": "Startup · monthly",
+    "status": "Open",
+    "paymentTitle": "Pay by bank transfer",
+    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "helpText": "Questions about this invoice?"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "Captura de pantalla. Factura TW-1909 de Tidewell Inc. por septiembre de 2026: USD 79,00. Pago a Tallgrass Commerce Bank, Account number 305517628841."
+}

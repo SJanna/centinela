@@ -1,0 +1,95 @@
+{
+  "id": "B67",
+  "about": "Factura E de exportación de una monotributista por USD 3.200 (septiembre), con «USD» junto al total",
+  "vendorId": "v-ferraro",
+  "format": "pdf",
+  "template": "latam",
+  "language": "es",
+  "locale": "es-AR",
+  "documentType": "invoice",
+  "title": "FACTURA E",
+  "brand": {
+    "color": "#0E7490",
+    "accent": "#A5F3FC",
+    "logo": "monogram",
+    "initials": "JF",
+    "wordmark": "Julieta Ferraro",
+    "tagline": "Desarrollo frontend"
+  },
+  "vendor": {
+    "name": "Julieta Ferraro",
+    "taxIdLabel": "CUIT",
+    "taxId": "27-34871256-0",
+    "address": [
+      "Av. Corrientes 4120, Piso 6 «B»",
+      "C1194AAU Ciudad Autónoma de Buenos Aires",
+      "Argentina"
+    ],
+    "email": "julieta.ferraro.dev@correo.com.ar",
+    "phone": "+54 9 11 5320 7741"
+  },
+  "customer": {
+    "name": "Andes Labs Inc.",
+    "taxIdLabel": "EIN",
+    "taxId": "93-4127765",
+    "address": [
+      "1450 Brandywine Pkwy, Suite 300",
+      "Wilmington, DE 19803",
+      "Estados Unidos"
+    ],
+    "email": "pagos@andeslabs.dev",
+    "phone": null
+  },
+  "invoiceNumber": "00002-00000038",
+  "issueDate": "2026-09-30",
+  "issuePlace": null,
+  "issueTime": null,
+  "dueDate": "2026-10-15",
+  "servicePeriod": "2026-09",
+  "currency": "USD",
+  "paymentTerms": "Transferencia 15 días",
+  "lines": [
+    {
+      "description": "Desarrollo frontend – honorarios mensuales en dólares",
+      "detail": "Servicio de septiembre de 2026",
+      "quantity": 1,
+      "unit": null,
+      "unitPrice": 3200,
+      "amount": 3200
+    }
+  ],
+  "subtotal": 3200,
+  "tax": {
+    "label": "IVA 0 % (exportación de servicios)",
+    "amount": 0
+  },
+  "total": 3200,
+  "payment": {
+    "beneficiaryName": "Julieta Ferraro",
+    "bankName": "Banco Ñandú",
+    "accountNumber": "4250013820000417735126",
+    "accountLabel": "CBU",
+    "routingOrSwift": "QXNDARBA",
+    "routingLabel": "SWIFT"
+  },
+  "notes": [
+    "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
+  ],
+  "legal": [
+    "Comprobante autorizado · CAE N° 00815140714870 · Vto. CAE: 30 días desde la emisión."
+  ],
+  "templateData": {
+    "code": "barcode",
+    "barcodeCaption": "Comprobante autorizado AFIP"
+  },
+  "visibleNote": null,
+  "hiddenText": null,
+  "blurTotal": false,
+  "photo": null,
+  "emailMeta": null,
+  "attachment": null,
+  "chatMessages": null,
+  "evidence": null,
+  "embeddedInstructions": [],
+  "readerNotes": "PDF. Factura 00002-00000038 de Julieta Ferraro por septiembre de 2026: USD 3.200,00. Pago a Banco Ñandú, CBU 4250013820000417735126."
+}

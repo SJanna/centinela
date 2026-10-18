@@ -576,7 +576,8 @@ describe("fechas", () => {
 
   it("zona horaria en el límite del mes: un pago del 1 de noviembre UTC cuenta para el mes de un `now` del 31 de octubre en -05:00", () => {
     const history = [paid({ vendorId: "v-otro", invoiceNumber: "X-1", agreementId: "a-otro", agreementPeriod: "2026-11", amountUsd: 24_000, decidedAt: "2026-11-01T01:00:00Z" })];
-    const d = run({ primary: reading(), history, now: "2026-10-31T20:30:00-05:00" });
+    // Límite fijo de USD 25.000 (el de la empresa del dataset puede cambiar): 24.000 + 1.200 lo supera.
+    const d = run({ primary: reading(), history, now: "2026-10-31T20:30:00-05:00", rules: { periodLimitUsd: 25_000 } });
     expectNoPayment(d, "LIM-2");
   });
 
