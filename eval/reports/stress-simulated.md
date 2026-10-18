@@ -1,8 +1,8 @@
 # Banco de pruebas · set de estrés
 
-- Fecha: 2026-10-18T07:29:13.521Z
+- Fecha: 2026-10-18T08:48:58.933Z
 - Lector: simulado (lectura «perfecta» del manifiesto: prueba la lógica de decisión, no la lectura)
-- Modelos: simulado · versión del prompt: v5
+- Modelos: simulado · versión del prompt: v6
 - Casos: 2000 · split: all · escenarios en paralelo: 8
 - Intervalos: Clopper-Pearson al 95 % entre corchetes. La etiqueta de cada factura sale de su receta (dataset/stress/plan.ts), no del motor.
 

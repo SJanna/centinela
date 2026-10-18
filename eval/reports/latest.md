@@ -1,9 +1,11 @@
 # Banco de pruebas · Centinela
 
-- Fecha: 2026-10-18T07:29:07.275Z
-- Lector: simulado (lectura «perfecta» del manifiesto: prueba la lógica de decisión, no mide la calidad de lectura)
+- Fecha: 2026-10-18T08:48:59.935Z
+- Lector: caché (lecturas guardadas de los modelos en dataset/reading-cache; sin llamadas a la API)
 - Casos: todos
-- Versión del prompt: v5 · Modelos: simulado
+- Versión del prompt: v6 + v6b · Modelos: claude-haiku-5-5
+- Perfil de lectura: economico · lector-a: claude-haiku-5-5 (prompt v6) · lector-b: claude-haiku-5-5 (prompt v6b)
+- Lecturas que no estaban en la caché: 0
 
 ## Resumen
 
