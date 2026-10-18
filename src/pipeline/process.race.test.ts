@@ -9,7 +9,7 @@
  */
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DecisionRecord, HistoryEntry } from "../core/schemas";
-import { exportDecisions, resetDbForTests } from "../store";
+import { exportDecisions, getCompany, resetDbForTests, saveRules } from "../store";
 import { readSample, resetDemo } from "./demo";
 import { processInvoice } from "./process";
 
@@ -138,6 +138,60 @@ describe("processInvoice · pago doble entre instancias", () => {
       [other.result().id, "PAGAR"],
       [mine.id, "ESCALAR"],
     ]);
+  });
+
+  it("otra factura que entra mientras se decide y juntas pasan el límite del mes: la base rechaza el PAGAR y al volver a decidir se escala por LIM-2", async () => {
+    // B01 (COP 12.000.000 ≈ USD 3.000) y B02 (USD 1.200): cada una cabe en USD 4.000, juntas no.
+    const company = (await getCompany())!;
+    await saveRules({ ...company.rules, periodLimitUsd: 4000 });
+    const other = otherInstanceProcesses("B01");
+    const mine = await processInvoice(await sampleInput("B02"), { now: NOW, mode: "simulated" });
+
+    expect(other.result().decision.outcome).toBe("PAGAR");
+    expect(mine.decision.outcome).toBe("ESCALAR");
+    expect(statusOf(mine, "LIM-2")).toBe("fail");
+    expect(race.reads).toBe(3);
+    const paid = (await exportDecisions()).filter((r) => r.decision.outcome === "PAGAR");
+    expect(paid.map((r) => r.id)).toEqual([other.result().id]);
+  });
+
+  it("otra factura que entra mientras se decide y juntas pasan el fondo: se frena por FON-1", async () => {
+    const company = (await getCompany())!;
+    await saveRules({ ...company.rules, initialFundUsd: 4000 });
+    const other = otherInstanceProcesses("B01");
+    const mine = await processInvoice(await sampleInput("B02"), { now: NOW, mode: "simulated" });
+
+    expect(other.result().decision.outcome).toBe("PAGAR");
+    expect(mine.decision.outcome).toBe("FRENAR");
+    expect(statusOf(mine, "FON-1")).toBe("fail");
+    expect((await exportDecisions()).filter((r) => r.decision.outcome === "PAGAR")).toHaveLength(1);
+  });
+
+  it("si entra otro pago y el historial nunca se entera, registra ESCALAR con LIM-2 y FON-1 sin evaluar", async () => {
+    race.frozenHistory = [];
+    const other = otherInstanceProcesses("B01");
+    const mine = await processInvoice(await sampleInput("B02"), { now: NOW, mode: "simulated" });
+
+    expect(other.result().decision.outcome).toBe("PAGAR");
+    expect(mine.decision.outcome).toBe("ESCALAR");
+    expect(mine.decision.guardOverride).toBe(false);
+    expect(mine.decision.summary).toBe(
+      "Se escala a una persona: mientras se decidía se registraron otros pagos y no se pudo confirmar el límite del mes ni el fondo.",
+    );
+    expect(mine.decision.checks.filter((c) => c.status !== "pass").map((c) => c.code)).toEqual(["LIM-2", "FON-1"]);
+    expect(mine.decision.checks.find((c) => c.code === "LIM-2")!.explanation).toMatch(/pagos registrados mientras se decidía/);
+    const exported = await exportDecisions();
+    expect(exported.map((r) => [r.id, r.decision.outcome])).toEqual([
+      [other.result().id, "PAGAR"],
+      [mine.id, "ESCALAR"],
+    ]);
+  });
+
+  it("dos facturas distintas sin carrera se pagan las dos (la condición no estorba)", async () => {
+    const a = await processInvoice(await sampleInput("B01"), { now: NOW, mode: "simulated" });
+    const b = await processInvoice(await sampleInput("B02"), { now: NOW, mode: "simulated" });
+    expect([a.decision.outcome, b.decision.outcome]).toEqual(["PAGAR", "PAGAR"]);
+    expect(race.reads).toBe(2);
   });
 
   it("sin carrera no hay reintento", async () => {

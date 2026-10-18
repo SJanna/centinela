@@ -182,7 +182,7 @@ Veredicto de la revisión: el proyecto cumple el reto y cuenta como agente, pero
 
 ## Riesgos conocidos (decisiones conscientes, documentadas)
 
-- **Límite mensual y fondo entre instancias de Vercel.** Los duplicados están protegidos en la base con índices únicos. El límite del mes y el fondo dependen de un candado por proceso: dos personas subiendo a la vez en dos instancias distintas podrían, en teoría, pasarse del límite. La interfaz sube de a una factura. Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
+- ~~**Límite mensual y fondo entre instancias de Vercel.**~~ Cerrado: la base solo inserta un PAGAR si el registro tiene los mismos pagos que el historial con que se decidió (candado de transacción + inserción condicional). Ver [ARCHITECTURE.md](ARCHITECTURE.md#pago-doble-entre-instancias).
 - **«Reiniciar demo» borra el registro.** Es una función de demo. Después de reiniciar, la misma factura se puede volver a pagar.
 - **Autonomía en el escenario base: 52 %.** Es baja a propósito: 11 de las 23 facturas son trampas que deben escalarse. El escenario «reservado» y facturas normales adicionales la suben. Si quieren que el video muestre más autonomía, agreguen casos normales al set.
 - **Texto extraído de títulos con letras espaciadas** sale unido («TOTALAPAGAR») en la pestaña «Texto extraído». No afecta decisiones.

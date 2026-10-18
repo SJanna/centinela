@@ -6,18 +6,21 @@
  * los duplicados dependen del historial, así que dos facturas simultáneas no pueden decidirse sobre
  * el mismo historial.
  *
- * Entre procesos (p. ej. dos instancias en Vercel) el candado no alcanza: la base rechaza un segundo
- * pago equivalente (claves de pago con índice único, ver src/store/payment-keys.ts) y aquí se vuelve
- * a decidir una vez con el historial fresco. El límite del mes y el fondo NO tienen esa protección.
+ * Entre procesos (p. ej. dos instancias en Vercel) el candado no alcanza, así que la base protege el
+ * PAGAR de dos formas y aquí se vuelve a decidir una vez con el historial fresco:
+ * - rechaza un segundo pago equivalente (claves de pago con índice único, ver src/store/payment-keys.ts);
+ * - solo inserta un PAGAR si el registro tiene los mismos pagos que el historial con que se decidió
+ *   (candado de transacción, ver `appendPaymentIfUnchanged` en src/store/repo.ts): así el límite del
+ *   mes (LIM-2) y el fondo (FON-1) siempre se calculan con todos los pagos.
  */
 import { AsyncLocalStorage } from "node:async_hooks";
 import packageJson from "../../package.json";
 import type { Decision, DecisionRecord, ReaderResult } from "../core/schemas";
 import { normalizeFile } from "../ingest";
 import { PROMPT_VERSION, readInvoice } from "../extract";
-import { appendDecision, getHistory, isDuplicatePaymentError, saveInvoice } from "../store";
+import { appendDecision, getHistory, isDuplicatePaymentError, isPaymentHistoryChangedError, saveInvoice } from "../store";
 import { ensureCompany } from "./company";
-import { escalateDuplicatePayment } from "./duplicate-payment";
+import { escalateDuplicatePayment, escalatePaymentHistoryChanged } from "./duplicate-payment";
 import { decideWithGuard } from "./guard-apply";
 import { getReaders, type ReaderPair } from "./readers";
 import { readingMode, type ReadingMode } from "./status";
@@ -117,8 +120,10 @@ function recordReadingMode(mode: ReadingMode, primary: ReaderResult, secondary: 
  * Procesa una factura y registra la decisión. Devuelve el registro guardado.
  *
  * Si la base rechaza el PAGAR porque otra instancia ya registró un pago equivalente
- * (DuplicatePaymentError), decide UNA vez más con el historial fresco (que ya incluye ese pago: el
- * motor frena por duplicado). Si la base vuelve a rechazarlo, registra ESCALAR con la explicación.
+ * (DuplicatePaymentError) u otro pago cualquiera después de leer el historial
+ * (PaymentHistoryChangedError), decide UNA vez más con el historial fresco (que ya incluye ese pago:
+ * el motor frena por duplicado o recalcula el límite del mes y el fondo). Si la base vuelve a
+ * rechazarlo, registra ESCALAR con la explicación.
  * @throws IngestError (mensaje en español) si el archivo no se puede leer; en ese caso no se guarda nada.
  */
 export function processInvoice(input: ProcessInput, opts: ProcessOptions = {}): Promise<DecisionRecord> {
@@ -142,7 +147,14 @@ async function processUnlocked(input: ProcessInput, opts: ProcessOptions): Promi
   const company = await ensureCompany();
   const now = opts.now ?? new Date().toISOString();
   const engineInput = { invoiceId, fileHash: doc.fileHash, reading };
-  const decideNow = async (): Promise<Decision> => decideWithGuard(engineInput, { company, history: await getHistory(), now });
+  /** Decide con el historial de ahora; `paymentsSeen` = cuántos PAGAR traía (la base lo exige igual al insertar). */
+  const decideNow = async (): Promise<{ decision: Decision; paymentsSeen: number }> => {
+    const history = await getHistory();
+    return {
+      decision: decideWithGuard(engineInput, { company, history, now }),
+      paymentsSeen: history.filter((h) => h.outcome === "PAGAR").length,
+    };
+  };
 
   const id = `dec_${shortId()}`;
   const recordFor = (decision: Decision): DecisionRecord => ({
@@ -162,22 +174,27 @@ async function processUnlocked(input: ProcessInput, opts: ProcessOptions): Promi
     readingMode: recordReadingMode(mode, reading.primary, reading.secondary),
   });
 
-  // Un rechazo por pago doble no guarda nada, así que el mismo id sirve para el siguiente intento.
-  const first = recordFor(await decideNow());
+  // Un rechazo de la base no guarda nada, así que el mismo id sirve para el siguiente intento.
+  const firstTry = await decideNow();
+  const first = recordFor(firstTry.decision);
   try {
-    await appendDecision(first);
+    await appendDecision(first, { paymentsSeen: firstTry.paymentsSeen });
     return first;
   } catch (err) {
-    if (!isDuplicatePaymentError(err)) throw err;
+    if (!isDuplicatePaymentError(err) && !isPaymentHistoryChangedError(err)) throw err;
   }
 
-  const retry = recordFor(await decideNow());
+  const retryTry = await decideNow();
+  const retry = recordFor(retryTry.decision);
   try {
-    await appendDecision(retry);
+    await appendDecision(retry, { paymentsSeen: retryTry.paymentsSeen });
     return retry;
   } catch (err) {
-    if (!isDuplicatePaymentError(err)) throw err;
-    const escalated = recordFor(escalateDuplicatePayment(retry.decision, err));
+    let escalatedDecision: Decision;
+    if (isDuplicatePaymentError(err)) escalatedDecision = escalateDuplicatePayment(retry.decision, err);
+    else if (isPaymentHistoryChangedError(err)) escalatedDecision = escalatePaymentHistoryChanged(retry.decision);
+    else throw err;
+    const escalated = recordFor(escalatedDecision);
     await appendDecision(escalated);
     return escalated;
   }
