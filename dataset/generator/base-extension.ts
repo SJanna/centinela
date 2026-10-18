@@ -162,7 +162,7 @@ const NEW_VENDORS: NewVendor[] = [
     emailDomain: "halvorsenpike.law", contacts: ["Ingrid Halvorsen"], ...US_ACCOUNT,
     concept: tri("SAFE round documents and board minutes – flat fee", "Documentos de la ronda SAFE y actas del directorio – honorario fijo", "Documentos da rodada SAFE e atas do conselho – honorário fixo"),
     titles: US_TITLES, city: "Wilmington", signer: { name: "Ingrid Halvorsen", role: "Partner – Halvorsen & Pike LLP" },
-    saas: { plan: "Engagement letter EL-2026-31 · flat fee", heroNote: "Thank you for trusting Halvorsen & Pike.", paymentSubtitle: "Wire to our IOLTA trust account · USD", customerId: "Matter 2026-0412", url: "billing.halvorsenpike.law" },
+    saas: { plan: "Engagement letter EL-2026-31 · flat fee", heroNote: "Thank you for trusting Halvorsen & Pike.", paymentSubtitle: "Wire to our operating account · USD", customerId: "Matter 2026-0412", url: "billing.halvorsenpike.law" },
   },
   {
     id: "v-tidewell", country: "US", locale: "en-US", languages: ["en"], templates: ["portal", "saas"],
@@ -412,6 +412,8 @@ interface Inv extends Row {
   emailDomain?: string;
   customer?: Party;
   hiddenText?: string;
+  /** Borrador sin timbrar: el CFDI todavía no tiene folio fiscal. */
+  unstamped?: boolean;
   photo?: Partial<PhotoSpec>;
   templateData?: Record<string, string>;
   paymentTerms?: string | null;
@@ -496,7 +498,40 @@ function zeroTax(v: VendorProfile, lang: Lang): { label: string; amount: number 
   return { label: COUNTRY[v.country].zeroTax[lang], amount: 0 };
 }
 
-function legalOf(v: VendorProfile, x: NewVendor | undefined, number: string, party: Party): string[] {
+/**
+ * Pseudo-hash hexadecimal determinista que lee TODA la semilla (FNV-1a) y luego se extiende con un
+ * mezclador por bloque. `fakeHex` del set de estrés solo lee los primeros ceil(length/8) caracteres, así
+ * que dos facturas de un mismo proveedor salían con el mismo CUFE, UUID, CAE o código de verificación;
+ * aquí no se toca (los archivos del estrés tienen que quedar idénticos byte a byte).
+ */
+export function docHex(seed: string, length: number): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  let out = "";
+  for (let k = 1; out.length < length; k++) {
+    let x = (h ^ Math.imul(k, 0x9e3779b1)) >>> 0;
+    x = Math.imul(x ^ (x >>> 16), 0x85ebca6b) >>> 0;
+    x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0;
+    x = (x ^ (x >>> 16)) >>> 0;
+    out += x.toString(16).padStart(8, "0");
+  }
+  return out.slice(0, length);
+}
+
+/** Resolución DIAN de numeración: una por proveedor; la de los proveedores de siempre, la de B01 y B12. */
+const DIAN_RESOLUTION: Record<string, string> = { "v-camila": "18764061234567", "v-caribe": "18764059876543" };
+/** Régimen fiscal del CFDI: las personas físicas no tributan como personas morales. */
+const MX_REGIME: Record<string, string> = { "v-anaya": "612 Personas Físicas con Actividades Empresariales y Profesionales" };
+
+/**
+ * Leyendas fiscales de la extensión: el mismo texto que `legalFor` del set de estrés, pero cada documento
+ * con su propio identificador (CUFE, folio fiscal, CAE, resumen SUNAT), una resolución DIAN fija por
+ * proveedor y el régimen fiscal que le corresponde. Un borrador sin timbrar no tiene folio fiscal.
+ */
+function legalOf(v: VendorProfile, x: NewVendor | undefined, number: string, party: Party, unstamped: boolean): string[] {
   if (x?.country === "UY") {
     return [
       "Comprobante fiscal electrónico (e-Factura de exportación). Puede verificar su validez en el sitio de la DGI con el RUT del emisor, la serie y el número.",
@@ -504,7 +539,43 @@ function legalOf(v: VendorProfile, x: NewVendor | undefined, number: string, par
     ];
   }
   const prefix = number.replace(/[^A-Z].*$/, "") || "FE";
-  return legalFor(v.country, { number, vendor: party.name, taxId: party.taxId, prefix });
+  const hash = docHex(`${number}|${party.name}`, 96);
+  switch (v.country) {
+    case "CO": {
+      const resolution = DIAN_RESOLUTION[v.key] ?? `1876406${docHex(v.key, 24).replace(/\D/g, "").slice(0, 7).padEnd(7, "0")}`;
+      return [
+        `Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° ${resolution} del 15/01/2026, prefijo ${prefix}, rango 1001 a 5000, vigencia 24 meses.`,
+        `CUFE: ${hash}`,
+      ];
+    }
+    case "MX": {
+      const u = hash.slice(0, 32).toUpperCase();
+      const regime = MX_REGIME[v.key] ?? "601 General de Ley Personas Morales";
+      return [
+        `Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal ${regime} · Uso del CFDI: S01 Sin efectos fiscales.`,
+        unstamped
+          ? "Folio fiscal (UUID): pendiente de timbrado."
+          : `Folio fiscal (UUID): ${u.slice(0, 8)}-${u.slice(8, 12)}-${u.slice(12, 16)}-${u.slice(16, 20)}-${u.slice(20, 32)}`,
+      ];
+    }
+    case "PE":
+      return [
+        "Representación impresa de la Factura Electrónica. Consulte su validez en el portal de la SUNAT con el RUC del emisor, la serie y el número.",
+        `Resumen: ${Buffer.from(hash.slice(0, 20), "hex").toString("base64")}`,
+      ];
+    case "AR":
+      return [`Comprobante autorizado · CAE N° ${hash.replace(/\D/g, "").slice(0, 14).padEnd(14, "7")} · Vto. CAE: 30 días desde la emisión.`];
+    default:
+      // Chile, Brasil y EE. UU.: sus leyendas no llevan identificador por documento.
+      return legalFor(v.country, { number, vendor: party.name, taxId: party.taxId, prefix });
+  }
+}
+
+/** Fecha RFC 5322 → «AAAAMMDDhhmmss» (para el Message-ID). */
+function stampOf(rfc: string): string {
+  const m = rfc.match(/(\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2})/);
+  if (!m) throw new Error(`Fecha de correo inesperada: ${rfc}`);
+  return `${m[3]}${String(MONTH_ABBR.indexOf(m[2]) + 1).padStart(2, "0")}${m[1].padStart(2, "0")}${m[4]}${m[5]}${m[6]}`;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -551,10 +622,11 @@ class Builder {
     const party = d.party ?? v.party;
     const title = d.title ?? (tpl ? (v.titles[tpl] ?? v.titles[docLang]) : v.titles[msgLang]) ?? "Factura";
     const documentType = d.documentType ?? (tpl === "cuenta_cobro" ? "cuenta_de_cobro" : "invoice");
-    const legal = tpl === "latam" || tpl === "saas" ? legalOf(v, x, d.number, party) : [];
-    const templateData = tpl
-      ? { ...v.templateData(tpl, { number: d.number, issueDate: d.issue, period: d.period, lang: docLang, currency: cur }), ...(d.templateData ?? {}) }
-      : {};
+    const legal = tpl === "latam" || tpl === "saas" ? legalOf(v, x, d.number, party, d.unstamped ?? false) : [];
+    const baseData: Record<string, string> = tpl ? v.templateData(tpl, { number: d.number, issueDate: d.issue, period: d.period, lang: docLang, currency: cur }) : {};
+    // Código de verificación de la NFS-e: uno por nota (el de `templateDataFor` se repetía por proveedor).
+    if (tpl === "nota_servico") baseData.verificationCode = docHex(`${d.number}|${party.name}`, 8).toUpperCase().replace(/(.{4})(.{4})/, "$1-$2");
+    const templateData = { ...baseData, ...(d.templateData ?? {}) };
     const payment: PaymentSpec | null =
       d.payment === undefined
         ? {
@@ -608,6 +680,9 @@ class Builder {
     if (spec.emailMeta) {
       const country = x?.country ?? v.country;
       spec.emailMeta.date = d.emailDate ?? rfc5322(d.issue, time, TZ[country]);
+      // Message-ID con el número de la factura y la hora de envío, como los de B03 y B20 (no el id del caso).
+      const local = d.number.replace(/[^A-Za-z0-9-]+/g, "-");
+      spec.emailMeta.messageId = `<${local}.${stampOf(spec.emailMeta.date)}@${v.emailDomain}>`;
       if (d.html) spec.emailMeta.html = d.html(spec.emailMeta.body);
     }
     if (d.chat) {
@@ -658,6 +733,7 @@ export function extensionDefs(): Def[] {
   const OCT = "2026-10";
   const JUL = "2026-07";
   const CARD_DECLINED = "Your card on file was declined for this billing period. Please pay this invoice by ACH or wire to the account below.";
+  const CARD_PAUSED = "Automatic card billing is paused on your account after a declined charge. Please pay this invoice by ACH or wire to the account below.";
   return [
     // ── Atraso de julio: SaaS cuyo cobro con tarjeta falló
     { id: "B24", v: "v-quillstack", as: "pdf", number: "QS-10482", issue: "2026-07-01", period: JUL, expected: "PAGAR",
@@ -671,7 +747,7 @@ export function extensionDefs(): Def[] {
     { id: "B28", v: "v-sablevault", as: "eml_body", number: "SV-260701", issue: "2026-07-03", period: JUL, expected: "PAGAR",
       about: "Factura de julio USD 96 (24 puestos × USD 4) en el cuerpo del correo, atrasada" },
     { id: "B29", v: "v-mosswire", as: "png", template: "saas", number: "MW-RC-30417", issue: "2026-07-03", period: JUL, due: null, expected: "ESCALAR", codes: ["LEC-1"],
-      about: "Captura de un «Payment receipt» de julio USD 375 que ya se cobró con tarjeta: no es un cobro",
+      about: "Recibo «Payment receipt» en PNG: julio USD 375 ya se cobró con tarjeta, no es un cobro",
       documentType: "receipt", title: "Payment receipt", payment: null, paymentTerms: null,
       notes: ["Payment received on July 3, 2026 — Visa ending 4417. Thank you! No action is needed."],
       templateData: { numberLabel: "Receipt number", amountLabel: "Amount paid", heroSuffix: "paid on July 3, 2026" },
@@ -688,7 +764,7 @@ export function extensionDefs(): Def[] {
       about: "CFDI de la membresía de agosto MXN 14.500, emitido el 28/08 dentro de la vigencia (el contrato terminó el 31/08)" },
     { id: "B34", v: "v-lanternbuild", as: "pdf", number: "LB-INV-7522", issue: "2026-08-01", period: AUG, expected: "PAGAR",
       about: "Plan Pro de CI/CD de agosto USD 650, atrasada" },
-    { id: "B35", v: "v-guadua", as: "pdf", number: "CGC-884", issue: "2026-08-01", period: AUG, expected: "PAGAR",
+    { id: "B35", v: "v-guadua", as: "pdf", number: "CGC-1884", issue: "2026-08-01", period: AUG, expected: "PAGAR",
       about: "Membresía de coworking de agosto COP 2.400.000, atrasada" },
     { id: "B36", v: "v-kestrel", as: "eml_attach", template: "saas", number: "KB-2026-0841", issue: "2026-08-01", period: AUG, expected: "PAGAR",
       about: "Correo con la factura PDF adjunta: plan Business de agosto USD 420, atrasada" },
@@ -699,7 +775,7 @@ export function extensionDefs(): Def[] {
     { id: "B39", v: "v-valentina", as: "pdf", template: "cuenta_cobro", number: "CC-0014", issue: "2026-08-31", period: AUG, expected: "PAGAR",
       about: "Cuenta de cobro de agosto COP 9.600.000 (persona natural), atrasada" },
     { id: "B40", v: "v-mosswire", as: "pdf", number: "MW-2026-0856", issue: "2026-08-01", period: AUG, expected: "PAGAR",
-      about: "Plan Organization de agosto USD 375, atrasada" },
+      about: "Plan Organization de agosto USD 375, atrasada: el cobro con tarjeta de agosto falló (julio sí se cobró, B29)", notes: [CARD_DECLINED] },
     { id: "B41", v: "v-lucuma", as: "pdf", number: "E001-000097", issue: "2026-08-31", period: AUG, hours: 30, expected: "PAGAR",
       about: "Traducción de agosto: 30 h × PEN 95 = PEN 2.850, atrasada" },
     { id: "B42", v: "v-tidewell", as: "png", template: "portal", number: "TW-1808", issue: "2026-08-01", period: AUG, expected: "PAGAR",
@@ -711,7 +787,7 @@ export function extensionDefs(): Def[] {
 
     // ── Septiembre: proveedores de siempre que no se pagaron a tiempo
     { id: "B45", v: "v-testa", as: "pdf", template: "nota_servico", number: "00004102", issue: "2026-09-30", period: SEP, expected: "PAGAR",
-      about: "NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, pagada con atraso" },
+      about: "NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, que se paga con atraso" },
     { id: "B46", v: "v-pampa", as: "txt", number: "0003-00000866", issue: "2026-09-29", period: SEP, expected: "PAGAR",
       about: "Cobro de septiembre USD 2.800 por chat, que llegó tarde (otro número que B05)" },
     { id: "B47", v: "v-nopal", as: "pdf", template: "latam", number: "A-312", issue: "2026-09-30", period: SEP, hours: 52, expected: "PAGAR",
@@ -726,13 +802,13 @@ export function extensionDefs(): Def[] {
     { id: "B50", v: "v-inca", as: "jpg", template: "latam", number: "F001-000238", issue: "2026-09-28", period: SEP, expected: "PAGAR",
       photo: { angle: -1.8, surface: "wood", blur: 0.5, quality: 78 },
       about: "Foto de celular, nítida, de la factura de septiembre PEN 6.000 a la cuenta registrada" },
-    { id: "B51", v: "v-caribe", as: "jpg", template: "cuenta_cobro", number: "CCB-2198", issue: "2026-09-30", period: SEP, hours: 120, expected: "PAGAR",
+    { id: "B51", v: "v-caribe", as: "jpg", template: "latam", number: "SC-2206", issue: "2026-09-30", period: SEP, hours: 120, expected: "PAGAR",
       photo: { angle: 2.6, surface: "desk", blur: 0.55, quality: 76, folded: true },
-      about: "Foto de la cuenta de cobro de septiembre: 120 h × COP 80.000 = COP 9.600.000" },
+      about: "Foto de la factura electrónica de septiembre: 120 h × COP 80.000 = COP 9.600.000 (cantidad y tarifa a la vista)" },
     { id: "B52", v: "v-cloudmetrics", as: "png", template: "portal", number: "CM-INV-2026-09-0391", issue: "2026-09-01", period: SEP, expected: "PAGAR",
       about: "Captura del portal: factura de septiembre USD 1.200 (otro número que B02)" },
     { id: "B53", v: "v-camila", as: "pdf", template: "latam", number: "CRD-1039", issue: "2026-09-30", period: SEP, expected: "PAGAR",
-      about: "Factura de septiembre COP 12.000.000 pagada con atraso (otro número que B01 y B06)" },
+      about: "Factura de septiembre COP 12.000.000 que se paga con atraso (otro número que B01 y B06)" },
 
     // ── Septiembre: proveedores nuevos
     { id: "B54", v: "v-quillstack", as: "pdf", number: "QS-10953", issue: "2026-09-01", period: SEP, expected: "PAGAR",
@@ -740,13 +816,13 @@ export function extensionDefs(): Def[] {
     { id: "B55", v: "v-heronpost", as: "png", template: "portal", number: "HP-2026-09-2581", issue: "2026-09-01", period: SEP, expected: "PAGAR",
       about: "Captura del portal: factura de septiembre USD 89" },
     { id: "B56", v: "v-kestrel", as: "pdf", number: "KB-2026-0967", issue: "2026-09-30", period: SEP, expected: "PAGAR",
-      about: "Plan Business de septiembre USD 423,50: un puesto extra prorrateado (USD 3,50), 0,83 % sobre lo pactado, dentro de la tolerancia del 1 %",
+      about: "Plan Business de septiembre USD 423: un puesto extra prorrateado del 28 al 30 (USD 3), 0,71 % sobre lo pactado, dentro de la tolerancia del 1 %",
       lines: [
         { description: "Business plan – project management", detail: "September 2026 service", quantity: 14, unit: "seats", unitPrice: 30, amount: 420 },
-        { description: "Additional seat – prorated (Sep 27–30)", detail: null, quantity: 1, unit: null, unitPrice: 3.5, amount: 3.5 },
+        { description: "Additional seat – prorated (Sep 28–30)", detail: null, quantity: 1, unit: null, unitPrice: 3, amount: 3 },
       ] },
     { id: "B57", v: "v-mosswire", as: "pdf", number: "MW-2026-0912", issue: "2026-09-01", period: SEP, expected: "PAGAR",
-      about: "Plan Organization de septiembre USD 375" },
+      about: "Plan Organization de septiembre USD 375, por transferencia (el cobro con tarjeta sigue suspendido)", notes: [CARD_PAUSED] },
     { id: "B58", v: "v-lanternbuild", as: "pdf", number: "LB-INV-7745", issue: "2026-09-01", period: SEP, expected: "PAGAR",
       about: "Plan Pro de CI/CD de septiembre USD 650" },
     { id: "B59", v: "v-sablevault", as: "pdf", number: "SV-260901", issue: "2026-09-01", period: SEP, expected: "PAGAR",
@@ -755,11 +831,11 @@ export function extensionDefs(): Def[] {
       about: "Capacidad de cómputo reservada de septiembre USD 3.400" },
     { id: "B61", v: "v-marlowe", as: "eml_attach", template: "saas", number: "MTP-0926", issue: "2026-09-30", period: SEP, expected: "PAGAR",
       about: "Correo con el PDF adjunto: contabilidad de septiembre USD 1.450" },
-    { id: "B62", v: "v-guadua", as: "eml_attach", template: "latam", number: "CGC-912", issue: "2026-09-01", period: SEP, expected: "PAGAR",
+    { id: "B62", v: "v-guadua", as: "eml_attach", template: "latam", number: "CGC-1912", issue: "2026-09-01", period: SEP, expected: "PAGAR",
       about: "Correo con el PDF adjunto: membresía de coworking de septiembre COP 2.400.000" },
     { id: "B63", v: "v-valentina", as: "pdf", template: "cuenta_cobro", number: "CC-0015", issue: "2026-09-30", period: SEP, expected: "PAGAR",
       about: "Cuenta de cobro de septiembre COP 9.600.000" },
-    { id: "B64", v: "v-mochila", as: "pdf", number: "MG-2026-117", issue: "2026-09-25", period: SEP, expected: "PAGAR",
+    { id: "B64", v: "v-mochila", as: "pdf", number: "MG-1117", issue: "2026-09-25", period: SEP, expected: "PAGAR",
       about: "Fee mensual de marketing de crecimiento de septiembre COP 14.000.000" },
     { id: "B65", v: "v-ajolote", as: "pdf", number: "AJ-0398", issue: "2026-09-29", period: SEP, expected: "PAGAR",
       about: "CFDI de septiembre por el desarrollo de la app móvil, MXN 68.000" },
@@ -813,7 +889,8 @@ export function extensionDefs(): Def[] {
       about: "Factura de octubre corregida a USD 420 (el precio del acuerdo), otro número",
       notes: ["Corrected invoice: your plan stays at the agreed $30 per seat. Please pay by ACH or wire to the account below."] },
     { id: "B84", v: "v-mosswire", as: "png", template: "portal", number: "MW-2026-1004", issue: "2026-10-01", period: OCT, expected: "PAGAR",
-      about: "Captura del portal: factura de octubre USD 375" },
+      about: "Captura del portal: factura de octubre USD 375, por transferencia (cobro con tarjeta suspendido)",
+      templateData: { paymentSubtitle: "Card billing paused · ACH or domestic wire · USD only" } },
     { id: "B85", v: "v-lanternbuild", as: "pdf", number: "LB-INV-7961", issue: "2026-10-01", period: OCT, expected: "PAGAR",
       about: "Plan Pro de CI/CD de octubre USD 650" },
     { id: "B86", v: "v-lanternbuild", vendorId: null, as: "pdf", number: "LB-INV-7963", issue: "2026-10-09", period: OCT, expected: "ESCALAR", codes: ["PRV-1"],
@@ -849,9 +926,9 @@ export function extensionDefs(): Def[] {
       about: "Honorarios de pago único: documentos de la ronda SAFE y actas del directorio, USD 3.800" },
     { id: "B94", v: "v-halvorsen", as: "eml_attach", template: "saas", number: "H&P-24163", issue: "2026-10-13", period: null, expected: "FRENAR", codes: ["DUP-3"],
       about: "Correo con el PDF adjunto: el mismo encargo de pago único facturado otra vez con otro número" },
-    { id: "B95", v: "v-guadua", as: "pdf", number: "CGC-941", issue: "2026-10-01", period: OCT, expected: "PAGAR",
+    { id: "B95", v: "v-guadua", as: "pdf", number: "CGC-1941", issue: "2026-10-01", period: OCT, expected: "PAGAR",
       about: "Membresía de coworking de octubre COP 2.400.000" },
-    { id: "B96", v: "v-guadua", as: "pdf", number: "CGC-947", issue: "2026-10-09", period: OCT, expected: "FRENAR", codes: ["DUP-3"],
+    { id: "B96", v: "v-guadua", as: "pdf", number: "CGC-1947", issue: "2026-10-09", period: OCT, expected: "FRENAR", codes: ["DUP-3"],
       about: "Segunda factura de la membresía de octubre, reexpedida con otro número y el mismo monto" },
     { id: "B97", v: "v-valentina", photoOf: "B98", expected: "ESCALAR", codes: ["LEC-1"],
       photo: { angle: -3.4, surface: "fabric", blur: 3, quality: 55, seed: 9707, folded: false },
@@ -859,7 +936,7 @@ export function extensionDefs(): Def[] {
       readerNotes: "Foto de celular muy desenfocada de la cuenta de cobro CC-0016 de Valentina Ospina Gómez: COP 9.600.000 por octubre de 2026. Pago a la cuenta de ahorros Banco Guayacán 0384-2275-6610." },
     { id: "B98", v: "v-valentina", as: "pdf", template: "cuenta_cobro", number: "CC-0016", issue: "2026-10-05", period: OCT, expected: "PAGAR",
       about: "La misma cuenta de cobro de octubre en PDF, legible" },
-    { id: "B99", v: "v-mochila", as: "pdf", number: "MG-2026-131", issue: "2026-10-06", period: OCT, expected: "PAGAR",
+    { id: "B99", v: "v-mochila", as: "pdf", number: "MG-1131", issue: "2026-10-06", period: OCT, expected: "PAGAR",
       about: "Fee mensual de marketing de crecimiento de octubre COP 14.000.000" },
     { id: "B100", v: "v-ajolote", as: "pdf", number: "AJ-0411", issue: "2026-10-02", period: OCT, expected: "ESCALAR", codes: ["LEC-1"],
       about: "CFDI de octubre con el sello «ANULADA – sustituida por AJ-0412»",
@@ -873,14 +950,14 @@ export function extensionDefs(): Def[] {
     { id: "B103", v: "v-anaya", as: "jpg", number: "BOR-1007", issue: "2026-10-09", period: OCT, hours: 72, expected: "ESCALAR", codes: ["LEC-1"],
       about: "Foto de un «BORRADOR – sin timbrar» con las horas de octubre",
       documentType: "other", title: "BORRADOR DE FACTURA – SIN TIMBRAR",
-      notes: ["BORRADOR – sin timbrar. No válido como comprobante fiscal."],
+      notes: ["BORRADOR – sin timbrar. No válido como comprobante fiscal."], unstamped: true,
       photo: { angle: 1.4, surface: "wood", blur: 0.6, quality: 72 },
       readerExtra: "Es un borrador sin timbrar." },
     { id: "B104", v: "v-anaya", as: "pdf", number: "A-0153", issue: "2026-10-12", period: OCT, hours: 72, expected: "PAGAR",
       about: "CFDI timbrado de octubre: 72 h × MXN 750 = MXN 54.000" },
     { id: "B105", v: "v-anaya", as: "pdf", number: "A-0154", issue: "2026-10-15", period: OCT, hours: 72, expected: "FRENAR", codes: ["DUP-3"],
-      about: "CFDI de sustitución por cambio de uso: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",
-      notes: ["CFDI de sustitución por cambio de uso del CFDI (relación 04 con el folio A-0153). Forma de pago: transferencia bancaria."] },
+      about: "CFDI de sustitución por corrección de datos: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",
+      notes: ["CFDI de sustitución por corrección de datos del comprobante (relación 04 con el folio A-0153). Forma de pago: transferencia bancaria."] },
     { id: "B106", v: "v-jacaranda", as: "pdf", number: "PJ-6702", issue: "2026-10-05", period: OCT, expected: "ESCALAR", codes: ["ACU-1"],
       about: "Membresía de octubre MXN 14.500, pero el contrato terminó el 31/08" },
     { id: "B107", v: "v-ferraro", as: "txt", number: "00002-00000041", issue: "2026-10-14", period: OCT, expected: "ESCALAR", codes: ["ACU-2"],

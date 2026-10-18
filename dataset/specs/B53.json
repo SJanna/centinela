@@ -1,6 +1,6 @@
 {
   "id": "B53",
-  "about": "Factura de septiembre COP 12.000.000 pagada con atraso (otro número que B01 y B06)",
+  "about": "Factura de septiembre COP 12.000.000 que se paga con atraso (otro número que B01 y B06)",
   "vendorId": "v-camila",
   "format": "pdf",
   "template": "latam",
@@ -76,8 +76,8 @@
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066092549 del 15/01/2026, prefijo CRD, rango 1001 a 9999, vigencia 24 meses.",
-    "CUFE: c60bf9f254d9ddb071f8460dcad6cab3132130f9bc3f8a4dc306e6712bdc50f8a0d2da8f1eeeac89a8ba48d545406078"
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764061234567 del 15/01/2026, prefijo CRD, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 23b87eef8078652cd6052e8c2856897be9e2efa6e46b16827b98b0c69c50b2eefb20f123a34fd38b907501f92361649a"
   ],
   "templateData": {
     "code": "qr"

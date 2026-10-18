@@ -1,6 +1,6 @@
 {
   "id": "B40",
-  "about": "Plan Organization de agosto USD 375, atrasada",
+  "about": "Plan Organization de agosto USD 375, atrasada: el cobro con tarjeta de agosto falló (julio sí se cobró, B29)",
   "vendorId": "v-mosswire",
   "format": "pdf",
   "template": "saas",
@@ -73,7 +73,7 @@
     "routingLabel": "ABA routing number"
   },
   "notes": [
-    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+    "Your card on file was declined for this billing period. Please pay this invoice by ACH or wire to the account below."
   ],
   "legal": [
     "Mosswire Inc. · EIN 96-5503128"

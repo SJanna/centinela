@@ -1,6 +1,6 @@
 {
   "id": "B105",
-  "about": "CFDI de sustitución por cambio de uso: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",
+  "about": "CFDI de sustitución por corrección de datos: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",
   "vendorId": "v-anaya",
   "format": "pdf",
   "template": "latam",
@@ -73,11 +73,11 @@
     "routingLabel": "SWIFT"
   },
   "notes": [
-    "CFDI de sustitución por cambio de uso del CFDI (relación 04 con el folio A-0153). Forma de pago: transferencia bancaria."
+    "CFDI de sustitución por corrección de datos del comprobante (relación 04 con el folio A-0153). Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 601 General de Ley Personas Morales · Uso del CFDI: S01 Sin efectos fiscales.",
-    "Folio fiscal (UUID): C40BF6CC-80D5-A5C6-C454-3F1C389F6BF8"
+    "Este documento es una representación impresa de un CFDI 4.0 · Régimen fiscal 612 Personas Físicas con Actividades Empresariales y Profesionales · Uso del CFDI: S01 Sin efectos fiscales.",
+    "Folio fiscal (UUID): AF5A05B7-3342-CAE5-5AA7-4F6B47DA5305"
   ],
   "templateData": {
     "code": "qr",

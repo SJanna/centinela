@@ -86,16 +86,16 @@ describe("oráculo del dataset (lectura perfecta + reglas de company.json)", () 
     expect(results.get("M03")!.amountUsd).toBeCloseTo(1805, 6);
     expect(results.get("B12")!.amountUsd).toBeCloseTo(3400, 6);
     expect(results.get("H08")!.amountUsd).toBeCloseTo(1630.8, 6);
-    expect(results.get("B56")!.amountUsd).toBeCloseTo(423.5, 6);
+    expect(results.get("B56")!.amountUsd).toBeCloseTo(423, 6);
   });
 
-  it("el escenario base paga USD 128.081,90: el 85 % del límite del mes (USD 150.000) y nunca toca el fondo", () => {
+  it("el escenario base paga USD 128.081,40: el 85 % del límite del mes (USD 150.000) y nunca toca el fondo", () => {
     const base = rows.filter((r) => r.escenario === "base").map((r) => results.get(r.id)!);
     const paid = base.filter((r) => r.outcome === "PAGAR");
     const cents = paid.reduce((s, r) => s + Math.round((r.amountUsd ?? 0) * 100), 0);
     expect(base).toHaveLength(120);
     expect(paid).toHaveLength(82);
-    expect(cents).toBe(12_808_190);
+    expect(cents).toBe(12_808_140);
     expect(cents).toBeLessThan(company.rules.periodLimitUsd * 100 * 0.9);
     expect(base.some((r) => r.failing.includes("LIM-2") || r.failing.includes("FON-1"))).toBe(false);
     // Ningún pago supera el umbral de aprobación: las facturas que lo superan escalan (B11, B23).

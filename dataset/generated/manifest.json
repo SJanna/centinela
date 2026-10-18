@@ -2532,7 +2532,7 @@
   {
     "caseId": "B26",
     "file": "B26.eml",
-    "sha256": "2001100d40e437aab7510ee5a5777a0629227aded20c2c976d3fc5e9eabbf0ac",
+    "sha256": "097834cb5763e48965aec58a093862f98bc9f549b9181da31171256e962a5522",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -2734,7 +2734,7 @@
   {
     "caseId": "B28",
     "file": "B28.eml",
-    "sha256": "1a9ca1d5e52326bc7aa761954438d930054840ad6fa0b63cd68c60fade8c764f",
+    "sha256": "a9921fdd4283615e1edb67058e2986f36776cf03153083388fed4e33fa234db6",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -3239,7 +3239,7 @@
   {
     "caseId": "B33",
     "file": "B33.pdf",
-    "sha256": "59af915c0fb26183df416948c2be9f97d557263e8d452fd70e3eec1eebe33bd8",
+    "sha256": "9b0160fd326e82e5e9d6e002dc8052159e158120dc38c27ddd027e87759763f8",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -3441,7 +3441,7 @@
   {
     "caseId": "B35",
     "file": "B35.pdf",
-    "sha256": "99903d398349f4ef0b3211403bb56d805d321016632a3eedd384a2f08240f742",
+    "sha256": "c09ecc2b73002fa4f037bd0828608b5fc93c062626f462388aaccc5bc03cad05",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -3466,8 +3466,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "CGC-884",
-        "evidence": "N° CGC-884",
+        "value": "CGC-1884",
+        "evidence": "N° CGC-1884",
         "legible": true
       },
       "issueDate": {
@@ -3536,13 +3536,13 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura CGC-884 de Casa Guadua Coworking S.A.S. por agosto de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+      "readerNotes": "PDF. Factura CGC-1884 de Casa Guadua Coworking S.A.S. por agosto de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
     }
   },
   {
     "caseId": "B36",
     "file": "B36.eml",
-    "sha256": "e06cf1bcbd4dddfcbc4ae780695d76ac7743cae74c6cc215ed32c61d6623ea09",
+    "sha256": "e94c993026b65082399c1b838de65659c420f1c22baecf9f31d7f77eba57acdd",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -3643,7 +3643,7 @@
   {
     "caseId": "B37",
     "file": "B37.eml",
-    "sha256": "6d5b231097316510cfbceabd99a69f99f8a6b11d6b5e1d094d026edf36849ba6",
+    "sha256": "f0bc2480f0c68bc1c2a27ee7f9f330074f0b626933385a1fd492739cb7b9d31c",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -3744,7 +3744,7 @@
   {
     "caseId": "B38",
     "file": "B38.pdf",
-    "sha256": "52d080dfd33fe80b3d9d3b67c9985a02387151a51a498d19a2318fe47cdea65f",
+    "sha256": "7cadd8f76f77d73b266091a9de66ce7a42a2f6e97d0b59a670463018c3ea902c",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -3946,7 +3946,7 @@
   {
     "caseId": "B40",
     "file": "B40.pdf",
-    "sha256": "7f13a36b47f0b0721dcf676bcb612317451ff22f27787417c8d3cb8908dbfb79",
+    "sha256": "91db3e9c697fc38bd17643158166123025ecee163103b89914791ec68e25e4a2",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -4047,7 +4047,7 @@
   {
     "caseId": "B41",
     "file": "B41.pdf",
-    "sha256": "b2b9d683ca36007f376bd795ac6cabc99960315369e47f157d903323a5b8d97e",
+    "sha256": "7ce9b24b277b1a248115fcd46904a007eac07f9bf2420e14514cdd77c74edbc4",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -4350,7 +4350,7 @@
   {
     "caseId": "B44",
     "file": "B44.eml",
-    "sha256": "6216d1c3d1470f07a88507e158210ae00b25250c3a1e8d0fdb74bd39dfb17afb",
+    "sha256": "b43ed21b79e64833ed2b72d9aa06b43b201b616ec7fe9bf80af70517d9a039d5",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -4451,7 +4451,7 @@
   {
     "caseId": "B45",
     "file": "B45.pdf",
-    "sha256": "df31a5ff64f449bf72f7198969ece52f7585fb3691399a76dce7306e970b6ff8",
+    "sha256": "f0373569765dfc37cc0d46663a5f7a7cad3a421957821ed66698bfd1ebeb49b9",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -4653,7 +4653,7 @@
   {
     "caseId": "B47",
     "file": "B47.pdf",
-    "sha256": "d5177bf7c762cc8049f7ce606845ee2c628920f939a4e3d6a8e717de0e4e093b",
+    "sha256": "4c1c4e84d3884647ea1b1b2771ddce2bd430f040680a5988dee3c0a724d4e147",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -4754,7 +4754,7 @@
   {
     "caseId": "B48",
     "file": "B48.pdf",
-    "sha256": "e3341510d23a7340d287b0ff8ff94306b739b14f26d146d1e941c23a071c6b62",
+    "sha256": "249776ce10c96d9869794e401bcac3a24628dde7662a867ff38407874a36e7f2",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -4855,7 +4855,7 @@
   {
     "caseId": "B49",
     "file": "B49.eml",
-    "sha256": "26ccf286329b662d5e129fb9f934e97b68eb1e970310e0b4c61c52942d9c37cc",
+    "sha256": "473fe040cf64eee392df6980a7c6bf545084dbb2a54c2cf8504381e33dd829fe",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -4956,7 +4956,7 @@
   {
     "caseId": "B50",
     "file": "B50.jpg",
-    "sha256": "d1e481fb0538b93eec96139ec9aa2ac9798bc13628bed8df6d36929a8db96932",
+    "sha256": "156204685150eb5f2ea69f1a221cf02f77581984775cebe2d9ca8d933869acfa",
     "mediaType": "image/jpeg",
     "groundTruth": {
       "documentType": "invoice",
@@ -5057,10 +5057,10 @@
   {
     "caseId": "B51",
     "file": "B51.jpg",
-    "sha256": "2f4260eed44915189dd706b6061a1f7473d8023457d189024cc7a4fc10f79df5",
+    "sha256": "1dfa12bf65184d4933909d67b5a8413d7fcaf25271234f17e903fede20598467",
     "mediaType": "image/jpeg",
     "groundTruth": {
-      "documentType": "cuenta_de_cobro",
+      "documentType": "invoice",
       "vendorName": {
         "value": "Soporte Caribe S.A.S.",
         "evidence": "Soporte Caribe S.A.S.",
@@ -5072,8 +5072,8 @@
         "legible": true
       },
       "billToName": {
-        "value": "ANDES LABS INC.",
-        "evidence": "ANDES LABS INC.",
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
         "legible": true
       },
       "billToTaxId": {
@@ -5082,18 +5082,18 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "CCB-2198",
-        "evidence": "CUENTA DE COBRO N° CCB-2198",
+        "value": "SC-2206",
+        "evidence": "N° SC-2206",
         "legible": true
       },
       "issueDate": {
         "value": "2026-09-30",
-        "evidence": "Barranquilla, 30 de septiembre de 2026",
+        "evidence": "30/09/2026",
         "legible": true
       },
       "dueDate": {
         "value": "2026-10-15",
-        "evidence": "15 de octubre de 2026",
+        "evidence": "15/10/2026",
         "legible": true
       },
       "servicePeriod": {
@@ -5103,7 +5103,7 @@
       },
       "currency": {
         "value": "COP",
-        "evidence": "pesos colombianos (COP)",
+        "evidence": "COP",
         "legible": true
       },
       "subtotal": {
@@ -5118,7 +5118,7 @@
       },
       "total": {
         "value": 9600000,
-        "evidence": "Total a cobrar COP 9.600.000",
+        "evidence": "TOTAL A PAGAR COP 9.600.000",
         "legible": true
       },
       "lineItems": [
@@ -5152,7 +5152,7 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "Foto de celular del documento impreso. Cuenta de cobro CCB-2198 de Soporte Caribe S.A.S. por septiembre de 2026: COP 9.600.000. Pago a Davivienda, Cuenta de ahorros N° 0550-4881-2233."
+      "readerNotes": "Foto de celular del documento impreso. Factura SC-2206 de Soporte Caribe S.A.S. por septiembre de 2026: COP 9.600.000. Pago a Davivienda, Cuenta de ahorros N° 0550-4881-2233."
     }
   },
   {
@@ -5259,7 +5259,7 @@
   {
     "caseId": "B53",
     "file": "B53.pdf",
-    "sha256": "0b611c79a22e28f7aef04a2b99d47f3b367fe40517fba6a0cceb4eb32f0ad1e1",
+    "sha256": "3512f974024e3af731d48327e1f5ec173826ddfd2384c1bb8cfd9d0bac3c52ab",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -5562,7 +5562,7 @@
   {
     "caseId": "B56",
     "file": "B56.pdf",
-    "sha256": "93a2f67b559bef95816f13f66bf095047d970c1d37844d0c36a937a969d6a222",
+    "sha256": "2365ed396deec0766c3c2c8a0852d4ed074b8cd017e362fb06b772b9f3568e2d",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -5612,8 +5612,8 @@
         "legible": true
       },
       "subtotal": {
-        "value": 423.5,
-        "evidence": "$423.50",
+        "value": 423,
+        "evidence": "$423.00",
         "legible": true
       },
       "tax": {
@@ -5622,8 +5622,8 @@
         "legible": true
       },
       "total": {
-        "value": 423.5,
-        "evidence": "$423.50",
+        "value": 423,
+        "evidence": "$423.00",
         "legible": true
       },
       "lineItems": [
@@ -5634,10 +5634,10 @@
           "amount": 420
         },
         {
-          "description": "Additional seat – prorated (Sep 27–30)",
+          "description": "Additional seat – prorated (Sep 28–30)",
           "quantity": 1,
-          "unitPrice": 3.5,
-          "amount": 3.5
+          "unitPrice": 3,
+          "amount": 3
         }
       ],
       "payment": {
@@ -5663,13 +5663,13 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura KB-2026-0967 de Kestrelboard Inc. por septiembre de 2026: USD 423,50. Pago a Saltmarsh Federal Bank, Account number 510833269041."
+      "readerNotes": "PDF. Factura KB-2026-0967 de Kestrelboard Inc. por septiembre de 2026: USD 423,00. Pago a Saltmarsh Federal Bank, Account number 510833269041."
     }
   },
   {
     "caseId": "B57",
     "file": "B57.pdf",
-    "sha256": "48ca0065b79ae77056886b2c6e0f3749bf7eebc76097925936e133cf30aa83c1",
+    "sha256": "188f65af6821154d19df36b6a5e16d8f7a71ab69ad01f4c65fa84ea64aa97eb3",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -6073,7 +6073,7 @@
   {
     "caseId": "B61",
     "file": "B61.eml",
-    "sha256": "fab3f962210f467a020f496534dac452063c4d4b8a2395d551f8a993a4ac863f",
+    "sha256": "9235b71c5d5b92ea8c52e9d899768242ac4b6ecab76362c148cf7cfb252d2cdd",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -6174,7 +6174,7 @@
   {
     "caseId": "B62",
     "file": "B62.eml",
-    "sha256": "814e28c61439a95c027f1825048d873b36db5c1adc47b5df935842a39d95e01b",
+    "sha256": "95d9f24b79058a15510ffb7474516166a1f5479400fa068be00fd81dab84e916",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -6199,8 +6199,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "CGC-912",
-        "evidence": "N° CGC-912",
+        "value": "CGC-1912",
+        "evidence": "N° CGC-1912",
         "legible": true
       },
       "issueDate": {
@@ -6269,7 +6269,7 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "Correo con el documento en PDF adjunto. Factura CGC-912 de Casa Guadua Coworking S.A.S. por septiembre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+      "readerNotes": "Correo con el documento en PDF adjunto. Factura CGC-1912 de Casa Guadua Coworking S.A.S. por septiembre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
     }
   },
   {
@@ -6376,7 +6376,7 @@
   {
     "caseId": "B64",
     "file": "B64.pdf",
-    "sha256": "976f4997b8b727977cda933f5de85d3da8d2eb7580ab4cc77a52755a16fa0c2a",
+    "sha256": "bb32e8c7d44765fdb941f952ae98561b2a5a0f5aa5d3480e7dd1b4fa00e03b0e",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -6401,8 +6401,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "MG-2026-117",
-        "evidence": "N° MG-2026-117",
+        "value": "MG-1117",
+        "evidence": "N° MG-1117",
         "legible": true
       },
       "issueDate": {
@@ -6471,13 +6471,13 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura MG-2026-117 de Mochila Growth S.A.S. por septiembre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
+      "readerNotes": "PDF. Factura MG-1117 de Mochila Growth S.A.S. por septiembre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
     }
   },
   {
     "caseId": "B65",
     "file": "B65.pdf",
-    "sha256": "77837891f0341d572ffbf520b7564849878eb76a954bc8dbb334fa0a032033e6",
+    "sha256": "ee7714cee7d47e803dc8522a46c46a8bcfb401c0f30b8567f4b5342d6336548f",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -6578,7 +6578,7 @@
   {
     "caseId": "B66",
     "file": "B66.pdf",
-    "sha256": "c9f48de81acb88a02f2ae63589cc616e7468a5236105dfd009d02e2b8df9d7f4",
+    "sha256": "8f7a4d558b9c33f5dd00fe917f50e93eeac932e8ef48b478cc47e48bedfced6e",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -6679,7 +6679,7 @@
   {
     "caseId": "B67",
     "file": "B67.pdf",
-    "sha256": "7bad54ab06a94213adca88ffece780f35ef6d1e45d535d3f2566a7817b30d163",
+    "sha256": "a09fbbce20fe2f81508c04f03d9485d0eba7e5a7f3503b49c94d4b4f13c702ad",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -6780,7 +6780,7 @@
   {
     "caseId": "B68",
     "file": "B68.png",
-    "sha256": "020e0579f16fe7e08ed2458cc546113260793f3ed10ab06d07f4b7212c72c1e5",
+    "sha256": "12750f994b52b95597844814f7968e323930de1eaf3ecc28d004900a9fc5f87b",
     "mediaType": "image/png",
     "groundTruth": {
       "documentType": "invoice",
@@ -6982,7 +6982,7 @@
   {
     "caseId": "B70",
     "file": "B70.eml",
-    "sha256": "ce7e7f269795f6710f3741154af5f5c5924065f4629e195d1145ef44f8ff03fc",
+    "sha256": "2c73f205c8779cf80ba7fd25e374beb5145e1d94f78be286abf5822ae835ede0",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -7588,7 +7588,7 @@
   {
     "caseId": "B76",
     "file": "B76.pdf",
-    "sha256": "80edc8651470fb2abb6be5f354225431c2bf0c944ef4a4554a16df180a086f5e",
+    "sha256": "32dad8180f804eb0dc84b1c08ac3b8cd9a3dd6c572cd7715138aef82c39ce1bc",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -8093,7 +8093,7 @@
   {
     "caseId": "B81",
     "file": "B81.eml",
-    "sha256": "543650f8bd01d54329680b076a7f0982f8a1dc769b2b8e5965af902da30d8ceb",
+    "sha256": "d4da6c5eab17fde5fc6723832ae4e716a7759ad867051d657211915748205da8",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -8396,7 +8396,7 @@
   {
     "caseId": "B84",
     "file": "B84.png",
-    "sha256": "dd554a10a664d91d30b418d66aca44a514ea16eb458b864d2d5d7f416374f36e",
+    "sha256": "0f55d452564224c05ee3f6a0283201211cb4fcc5e00b574298eabce2f3b97f23",
     "mediaType": "image/png",
     "groundTruth": {
       "documentType": "invoice",
@@ -8699,7 +8699,7 @@
   {
     "caseId": "B87",
     "file": "B87.eml",
-    "sha256": "2dcd90c1755ac5f5ca87873f55f439e7edd7674629aaa927c745341075d3efa1",
+    "sha256": "c8d360611b6857e949992fbdbc09d3b3914e64e262ba987fcc3f889bc659c433",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -9002,7 +9002,7 @@
   {
     "caseId": "B90",
     "file": "B90.eml",
-    "sha256": "0a97df47e2ad855b0dfe5f38fb8fefef4eb5c2611692da5b3e65aba84eb9d212",
+    "sha256": "b6800864d3f7c3470792bdac875acfd57a2e0a8199fb911ae4a922ee503800b9",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -9305,7 +9305,7 @@
   {
     "caseId": "B93",
     "file": "B93.pdf",
-    "sha256": "a906d89d800ca20fdb2861a0c74cc0439349c803381d73aaac3b1f4a2c5c2970",
+    "sha256": "d8d08d317973b4e0f6b885a672f98a529653a3e4af3586d77974db06c3edda49",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -9406,7 +9406,7 @@
   {
     "caseId": "B94",
     "file": "B94.eml",
-    "sha256": "f31e796f10a2b8f7539a801e654c2fb3845c8c6742a036f467a2d6162d3c04da",
+    "sha256": "00c8e4415128f11739638f09e8383e2e7155f7577ce0380975816a93dbed452e",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -9507,7 +9507,7 @@
   {
     "caseId": "B95",
     "file": "B95.pdf",
-    "sha256": "ce6a19575ef12b23d29f60c66ea00aacca9901e40fbc7bf99f760c813234c8a4",
+    "sha256": "c22ed9f0502dd6f9f00c9ecbf9662cd97e429492855065051a931c9036f5b411",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -9532,8 +9532,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "CGC-941",
-        "evidence": "N° CGC-941",
+        "value": "CGC-1941",
+        "evidence": "N° CGC-1941",
         "legible": true
       },
       "issueDate": {
@@ -9602,13 +9602,13 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura CGC-941 de Casa Guadua Coworking S.A.S. por octubre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+      "readerNotes": "PDF. Factura CGC-1941 de Casa Guadua Coworking S.A.S. por octubre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
     }
   },
   {
     "caseId": "B96",
     "file": "B96.pdf",
-    "sha256": "68c7c9cb0cd4260937472806f47d82a4655a9d1992a9e14a972be35314e6b586",
+    "sha256": "236adad0e9c3db05d364dbc77c01a4437b042799b4370ed55fcc098975cfa8d4",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -9633,8 +9633,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "CGC-947",
-        "evidence": "N° CGC-947",
+        "value": "CGC-1947",
+        "evidence": "N° CGC-1947",
         "legible": true
       },
       "issueDate": {
@@ -9703,7 +9703,7 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura CGC-947 de Casa Guadua Coworking S.A.S. por octubre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+      "readerNotes": "PDF. Factura CGC-1947 de Casa Guadua Coworking S.A.S. por octubre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
     }
   },
   {
@@ -9911,7 +9911,7 @@
   {
     "caseId": "B99",
     "file": "B99.pdf",
-    "sha256": "e1cabc8515550ed42396068567ededac863dd882c4bf2d520d31fc1404397152",
+    "sha256": "33959156a284c4d2f01b1aecc41bdecd4c0cf065eb1acc2e6d74e7d0c503d110",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -9936,8 +9936,8 @@
         "legible": true
       },
       "invoiceNumber": {
-        "value": "MG-2026-131",
-        "evidence": "N° MG-2026-131",
+        "value": "MG-1131",
+        "evidence": "N° MG-1131",
         "legible": true
       },
       "issueDate": {
@@ -10006,13 +10006,13 @@
         }
       },
       "embeddedInstructions": [],
-      "readerNotes": "PDF. Factura MG-2026-131 de Mochila Growth S.A.S. por octubre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
+      "readerNotes": "PDF. Factura MG-1131 de Mochila Growth S.A.S. por octubre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
     }
   },
   {
     "caseId": "B100",
     "file": "B100.pdf",
-    "sha256": "4c1d76e920e3d18d013b5fb5443ed10d86cd246947551abf8dc2f9fd9ba62655",
+    "sha256": "c6b0662970f543f7b489b54a68428c9c162e70f7150c660ac94c1c098acd74ab",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "other",
@@ -10113,7 +10113,7 @@
   {
     "caseId": "B101",
     "file": "B101.pdf",
-    "sha256": "a944605cb0a4c50a0e8389e57782cd587f3861c249e773b83e6177501f501667",
+    "sha256": "fde0b759d2e3988e80b22b0b23d2bd2d31daf82e2b0ee0831aad88d8da86744b",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -10214,7 +10214,7 @@
   {
     "caseId": "B102",
     "file": "B102.eml",
-    "sha256": "5e2e6fd5c67c4089c1307797c3055fdfcd4d7248b798debd0ae783e5b67af0b7",
+    "sha256": "206058467857df305f5ffa21aff3c88dd64c006cfce11611ced24cc3196f0c59",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -10315,7 +10315,7 @@
   {
     "caseId": "B103",
     "file": "B103.jpg",
-    "sha256": "f25f418c7463b38f524def5ba331a28734e4beb0130d443766ebaf942088840d",
+    "sha256": "22116b3b459609c97bf56d658c23d46b105a6d983948cbaa7cb34c09d52ec1af",
     "mediaType": "image/jpeg",
     "groundTruth": {
       "documentType": "other",
@@ -10416,7 +10416,7 @@
   {
     "caseId": "B104",
     "file": "B104.pdf",
-    "sha256": "ffe733a8c919d40b226d983f2d8d0e2fc12f6383e85ecbbfbcd5574405798de7",
+    "sha256": "1e5335ff2d2876248c6b45938d880986989b48a95f3f2ca25fc90bf4af4b988a",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -10517,7 +10517,7 @@
   {
     "caseId": "B105",
     "file": "B105.pdf",
-    "sha256": "59b1aa01c725c663124027e2f5cd90662710c95661b3f6b31906c19374dcd641",
+    "sha256": "bcf41974d92a19bd062552370cc566f6a430d8d62926c6e209fe7cbc8ffed528",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -10618,7 +10618,7 @@
   {
     "caseId": "B106",
     "file": "B106.pdf",
-    "sha256": "70ab01e5be7abe568696172f80b0367c317f05a2a75fb71545ff901559f766fa",
+    "sha256": "e68ac7511db48301d8186f5394673137297fbec4d8ab6551444215e6c2420f7c",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -10820,7 +10820,7 @@
   {
     "caseId": "B108",
     "file": "B108.pdf",
-    "sha256": "f4a528bc4316e7d16e7b6b69b15262fc0bed9f2ad7176675d0ad9a2984439477",
+    "sha256": "41427e56169527c4db1dc834afaf9843f1646081fa96b88b8c821aac52df2841",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -10921,7 +10921,7 @@
   {
     "caseId": "B109",
     "file": "B109.eml",
-    "sha256": "002a113681d3705f2d6801d1b5cdb28cda7bc07307ce1d5d5f8e4721f550fa17",
+    "sha256": "afa5f210cf601cbeb4d295c649b41152621797927188086a8fdf814cc98b4759",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -11224,7 +11224,7 @@
   {
     "caseId": "B112",
     "file": "B112.png",
-    "sha256": "4fbd8a4a0eacc81e12a171a7a83da955f9c7f883421554db079d10b6c726de77",
+    "sha256": "af6c0f4a33381f4ff034ea5884b4b37e5cea2aa8d291163f8a5d701585df71b6",
     "mediaType": "image/png",
     "groundTruth": {
       "documentType": "invoice",
@@ -11325,7 +11325,7 @@
   {
     "caseId": "B113",
     "file": "B113.eml",
-    "sha256": "28fcbbdeb09e9567d97232039787edf944bc9e394ba35f3065e675b8c4e84d30",
+    "sha256": "003d98a14cba46c0b9bef390fdc0b7143fe46de75e79e62cc7310de6f17dc83e",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",
@@ -11426,7 +11426,7 @@
   {
     "caseId": "B114",
     "file": "B114.pdf",
-    "sha256": "d87d0c49b053a179b54e0901d6ad1ea965438b245410664f126a77c8b06edd62",
+    "sha256": "c45206ba0810afbc203257ba367fe5d2f456a7e69b6a5ac42ac0af438cbda729",
     "mediaType": "application/pdf",
     "groundTruth": {
       "documentType": "invoice",
@@ -11527,7 +11527,7 @@
   {
     "caseId": "B115",
     "file": "B115.jpg",
-    "sha256": "245a48ca69cfe53328bb4668deeb5d97765ed6ca2fedaae941cb88dc76d13cfe",
+    "sha256": "85d46d000571afa602151f9c168f167e21508d9ecf491640e0fa64f0dab4efa4",
     "mediaType": "image/jpeg",
     "groundTruth": {
       "documentType": "invoice",
@@ -11936,7 +11936,7 @@
   {
     "caseId": "B119",
     "file": "B119.eml",
-    "sha256": "bc5410121222bcf60ae7f8ab7b0ef63a5f5103883d2f264a5f363976c8cfe7a9",
+    "sha256": "44229bf52e65b1155a58f91da3e7950389ac78468ae0258d086dfbe7b6039aaf",
     "mediaType": "message/rfc822",
     "groundTruth": {
       "documentType": "invoice",

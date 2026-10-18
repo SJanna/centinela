@@ -40,7 +40,7 @@
     "email": "pagos@andeslabs.dev",
     "phone": null
   },
-  "invoiceNumber": "CGC-884",
+  "invoiceNumber": "CGC-1884",
   "issueDate": "2026-08-01",
   "issuePlace": null,
   "issueTime": null,
@@ -76,8 +76,8 @@
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066092549 del 15/01/2026, prefijo CGC, rango 1001 a 9999, vigencia 24 meses.",
-    "CUFE: c60bf9f254d9ddb057f81d1ff69668a1b3c6895f1489c8e9e6e6bdd63b3cb21ab68cefc21bdd64f47c85664d6c003292"
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066239055 del 15/01/2026, prefijo CGC, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 22bd6134f99231232d7b7c87aa0dbb70b5232efe57df80de5361a7a14a7ec86837063790ccf46d5e1a9a5ed84fd897da"
   ],
   "templateData": {
     "code": "qr"
@@ -91,5 +91,5 @@
   "chatMessages": null,
   "evidence": null,
   "embeddedInstructions": [],
-  "readerNotes": "PDF. Factura CGC-884 de Casa Guadua Coworking S.A.S. por agosto de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+  "readerNotes": "PDF. Factura CGC-1884 de Casa Guadua Coworking S.A.S. por agosto de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
 }

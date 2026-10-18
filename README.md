@@ -24,7 +24,7 @@ Más detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Las comprobaciones
 
 138 facturas de prueba realistas de una empresa ficticia (Andes Labs Inc.), con casos normales y trampas, en [dataset/casos.csv](dataset/casos.csv). 13 forman un set reservado para medir. No es una medición a ciegas: varias pruebas automáticas también usan esos casos. Además, un set de estrés de 2.000 facturas generadas (formatos, idiomas y trampas variadas) y un equipo rojo de 42 ataques.
 
-El escenario base tiene 120 facturas: el cierre de octubre con el atraso de julio a septiembre (B24–B120 se sumaron a B01–B23). Se pagan 82 (68 %), se frenan 12 por duplicado (10 %) y escalan 26 trampas (22 %); lo pagado suma USD 128.081,90 del límite del mes de USD 150.000. Las 97 facturas nuevas son, como el resto, un borrador sin revisión humana, y **todavía no se midieron con lecturas reales**: con el lector simulado dan 138 de 138.
+El escenario base tiene 120 facturas: el cierre de octubre con el atraso de julio a septiembre (B24–B120 se sumaron a B01–B23). Se pagan 82 (68 %), se frenan 12 por duplicado (10 %) y escalan 26 trampas (22 %); lo pagado suma USD 128.081,40 del límite del mes de USD 150.000. Las 97 facturas nuevas son, como el resto, un borrador sin revisión humana, y **todavía no se midieron con lecturas reales**: con el lector simulado dan 138 de 138.
 
 Con Claude real, perfil por defecto (Haiku 5.5 dos veces, prompts `v6`/`v6b`, 18 de octubre de 2026). Estas cifras son del set de 41 casos (B01–B23 y los otros escenarios), medido antes de ampliar el escenario base:
 
@@ -77,7 +77,7 @@ Abre http://localhost:3000 y pulsa **Probar con ejemplos → Reproducir escenari
 npm run eval:live
 ```
 
-Lee las 41 facturas con Claude (necesita `ANTHROPIC_API_KEY`) y escribe `eval/reports/latest.md`. Falla si hay un solo pago indebido. Con el perfil por defecto (`economico`) la corrida completa cuesta unos USD 0,11 (con `READER_PROFILE=calidad`, unos USD 0,84); las lecturas quedan en caché (`dataset/reading-cache`) y repetirlas no cuesta.
+Lee las 138 facturas del dataset con Claude (necesita `ANTHROPIC_API_KEY`) y escribe `eval/reports/latest.md`. Falla si hay un solo pago indebido. Con el perfil por defecto (`economico`) las 41 de antes costaron unos USD 0,11 y ya están en la caché (`dataset/reading-cache`): hoy solo se pagan las 97 nuevas, unos USD 0,30 estimados (con `READER_PROFILE=calidad`, unos USD 0,84 por cada 41 facturas). Repetir una lectura guardada no cuesta. `eval/reports/latest.*` guarda la última corrida con lecturas reales (las 41 de antes); `npm run eval` lo sobrescribe con la simulada.
 
 ```bash
 npm run eval

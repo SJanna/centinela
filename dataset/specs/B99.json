@@ -40,7 +40,7 @@
     "email": "pagos@andeslabs.dev",
     "phone": null
   },
-  "invoiceNumber": "MG-2026-131",
+  "invoiceNumber": "MG-1131",
   "issueDate": "2026-10-06",
   "issuePlace": null,
   "issueTime": null,
@@ -76,8 +76,8 @@
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764068018528 del 15/01/2026, prefijo MG, rango 1001 a 9999, vigencia 24 meses.",
-    "CUFE: c80bfd1852dfeab8537eb9e7fc7e1764837e432b59c406ae1896ae6b013461a4d07624f1b3fb853e9bf2cec5c63ab9c5"
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764067204562 del 15/01/2026, prefijo MG, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 59c85b321d065d67c88aafc02093d9035b5a8f60b781dcadaa4b5332061b02fe38c1eec9d4761d55d0540f9d53b19ae0"
   ],
   "templateData": {
     "code": "qr"
@@ -91,5 +91,5 @@
   "chatMessages": null,
   "evidence": null,
   "embeddedInstructions": [],
-  "readerNotes": "PDF. Factura MG-2026-131 de Mochila Growth S.A.S. por octubre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
+  "readerNotes": "PDF. Factura MG-1131 de Mochila Growth S.A.S. por octubre de 2026: COP 14.000.000. Pago a Banco Guayacán, Cuenta corriente N° 0915-3302-7748."
 }

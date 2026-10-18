@@ -1,6 +1,6 @@
 {
   "id": "B84",
-  "about": "Captura del portal: factura de octubre USD 375",
+  "about": "Captura del portal: factura de octubre USD 375, por transferencia (cobro con tarjeta suspendido)",
   "vendorId": "v-mosswire",
   "format": "png",
   "template": "portal",
@@ -81,7 +81,7 @@
     "plan": "Organization · monthly",
     "status": "Open",
     "paymentTitle": "Pay by bank transfer",
-    "paymentSubtitle": "ACH or domestic wire · USD only",
+    "paymentSubtitle": "Card billing paused · ACH or domestic wire · USD only",
     "helpText": "Questions about this invoice?"
   },
   "visibleNote": null,

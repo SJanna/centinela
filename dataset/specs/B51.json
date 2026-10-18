@@ -1,13 +1,13 @@
 {
   "id": "B51",
-  "about": "Foto de la cuenta de cobro de septiembre: 120 h × COP 80.000 = COP 9.600.000",
+  "about": "Foto de la factura electrónica de septiembre: 120 h × COP 80.000 = COP 9.600.000 (cantidad y tarifa a la vista)",
   "vendorId": "v-caribe",
   "format": "jpg",
-  "template": "cuenta_cobro",
+  "template": "latam",
   "language": "es",
   "locale": "es-CO",
-  "documentType": "cuenta_de_cobro",
-  "title": "CUENTA DE COBRO",
+  "documentType": "invoice",
+  "title": "FACTURA ELECTRÓNICA DE VENTA",
   "brand": {
     "color": "#0891B2",
     "accent": "#FDE68A",
@@ -40,14 +40,14 @@
     "email": "pagos@andeslabs.dev",
     "phone": null
   },
-  "invoiceNumber": "CCB-2198",
+  "invoiceNumber": "SC-2206",
   "issueDate": "2026-09-30",
-  "issuePlace": "Barranquilla",
+  "issuePlace": null,
   "issueTime": null,
   "dueDate": "2026-10-15",
   "servicePeriod": "2026-09",
   "currency": "COP",
-  "paymentTerms": null,
+  "paymentTerms": "Transferencia 15 días",
   "lines": [
     {
       "description": "Soporte al cliente – horas atendidas",
@@ -75,13 +75,12 @@
   "notes": [
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
-  "legal": [],
+  "legal": [
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764059876543 del 15/01/2026, prefijo SC, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: ba3f5e4f3e19a3232a94541e2aafaae93d9b773455b9e9b9047b1039bd81eb5563e184b52d7ae950d9f9d65528cf0a45"
+  ],
   "templateData": {
-    "concept": "Soporte al cliente – horas atendidas, servicios prestados a ANDES LABS INC. durante septiembre de 2026, conforme al acuerdo vigente.",
-    "currencyText": "pesos colombianos (COP)",
-    "signerName": "Luisa Barrios",
-    "signerRole": "Gerente – Soporte Caribe S.A.S.",
-    "salutation": "Señores"
+    "code": "qr"
   },
   "visibleNote": null,
   "hiddenText": null,
@@ -99,5 +98,5 @@
   "chatMessages": null,
   "evidence": null,
   "embeddedInstructions": [],
-  "readerNotes": "Foto de celular del documento impreso. Cuenta de cobro CCB-2198 de Soporte Caribe S.A.S. por septiembre de 2026: COP 9.600.000. Pago a Davivienda, Cuenta de ahorros N° 0550-4881-2233."
+  "readerNotes": "Foto de celular del documento impreso. Factura SC-2206 de Soporte Caribe S.A.S. por septiembre de 2026: COP 9.600.000. Pago a Davivienda, Cuenta de ahorros N° 0550-4881-2233."
 }

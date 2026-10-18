@@ -40,7 +40,7 @@
     "email": "pagos@andeslabs.dev",
     "phone": null
   },
-  "invoiceNumber": "CGC-912",
+  "invoiceNumber": "CGC-1912",
   "issueDate": "2026-09-01",
   "issuePlace": null,
   "issueTime": null,
@@ -76,8 +76,8 @@
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066092549 del 15/01/2026, prefijo CGC, rango 1001 a 9999, vigencia 24 meses.",
-    "CUFE: c60bf9f254d9ddb057f81d1ff69668a1b3c6895f1489c8e9e6e6bdd63b3cb21ab68cefc21bdd64f47c85664d6c003292"
+    "Factura electrónica de venta. Numeración autorizada por la DIAN, resolución N° 18764066239055 del 15/01/2026, prefijo CGC, rango 1001 a 5000, vigencia 24 meses.",
+    "CUFE: 4247050862b694adb955f6b55fc4352ad155ddc0db04ecc7566219fe21988674980cf66e09fee80aad489a67fce2b2b9"
   ],
   "templateData": {
     "code": "qr"
@@ -90,13 +90,13 @@
     "from": "Juliana Restrepo <juliana.restrepo@casaguadua.co>",
     "to": "Cuentas por pagar · Andes Labs <pagos@andeslabs.dev>",
     "cc": null,
-    "subject": "FACTURA ELECTRÓNICA DE VENTA CGC-912 – septiembre de 2026",
+    "subject": "FACTURA ELECTRÓNICA DE VENTA CGC-1912 – septiembre de 2026",
     "date": "Tue, 01 Sep 2026 09:12:00 -0500",
-    "messageId": "<20260901091200.b62@casaguadua.co>",
+    "messageId": "<CGC-1912.20260901091200@casaguadua.co>",
     "body": [
       "Hola, equipo de Andes Labs:",
       "",
-      "Adjuntamos la factura electrónica de venta CGC-912 correspondiente a septiembre de 2026.",
+      "Adjuntamos la factura electrónica de venta CGC-1912 correspondiente a septiembre de 2026.",
       "",
       "Quedamos atentos a cualquier duda.",
       "",
@@ -106,11 +106,11 @@
     ]
   },
   "attachment": {
-    "filename": "cgc-912.pdf",
+    "filename": "cgc-1912.pdf",
     "template": "latam"
   },
   "chatMessages": null,
   "evidence": null,
   "embeddedInstructions": [],
-  "readerNotes": "Correo con el documento en PDF adjunto. Factura CGC-912 de Casa Guadua Coworking S.A.S. por septiembre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
+  "readerNotes": "Correo con el documento en PDF adjunto. Factura CGC-1912 de Casa Guadua Coworking S.A.S. por septiembre de 2026: COP 2.400.000. Pago a Banco Guayacán, Cuenta corriente N° 0721-4408-1936."
 }

@@ -3,7 +3,8 @@
  * - lo inventado para los proveedores nuevos (ids tributarios, cuentas, ABA) NO pasa el dígito de control
  *   de su formato, para no fabricar por accidente el número de una empresa o una cuenta real;
  * - los proveedores nuevos no coinciden con los del set de estrés (si ya se generó);
- * - la mezcla del escenario base completo es la pedida: ~70 % se paga, ~10 % se frena, ~20 % escala.
+ * - la mezcla del escenario base completo es la pedida: ~70 % se paga, ~10 % se frena, ~20 % escala;
+ * - cada documento del escenario base trae su propio identificador fiscal (CUFE, folio fiscal, CAE…).
  */
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -21,9 +22,9 @@ import {
   rutCheckDigit,
 } from "../stress/checksums";
 import { STRESS_VENDOR_IDS } from "../stress/vendors";
-import { buildExtension } from "./base-extension";
+import { buildExtension, isExtensionId } from "./base-extension";
 import { readCases, readCompany } from "./cases";
-import { isDocumentSpec } from "./spec";
+import { isDocumentSpec, loadSpecs } from "./spec";
 
 const company = readCompany();
 const added = company.vendors.filter((v) => !STRESS_VENDOR_IDS.includes(v.id));
@@ -128,5 +129,56 @@ describe("extensión del escenario base · mezcla", () => {
       else expect(r.codigos_esperados, r.id).toHaveLength(1);
       if (r.decision_esperada === "FRENAR") expect(r.codigos_esperados[0], r.id).toMatch(/^DUP-/);
     }
+  });
+});
+
+describe("extensión del escenario base · identificadores fiscales", () => {
+  const base = loadSpecs().filter(isDocumentSpec).filter((s) => /^B\d+$/.test(s.id));
+  const PATTERNS: Array<[string, RegExp]> = [
+    ["CUFE", /CUFE: (\S+)/],
+    ["folio fiscal", /Folio fiscal \(UUID\): ([0-9A-F-]{36})/],
+    ["CAE", /CAE N° (\d+)/],
+    ["resumen SUNAT", /Resumen: (\S+)/],
+  ];
+
+  it("ningún CUFE, folio fiscal, CAE, resumen SUNAT ni código de NFS-e se repite entre facturas", () => {
+    const seen = new Map<string, string>();
+    for (const s of base) {
+      const ids: string[] = [];
+      for (const [name, re] of PATTERNS) {
+        const m = s.legal.join("\n").match(re);
+        if (m) ids.push(`${name} ${m[1]}`);
+      }
+      if (s.templateData.verificationCode) ids.push(`NFS-e ${s.templateData.verificationCode}`);
+      for (const id of ids) {
+        expect(seen.get(id), `${s.id} repite ${id}`).toBeUndefined();
+        seen.set(id, s.id);
+      }
+    }
+    expect(seen.size).toBeGreaterThan(30);
+  });
+
+  it("una resolución DIAN por proveedor y el número de la factura dentro del rango que imprime", () => {
+    const byVendor = new Map<string, string>();
+    for (const s of base) {
+      const m = s.legal.join(" ").match(/resolución N° (\d+) .*prefijo (\w+), rango (\d+) a (\d+)/);
+      if (!m) continue;
+      const prev = byVendor.get(s.vendorId ?? "");
+      if (prev) expect(m[1], s.id).toBe(prev);
+      byVendor.set(s.vendorId ?? "", m[1]);
+      // B14 y B15 (Bufete Andino, BA-0877 y BA-0881) quedan fuera de su rango; son de antes y no se tocan.
+      if (!isExtensionId(s.id)) continue;
+      expect(s.invoiceNumber.startsWith(`${m[2]}-`), s.id).toBe(true);
+      const n = Number(s.invoiceNumber.slice(m[2].length + 1));
+      expect(n >= Number(m[3]) && n <= Number(m[4]), `${s.id} ${s.invoiceNumber}`).toBe(true);
+    }
+    expect(byVendor.size).toBeGreaterThanOrEqual(5);
+  });
+
+  it("el CFDI de la persona física dice régimen 612 y el borrador sin timbrar no trae folio fiscal", () => {
+    for (const s of base.filter((x) => x.vendorId === "v-anaya" && x.legal.length > 0)) {
+      expect(s.legal.join(" "), s.id).toContain("Régimen fiscal 612");
+    }
+    expect(base.find((s) => s.id === "B103")!.legal.join(" ")).toContain("pendiente de timbrado");
   });
 });

@@ -1,6 +1,6 @@
 {
   "id": "B45",
-  "about": "NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, pagada con atraso",
+  "about": "NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, que se paga con atraso",
   "vendorId": "v-testa",
   "format": "pdf",
   "template": "nota_servico",
@@ -77,7 +77,7 @@
   ],
   "legal": [],
   "templateData": {
-    "verificationCode": "D10C-0B43",
+    "verificationCode": "34D1-9CA4",
     "municipalRegistration": "5.123.456-7",
     "rps": "RPS N° 4102 · Série A · emitido em 30/09/2026",
     "serviceCode": "01.01 – Análise e desenvolvimento de sistemas",

@@ -1,6 +1,6 @@
 {
   "id": "B57",
-  "about": "Plan Organization de septiembre USD 375",
+  "about": "Plan Organization de septiembre USD 375, por transferencia (el cobro con tarjeta sigue suspendido)",
   "vendorId": "v-mosswire",
   "format": "pdf",
   "template": "saas",
@@ -73,7 +73,7 @@
     "routingLabel": "ABA routing number"
   },
   "notes": [
-    "Please pay by ACH or wire transfer to the account below and include the invoice number as reference."
+    "Automatic card billing is paused on your account after a declined charge. Please pay this invoice by ACH or wire to the account below."
   ],
   "legal": [
     "Mosswire Inc. · EIN 96-5503128"

@@ -27,7 +27,7 @@ B25,train,base,png,v-heronpost,"Captura del portal: factura de julio USD 89, atr
 B26,train,base,eml,v-kestrel,"Correo con la factura PDF adjunta: plan Business de julio USD 420 (14 puestos), atrasada",PAGAR,
 B27,train,base,pdf,v-lanternbuild,"Plan Pro de CI/CD de julio USD 650, atrasada",PAGAR,
 B28,train,base,eml,v-sablevault,"Factura de julio USD 96 (24 puestos × USD 4) en el cuerpo del correo, atrasada",PAGAR,
-B29,train,base,png,v-mosswire,"Captura de un «Payment receipt» de julio USD 375 que ya se cobró con tarjeta: no es un cobro",ESCALAR,LEC-1
+B29,train,base,png,v-mosswire,"Recibo «Payment receipt» en PNG: julio USD 375 ya se cobró con tarjeta, no es un cobro",ESCALAR,LEC-1
 B30,train,base,pdf,v-quillstack,"Suscripción Team de agosto USD 240, atrasada (falló el cobro con tarjeta)",PAGAR,
 B31,train,base,png,v-heronpost,"Captura del portal: factura de agosto USD 89, atrasada",PAGAR,
 B32,train,base,pdf,v-marlowe,"Contabilidad e impuestos de agosto USD 1.450, atrasada",PAGAR,
@@ -38,24 +38,24 @@ B36,train,base,eml,v-kestrel,"Correo con la factura PDF adjunta: plan Business d
 B37,train,base,eml,v-sablevault,"Factura de agosto USD 96 en el cuerpo del correo, solo texto, atrasada",PAGAR,
 B38,train,base,pdf,v-quipu,"Contabilidad y planillas de agosto PEN 3.200, atrasada",PAGAR,
 B39,train,base,pdf,v-valentina,"Cuenta de cobro de agosto COP 9.600.000 (persona natural), atrasada",PAGAR,
-B40,train,base,pdf,v-mosswire,"Plan Organization de agosto USD 375, atrasada",PAGAR,
+B40,train,base,pdf,v-mosswire,"Plan Organization de agosto USD 375, atrasada: el cobro con tarjeta de agosto falló (julio sí se cobró, B29)",PAGAR,
 B41,train,base,pdf,v-lucuma,"Traducción de agosto: 30 h × PEN 95 = PEN 2.850, atrasada",PAGAR,
 B42,train,base,png,v-tidewell,"Captura del portal: página de estado de agosto USD 79, atrasada",PAGAR,
 B43,train,base,pdf,v-pellucid,"Analítica de producto, plan Growth de agosto USD 310, atrasada",PAGAR,
 B44,train,base,eml,v-gannetline,"Videollamadas de agosto USD 180 (12 puestos × USD 15) en el cuerpo del correo, atrasada",PAGAR,
-B45,train,base,pdf,v-testa,"NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, pagada con atraso",PAGAR,
+B45,train,base,pdf,v-testa,"NFS-e de setembro (emitida el 30/09) por BRL 9.500, igual al acuerdo, que se paga con atraso",PAGAR,
 B46,train,base,txt,v-pampa,"Cobro de septiembre USD 2.800 por chat, que llegó tarde (otro número que B05)",PAGAR,
 B47,train,base,pdf,v-nopal,"Diseño de septiembre: 52 h × MXN 900 = MXN 46.800",PAGAR,
 B48,train,base,pdf,v-jabuticaba,"Nota de setembro BRL 14.000 correcta, pero «mudamos de banco»: pide pagar a una cuenta del Banco Sabiá que no es la registrada",ESCALAR,PRV-2
 B49,train,base,eml,v-datossur,"Correo en inglés con el PDF adjunto: 48 h × USD 60 = USD 2.880 (septiembre)",PAGAR,
 B50,train,base,jpg,v-inca,"Foto de celular, nítida, de la factura de septiembre PEN 6.000 a la cuenta registrada",PAGAR,
-B51,train,base,jpg,v-caribe,"Foto de la cuenta de cobro de septiembre: 120 h × COP 80.000 = COP 9.600.000",PAGAR,
+B51,train,base,jpg,v-caribe,"Foto de la factura electrónica de septiembre: 120 h × COP 80.000 = COP 9.600.000 (cantidad y tarifa a la vista)",PAGAR,
 B52,train,base,png,v-cloudmetrics,"Captura del portal: factura de septiembre USD 1.200 (otro número que B02)",PAGAR,
-B53,train,base,pdf,v-camila,"Factura de septiembre COP 12.000.000 pagada con atraso (otro número que B01 y B06)",PAGAR,
+B53,train,base,pdf,v-camila,"Factura de septiembre COP 12.000.000 que se paga con atraso (otro número que B01 y B06)",PAGAR,
 B54,train,base,pdf,v-quillstack,"Suscripción Team de septiembre USD 240",PAGAR,
 B55,train,base,png,v-heronpost,"Captura del portal: factura de septiembre USD 89",PAGAR,
-B56,train,base,pdf,v-kestrel,"Plan Business de septiembre USD 423,50: un puesto extra prorrateado (USD 3,50), 0,83 % sobre lo pactado, dentro de la tolerancia del 1 %",PAGAR,
-B57,train,base,pdf,v-mosswire,"Plan Organization de septiembre USD 375",PAGAR,
+B56,train,base,pdf,v-kestrel,"Plan Business de septiembre USD 423: un puesto extra prorrateado del 28 al 30 (USD 3), 0,71 % sobre lo pactado, dentro de la tolerancia del 1 %",PAGAR,
+B57,train,base,pdf,v-mosswire,"Plan Organization de septiembre USD 375, por transferencia (el cobro con tarjeta sigue suspendido)",PAGAR,
 B58,train,base,pdf,v-lanternbuild,"Plan Pro de CI/CD de septiembre USD 650",PAGAR,
 B59,train,base,pdf,v-sablevault,"Plan Teams de septiembre USD 96 (24 puestos × USD 4)",PAGAR,
 B60,train,base,pdf,v-ferrovane,"Capacidad de cómputo reservada de septiembre USD 3.400",PAGAR,
@@ -82,7 +82,7 @@ B80,train,base,png,v-heronpost,"Captura del portal: factura de octubre USD 89",P
 B81,train,base,eml,v-heronpost,"Correo (cuerpo) con una factura de enero de 2026 que «nunca se cobró»: el acuerdo empezó el 1 de febrero",ESCALAR,ACU-1
 B82,train,base,pdf,v-kestrel,"Plan Business de octubre USD 462: subió 10 % sobre los USD 420 pactados (tolerancia 1 %)",ESCALAR,ACU-3
 B83,train,base,pdf,v-kestrel,"Factura de octubre corregida a USD 420 (el precio del acuerdo), otro número",PAGAR,
-B84,train,base,png,v-mosswire,"Captura del portal: factura de octubre USD 375",PAGAR,
+B84,train,base,png,v-mosswire,"Captura del portal: factura de octubre USD 375, por transferencia (cobro con tarjeta suspendido)",PAGAR,
 B85,train,base,pdf,v-lanternbuild,"Plan Pro de CI/CD de octubre USD 650",PAGAR,
 B86,train,base,pdf,,"«Lantembuild Inc.» (rn → m), plan Pro de CI/CD USD 650 a otra cuenta en otro banco: no es Lanternbuild Inc. ni está registrado",ESCALAR,PRV-1
 B87,train,base,eml,v-sablevault,"Correo multipart: el texto plano cobra USD 96 de octubre y la versión HTML, la que ve una persona, dice «Paid – thank you»",ESCALAR,LEC-1
@@ -103,7 +103,7 @@ B101,train,base,pdf,v-ajolote,"CFDI AJ-0412 de octubre MXN 68.000, el que sustit
 B102,train,base,eml,v-ajolote,"Correo con los datos del CFDI AJ-0412 en el cuerpo (mismo número de B101)",FRENAR,DUP-2
 B103,train,base,jpg,v-anaya,"Foto de un «BORRADOR – sin timbrar» con las horas de octubre",ESCALAR,LEC-1
 B104,train,base,pdf,v-anaya,"CFDI timbrado de octubre: 72 h × MXN 750 = MXN 54.000",PAGAR,
-B105,train,base,pdf,v-anaya,"CFDI de sustitución por cambio de uso: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",FRENAR,DUP-3
+B105,train,base,pdf,v-anaya,"CFDI de sustitución por corrección de datos: las mismas 72 h de octubre con otro folio; octubre ya se pagó en B104",FRENAR,DUP-3
 B106,train,base,pdf,v-jacaranda,"Membresía de octubre MXN 14.500, pero el contrato terminó el 31/08",ESCALAR,ACU-1
 B107,train,base,txt,v-ferraro,"Chat: «te paso el cobro de octubre, son $ 3.200» sin decir USD; en Argentina «$» es el peso",ESCALAR,ACU-2
 B108,train,base,pdf,v-ferraro,"Factura E de octubre por USD 3.200, con la moneda escrita",PAGAR,

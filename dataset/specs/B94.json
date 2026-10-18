@@ -82,7 +82,7 @@
     "customerId": "Matter 2026-0412",
     "plan": "Engagement letter EL-2026-31 · flat fee",
     "heroNote": "Thank you for trusting Halvorsen & Pike.",
-    "paymentSubtitle": "Wire to our IOLTA trust account · USD"
+    "paymentSubtitle": "Wire to our operating account · USD"
   },
   "visibleNote": null,
   "hiddenText": null,
@@ -94,7 +94,7 @@
     "cc": null,
     "subject": "Invoice H&P-24163 – 10/13/2026",
     "date": "Tue, 13 Oct 2026 09:12:00 -0500",
-    "messageId": "<20261013091200.b94@halvorsenpike.law>",
+    "messageId": "<H-P-24163.20261013091200@halvorsenpike.law>",
     "body": [
       "Hi Andes Labs team,",
       "",

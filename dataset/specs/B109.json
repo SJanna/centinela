@@ -76,7 +76,7 @@
     "Operación de exportación de servicios. Forma de pago: transferencia bancaria."
   ],
   "legal": [
-    "Comprobante autorizado · CAE N° 00036047011996 · Vto. CAE: 30 días desde la emisión."
+    "Comprobante autorizado · CAE N° 30689867950172 · Vto. CAE: 30 días desde la emisión."
   ],
   "templateData": {
     "code": "barcode",
@@ -92,7 +92,7 @@
     "cc": null,
     "subject": "FACTURA E 00004-00000233 – octubre de 2026",
     "date": "Thu, 15 Oct 2026 09:12:00 -0300",
-    "messageId": "<20261015091200.b109@ombu.com.ar>",
+    "messageId": "<00004-00000233.20261015091200@ombu.com.ar>",
     "body": [
       "Hola, equipo de Andes Labs:",
       "",
