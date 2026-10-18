@@ -121,6 +121,11 @@ interface GuardInvoice {
   period: string | null;
   /** De dónde salió `period`: periodo de servicio, una referencia a un mes anterior, o la fecha. */
   periodFrom: "service_period" | "earlier_reference" | "date";
+  /**
+   * Por qué el periodo escrito no se lee (una lectura lo marca ilegible o anota que está borroso), o
+   * null. Con un acuerdo mensual no se sabe qué mes cobra: no se aprueba.
+   */
+  periodDoubt: string | null;
   /** Con periodFrom "earlier_reference": true si la referencia es «el mes anterior» (sin nombrarlo). */
   periodRelative: boolean;
   /**
@@ -403,14 +408,14 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
       const quoted = voided.find((m) => nonEmpty(typeof m?.text === "string" ? m.text : null));
       v.add(quoted ? `el documento no es un cobro válido («${shown(quoted.text, 80)}»)` : "el documento no es un cobro válido");
     }
-    // Avisos de la entrada: lo que una persona ve en el correo no es lo que se leyó (versión HTML
-    // distinta del texto, adjunto que no se pudo leer). Basta uno, diga lo que diga.
+    // Avisos de la entrada: lo que una persona ve no es lo que se leyó (versión HTML distinta del
+    // texto, adjunto que no se pudo leer) o la foto está borrosa. Basta uno, diga lo que diga.
     if (ingest && ingest.length > 0) {
       const first = ingest.find((w) => nonEmpty(typeof w === "string" ? w : null));
       v.add(
         first
-          ? `la entrada avisa que el correo trae algo que la lectura no vio («${shown(first, 100)}»)`
-          : "la entrada avisa que el correo trae algo que la lectura no vio",
+          ? `la entrada dejó un aviso que la lectura no resuelve («${shown(first, 100)}»)`
+          : "la entrada dejó un aviso que la lectura no resuelve",
       );
     }
     // Documento ya pagado (un recibo): basta una marca, venga de una lectura o del texto del documento.
@@ -570,6 +575,7 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     referenceDay,
     period,
     periodFrom,
+    periodDoubt: guardPeriodDoubt([primary, secondary], signals?.servicePeriodDoubts),
     periodRelative,
     otherPeriods,
   };
@@ -613,6 +619,44 @@ function guardSaysEarlierMonth(raw: unknown): boolean {
 }
 
 /** Mes (1-12) sin año ubicado contra el mes de la fecha: la última vez que cayó antes. null si es ese mismo mes. */
+/**
+ * Implementación PROPIA de la guardia (no usa src/extract/period-doubts.ts): ¿alguna lectura duda del
+ * periodo escrito? La marca `legible === false` del periodo; o, en una nota, una palabra de periodo que
+ * no complementa a otra cosa («cargos del periodo», «según el periodo») seguida, en las cinco palabras
+ * siguientes, de una de borroso / ilegible (por palabras, sin tildes), sin una negación entre las dos.
+ * Además, la señal de la verificación si la trae.
+ */
+const GUARD_PERIOD_NOUNS = new Set(["periodo", "period", "competencia"]);
+const GUARD_PERIOD_AS_MODIFIER = new Set(["del", "al", "por", "segun", "con", "para", "of", "for", "by", "per"]);
+const GUARD_BLUR_STEMS = ["borros", "ilegib", "ilegiv", "illegib", "desenfoc", "desfocad", "blurr", "unreadable"];
+
+function guardPeriodDoubt(extractions: ReadonlyArray<Extraction | null>, signal: unknown): string | null {
+  for (const e of extractions) {
+    if (e?.servicePeriod?.legible === false) {
+      const quote = typeof e.servicePeriod.evidence === "string" ? e.servicePeriod.evidence.trim() : "";
+      return quote ? `una lectura lo marca como ilegible: «${shown(quote, 60)}»` : "una lectura lo marca como ilegible";
+    }
+  }
+  for (const e of extractions) {
+    const notes = typeof e?.readerNotes === "string" ? e.readerNotes : "";
+    for (const sentence of notes.split(/[.,;!?\n]+/)) {
+      const words = foldText(sentence).split(/[^a-z0-9]+/).filter(Boolean);
+      for (let i = 0; i < words.length; i++) {
+        if (!GUARD_PERIOD_NOUNS.has(words[i])) continue;
+        if (i > 0 && GUARD_PERIOD_AS_MODIFIER.has(words[i - 1])) continue;
+        if (i > 1 && words[i - 1] === "el" && GUARD_PERIOD_AS_MODIFIER.has(words[i - 2])) continue;
+        const after = words.slice(i + 1, i + 6);
+        const blur = after.findIndex((w) => GUARD_BLUR_STEMS.some((stem) => w.startsWith(stem)));
+        if (blur < 0) continue;
+        if (after.slice(0, blur).some((w) => GUARD_NEGATIONS.has(w))) continue;
+        return `una lectura anota que está borroso: «${shown(sentence.trim(), 60)}»`;
+      }
+    }
+  }
+  if (Array.isArray(signal) && signal.length > 0) return "la verificación marca dudas sobre el periodo";
+  return null;
+}
+
 function guardMonthBefore(month: number, datePeriod: string): string | null {
   const year = Number(datePeriod.slice(0, 4));
   const current = Number(datePeriod.slice(5, 7));
@@ -928,6 +972,9 @@ function checkAgreement(
         : `la decisión indica el acuerdo ${decision.agreementId}, pero la factura cuadra con ${fitting.map((a) => a.id).join(", ")}`,
     );
   } else if (chosen.frequency === "monthly") {
+    if (invoice.periodDoubt !== null) {
+      v.add(`el periodo de la factura no se lee con claridad (${invoice.periodDoubt}): no se sabe qué mes cobra`);
+    }
     const decided = guardPeriod(decision.agreementPeriod);
     if (decided !== invoice.period) {
       v.add(

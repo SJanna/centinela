@@ -3,9 +3,10 @@
  * de la página) y el de anotaciones y campos de formulario: es deseable, porque el detector de
  * instrucciones escondidas debe verlo y las citas del lector deben poder encontrarse.
  */
-import { extractTextItems, getDocumentProxy, type StructuredTextItem } from "unpdf";
+import { extractImages, extractTextItems, getDocumentProxy, type StructuredTextItem } from "unpdf";
 import { IngestError } from "./errors";
-import { MAX_PDF_PAGES } from "./limits";
+import { measureRawSharpness } from "./image";
+import { MAX_PDF_PAGES, MAX_SHARPNESS_PDF_PAGES, MIN_SCANNED_PAGE_SIDE } from "./limits";
 import { cleanText } from "./text";
 
 export interface PdfText {
@@ -13,6 +14,31 @@ export interface PdfText {
   pages: number | null;
   /** Texto de todas las páginas unido con saltos de línea. null si no hay capa de texto o falló. */
   text: string | null;
+  /**
+   * Sin capa de texto (PDF escaneado): nitidez de la imagen más grande de cada una de las primeras
+   * MAX_SHARPNESS_PDF_PAGES páginas (src/ingest/sharpness.ts). Solo las páginas que se pudieron medir.
+   */
+  pageSharpness?: { page: number; sharpness: number }[];
+}
+
+/**
+ * Nitidez de las páginas de un PDF escaneado: la imagen más grande de cada página (si mide al menos
+ * MIN_SCANNED_PAGE_SIDE px de lado largo; un logo no cuenta). Lo que falle se omite.
+ */
+async function scannedPageSharpness(pdf: PdfProxy, pages: number): Promise<{ page: number; sharpness: number }[]> {
+  const out: { page: number; sharpness: number }[] = [];
+  for (let page = 1; page <= Math.min(pages, MAX_SHARPNESS_PDF_PAGES); page++) {
+    try {
+      const images = await extractImages(pdf, page);
+      const largest = images.reduce<(typeof images)[number] | null>((a, b) => (a == null || b.width * b.height > a.width * a.height ? b : a), null);
+      if (largest == null || Math.max(largest.width, largest.height) < MIN_SCANNED_PAGE_SIDE) continue;
+      const sharpness = await measureRawSharpness(largest.data, largest.width, largest.height, largest.channels);
+      if (sharpness != null) out.push({ page, sharpness });
+    } catch {
+      // Una imagen que PDF.js no sabe decodificar no se mide.
+    }
+  }
+  return out;
 }
 
 function isPasswordError(err: unknown): boolean {
@@ -329,6 +355,7 @@ export async function readPdf(bytes: Uint8Array, filename: string): Promise<PdfT
     } catch {
       text = null;
     }
+    if (text == null) return { pages, text, pageSharpness: await scannedPageSharpness(pdf, pages) };
     return { pages, text };
   } finally {
     await pdf.destroy().catch(() => undefined);

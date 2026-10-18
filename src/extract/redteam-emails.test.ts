@@ -103,7 +103,7 @@ describe("equipo rojo · correos que se pagaban, ahora escalan", () => {
     expect(enginePaid.outcome).toBe("PAGAR");
     const g = guardPayment(onlyWarning, ctx, enginePaid);
     expect(g.approved).toBe(false);
-    expect(g.violations).toEqual([expect.stringContaining("la entrada avisa que el correo trae algo que la lectura no vio («El correo trae")]);
+    expect(g.violations).toEqual([expect.stringContaining("la entrada dejó un aviso que la lectura no resuelve («El correo trae")]);
   });
 });
 

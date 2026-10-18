@@ -62,8 +62,8 @@ export interface InvoiceModel {
   brandColor?: string;
   vendor: Party;
   customer: Party;
-  /** Pares etiqueta/valor del encabezado (N.º de factura, fechas, periodo, moneda…). */
-  meta: { label: string; value: string }[];
+  /** Pares etiqueta/valor del encabezado (N.º de factura, fechas, periodo, moneda…). tag marca el valor para efectos de foto. */
+  meta: { label: string; value: string; tag?: string }[];
   lines: LineItem[];
   totals: TotalRow[];
   payment?: Payment;
@@ -144,7 +144,7 @@ export function drawInvoice(model: InvoiceModel): Canvas {
       mx = M;
     }
     c.text(mx, y, m.label.toUpperCase(), { size: 7, font: "sansBold", color: MUTE });
-    c.text(mx, y + 13, m.value, { size: 9.5, font: "sansBold", color: INK });
+    c.text(mx, y + 13, m.value, { size: 9.5, font: "sansBold", color: INK, tags: m.tag ? [m.tag] : [] });
     mx += colW;
   });
   y += 40;

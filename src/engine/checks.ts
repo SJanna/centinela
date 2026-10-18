@@ -375,9 +375,28 @@ const INGEST_WARNING_MAX = 320;
 const ACTION_INGEST =
   "Abrir el correo original como lo ve una persona en su cliente de correo y revisar lo que la lectura no vio o vio distinto (la versión HTML del cuerpo, los adjuntos que no se pudieron leer, el texto que se ve distinto de como se lee). Si muestra que la factura ya está pagada o cambia los datos del cobro, no pagar; si no, pedir al proveedor la factura en PDF.";
 
+/** Foto borrosa (aviso `blurry_image`): las dos lecturas pueden equivocarse igual. */
+const ACTION_BLURRY = "Pedir al proveedor una copia legible o el PDF original antes de pagar.";
+const BLURRY_IMAGE_CODE = "blurry_image";
+
 /**
- * Avisos de la entrada (versión HTML distinta del texto plano, adjunto que no se pudo leer). La señal
- * la produce otro módulo y es opcional en registros viejos: si no es una lista, no hay avisos.
+ * Acciones según los códigos de los avisos de la entrada: foto borrosa → pedir una copia legible; los
+ * demás (correo) → abrir el original. Sin códigos (registros anteriores) o con códigos que no son de
+ * foto, los avisos se tratan como de un correo.
+ */
+function ingestActions(input: EngineInput): string[] {
+  const raw: unknown = input.reading.signals.ingestWarningCodes;
+  const codes = Array.isArray(raw) ? (raw as unknown[]).map(String) : [];
+  const actions: string[] = [];
+  if (codes.length === 0 || codes.some((c) => c !== BLURRY_IMAGE_CODE)) actions.push(ACTION_INGEST);
+  if (codes.includes(BLURRY_IMAGE_CODE)) actions.push(ACTION_BLURRY);
+  return actions;
+}
+
+/**
+ * Avisos de la entrada (versión HTML distinta del texto plano, adjunto que no se pudo leer, foto
+ * borrosa). La señal la produce otro módulo y es opcional en registros viejos: si no es una lista, no
+ * hay avisos.
  */
 function ingestWarningsOf(input: EngineInput): string[] {
   const raw: unknown = input.reading.signals.ingestWarnings;
@@ -446,7 +465,7 @@ const lec1: Evaluator = (f, input) => {
   const totalQuoteProblem =
     s.illegibleCriticalFields.includes("total") && okExtractions(input).every((e) => e.total?.legible === true);
 
-  // Lo que una persona ve en el correo y la lectura no (versión HTML distinta, adjunto sin leer).
+  // Lo que una persona ve y la lectura no (versión HTML distinta, adjunto sin leer, foto borrosa).
   const ingestWarnings = ingestWarningsOf(input);
 
   if (
@@ -478,7 +497,7 @@ const lec1: Evaluator = (f, input) => {
   }
   const all = unique([...missing, ...illegible, ...notFound]);
   const actions: string[] = [];
-  if (ingestWarnings.length > 0) actions.push(ACTION_INGEST);
+  if (ingestWarnings.length > 0) actions.push(...ingestActions(input));
   actions.push(...voidActions(voidMarkers));
   if (documentKind != null) actions.push(documentKind === "receipt" ? ACTION_RECEIPT : ACTION_OTHER_DOCUMENT);
   if (all.length > 0) actions.push(`Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`);
@@ -772,6 +791,37 @@ function quoteHint(h: PeriodHint): string {
   return `«${t}»`;
 }
 
+const ACTION_PERIOD_UNCLEAR = "Pedir al proveedor una copia legible y confirmar qué mes cobra antes de pagar.";
+
+/**
+ * Lecturas que dudan del periodo escrito: lo marcan ilegible o anotan que está borroso (señal
+ * servicePeriodDoubts). Registros sin la señal: la marca `legible === false` de las propias lecturas.
+ */
+function periodDoubtsOf(input: EngineInput): { source: string; text: string }[] {
+  const raw: unknown = input.reading.signals.servicePeriodDoubts;
+  const out: { source: string; text: string }[] = [];
+  if (Array.isArray(raw)) {
+    for (const d of raw as unknown[]) {
+      const o = d as { source?: unknown; text?: unknown } | null;
+      out.push({ source: o?.source === "note" ? "note" : "flag", text: typeof o?.text === "string" ? o.text : "" });
+    }
+  } else {
+    for (const e of okExtractions(input)) {
+      if (e.servicePeriod?.legible === false) out.push({ source: "flag", text: e.servicePeriod.evidence ?? "" });
+    }
+  }
+  // Primero las marcas de ilegible (lo que la lectura dice del dato) con su cita, después las notas.
+  const rank = (d: { source: string; text: string }) => (d.source === "flag" ? 0 : 2) + (d.text.trim() === "" ? 1 : 0);
+  return out.sort((a, b) => rank(a) - rank(b));
+}
+
+/** «una de las lecturas lo marca como ilegible («PERIODO 10/2026 (borroso)»)» o «una de las lecturas anota «…»». */
+function periodDoubtText(d: { source: string; text: string }): string {
+  const t = truncate(stripFinalPeriod(d.text.replace(/\s+/g, " ").trim()), 110);
+  if (d.source === "note") return t ? `una de las lecturas anota «${t}»` : "una de las lecturas anota que está borroso";
+  return t ? `una de las lecturas lo marca como ilegible («${t}»)` : "una de las lecturas lo marca como ilegible";
+}
+
 /** «se refiere a un mes anterior («…»)» o «menciona octubre de 2026 («…»)». */
 function hintSays(h: PeriodHint | undefined): string {
   if (h == null || h.text == null) return "no se pudo revisar si se refiere a un mes anterior";
@@ -941,6 +991,34 @@ const dup3: Evaluator = (f, _input, ctx) => {
       "Confirmar con el proveedor: ese mes ya se pagó.",
       { agreementId: agreement.id, frequency: "monthly", period, previousInvoiceId: prev.invoiceId },
     );
+  }
+  // El documento trae un periodo que no se lee (una lectura lo marca ilegible o anota que está borroso):
+  // no es un periodo ausente. Imputarlo al mes de la fecha, o al que una lectura adivinó, podría pagar
+  // dos veces un mes ya pagado (errores honestos, HON-T4).
+  const unclear = periodDoubtsOf(_input);
+  if (unclear.length > 0) {
+    const lastPaid = f.paid
+      .filter((h) => h.agreementId === agreement.id && periodOf(h.agreementPeriod) != null)
+      .sort((a, b) => String(periodOf(b.agreementPeriod)).localeCompare(String(periodOf(a.agreementPeriod))))[0];
+    const paidNote = lastPaid
+      ? ` (del acuerdo «${agreement.description}» ya se pagó ${formatPeriod(periodOf(lastPaid.agreementPeriod) ?? "")}, factura ${lastPaid.invoiceId})`
+      : "";
+    return {
+      ...notEvaluable(
+        `El periodo de la factura no se lee con claridad: ${periodDoubtText(unclear[0])}. No se sabe qué mes cobra: imputarla a ${formatPeriod(period)} sin confirmarlo podría pagar dos veces un mes${paidNote}.`,
+        ACTION_PERIOD_UNCLEAR,
+        {
+          agreementId: agreement.id,
+          frequency: "monthly",
+          period,
+          periodUnclear: truncate(unclear[0].text, 120) || null,
+          periodUnclearSource: unclear[0].source,
+          lastPaidPeriod: lastPaid ? periodOf(lastPaid.agreementPeriod) : null,
+          previousInvoiceId: lastPaid?.invoiceId ?? null,
+        },
+      ),
+      doubt: MONTH_DOUBT,
+    };
   }
   const inferred = inferredPeriodMayBePaid(f, agreement, ctx);
   if (inferred) return inferred;

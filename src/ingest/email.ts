@@ -4,9 +4,9 @@
  *
  * Lo que una persona ve y la lectura no queda como aviso (`warnings`): una versión HTML que no dice
  * lo mismo que el texto plano (ver email-bodies.ts) o que no tiene texto (solo imágenes), un adjunto
- * que no se pudo leer, o texto que se ve distinto de como se lee (orden invertido, letras de otro
- * alfabeto que imitan latinas: ver lookalike.ts). Con cualquier aviso el correo nunca se paga (LEC-1
- * y la guardia).
+ * que no se pudo leer, una foto adjunta borrosa (ver sharpness.ts), o texto que se ve distinto de
+ * como se lee (orden invertido, letras de otro alfabeto que imitan latinas: ver lookalike.ts). Con
+ * cualquier aviso el correo nunca se paga (LEC-1 y la guardia).
  */
 import { simpleParser, type AddressObject, type EmailAddress, type ParsedMail } from "mailparser";
 import type { DocPart, IngestWarning } from "@/core/schemas";
@@ -15,6 +15,7 @@ import { detectFormat, extensionOf } from "./detect";
 import { compareEmailBodies } from "./email-bodies";
 import { IngestError, type IngestErrorCode } from "./errors";
 import { prepareImage } from "./image";
+import { blurryImageWarning, blurryPageWarnings, isBlurry } from "./sharpness";
 import { MAX_EMAIL_ATTACHMENTS, MAX_EMAIL_DEPTH, MIN_ATTACHMENT_IMAGE_SIDE } from "./limits";
 import { hasDirectionOverride, latinSkeleton, mixedScriptWords, reversedSegment } from "./lookalike";
 import { readPdf } from "./pdf";
@@ -241,7 +242,7 @@ interface AttachmentOutcome {
   parts: DocPart[];
   /** Bloque para plainText (null si el adjunto no aporta texto). */
   text: string | null;
-  /** Avisos del adjunto (un PDF que no se pudo abrir) o de un correo adjunto. */
+  /** Avisos del adjunto (un PDF que no se pudo abrir, una foto borrosa) o de un correo adjunto. */
   warnings?: IngestWarning[];
 }
 
@@ -255,14 +256,17 @@ async function processAttachment(
   const detected = detectFormat(content, name, contentType);
   switch (detected.kind) {
     case "pdf": {
-      const { pages, text } = await readPdf(content, name);
+      const { pages, text, pageSharpness } = await readPdf(content, name);
+      const blurry = blurryPageWarnings(pageSharpness, name);
       return {
         parts: [{ type: "pdf", base64: toBase64(content) }],
         text: text ? `--- Adjunto: ${name} ---\n${text}` : null,
         // PDF.js no lo pudo abrir: va igual a los lectores, pero ni el texto ni los detectores lo vieron.
         ...(pages == null
           ? { warnings: [{ code: "attachment_unreadable" as const, message: `El correo trae un adjunto que no se pudo leer: ${name} (PDF que no se pudo abrir)` }] }
-          : {}),
+          : blurry.length > 0
+            ? { warnings: blurry }
+            : {}),
       };
     }
     case "image": {
@@ -270,7 +274,12 @@ async function processAttachment(
       if (img.width != null && img.height != null && Math.max(img.width, img.height) < MIN_ATTACHMENT_IMAGE_SIDE) {
         return { skipped: SKIP_TINY_IMAGE };
       }
-      return { parts: [img.part], text: null };
+      return {
+        parts: [img.part],
+        text: null,
+        // Foto borrosa: lo que leen los lectores puede no ser lo que dice el documento.
+        ...(img.sharpness != null && isBlurry(img.sharpness) ? { warnings: [blurryImageWarning(img.sharpness, { attachment: name })] } : {}),
+      };
     }
     case "email": {
       if (depth + 1 > MAX_EMAIL_DEPTH) return { skipped: "correo anidado demasiado profundo" };

@@ -1,11 +1,14 @@
 /**
  * Entrada: convierte cualquier archivo subido en un NormalizedDoc.
  *
- * - PDF → la parte PDF tal cual + texto plano con unpdf (incluye texto oculto).
- * - Imagen → la imagen (reducida a 2000 px / JPEG 85 si pesa > 3,5 MB o mide > 2400 px).
+ * - PDF → la parte PDF tal cual + texto plano con unpdf (incluye texto oculto). Sin capa de texto
+ *   (escaneado), aviso si la imagen de alguna de las primeras páginas está borrosa.
+ * - Imagen → la imagen (reducida a 2000 px / JPEG 85 si pesa > 3,5 MB o mide > 2400 px). Aviso
+ *   (`warnings`) si la foto está borrosa (nitidez medida sin modelo por debajo del mínimo).
  * - Correo → texto con cabeceras y cuerpo (más la versión HTML si dice algo distinto), y cada adjunto
  *   como su propia parte. Avisos (`warnings`) si el HTML difiere de forma material del texto (o no
- *   tiene texto), si un adjunto no se pudo leer o si hay texto que se ve distinto de como se lee.
+ *   tiene texto), si un adjunto no se pudo leer, si una foto adjunta está borrosa o si hay texto que
+ *   se ve distinto de como se lee.
  * - Chat / texto → el texto limpio.
  *
  * Solo para el servidor (usa node:crypto, mailparser, unpdf y sharp).
@@ -16,6 +19,7 @@ import { detectFormat } from "./detect";
 import { normalizeEmail } from "./email";
 import { IngestError } from "./errors";
 import { prepareImage } from "./image";
+import { blurryImageWarning, blurryPageWarnings, isBlurry } from "./sharpness";
 import { MAX_FILE_BYTES, formatBytes } from "./limits";
 import { readPdf } from "./pdf";
 
@@ -57,9 +61,13 @@ export async function normalizeFile(bytes: Uint8Array, filename: string, mediaTy
 
   switch (detected.kind) {
     case "pdf": {
-      const { pages, text } = await readPdf(bytes, name);
+      const { pages, text, pageSharpness } = await readPdf(bytes, name);
       if (pages != null) meta.pages = String(pages);
       meta.textLayer = text ? "true" : "false";
+      if (pageSharpness && pageSharpness.length > 0) {
+        meta.pageSharpness = pageSharpness.map((p) => `${p.page}:${Math.round(p.sharpness)}`).join(" ");
+      }
+      const warnings = blurryPageWarnings(pageSharpness);
       return {
         fileHash,
         filename: name,
@@ -68,6 +76,7 @@ export async function normalizeFile(bytes: Uint8Array, filename: string, mediaTy
         parts: [{ type: "pdf", base64: toBase64(bytes) }],
         plainText: text,
         meta,
+        ...(warnings.length > 0 ? { warnings } : {}),
       };
     }
 
@@ -81,6 +90,7 @@ export async function normalizeFile(bytes: Uint8Array, filename: string, mediaTy
         parts: [img.part],
         plainText: null,
         meta: { ...meta, ...img.meta },
+        ...(img.sharpness != null && isBlurry(img.sharpness) ? { warnings: [blurryImageWarning(img.sharpness)] } : {}),
       };
     }
 

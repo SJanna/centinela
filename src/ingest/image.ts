@@ -1,6 +1,7 @@
 /**
  * Imágenes: se envían tal cual si el modelo las acepta y no son demasiado grandes; si no, se
- * reducen (y se enderezan según EXIF) con sharp, que se carga solo cuando hace falta.
+ * reducen (y se enderezan según EXIF) con sharp, que se carga solo cuando hace falta. Con sharp
+ * también se mide la nitidez (src/ingest/sharpness.ts): la entrada avisa si la foto está borrosa.
  */
 import type { DocPart } from "@/core/schemas";
 import { IngestError, unsupported } from "./errors";
@@ -10,9 +11,11 @@ import {
   MAX_IMAGE_SIDE,
   RESIZED_IMAGE_SIDE,
   RESIZED_JPEG_QUALITY,
+  SHARPNESS_SIDE,
   formatBytes,
 } from "./limits";
 import { toBase64 } from "./bytes";
+import { laplacianVariance } from "./sharpness";
 
 type SharpFactory = (typeof import("sharp"))["default"];
 type ImagePart = Extract<DocPart, { type: "image" }>;
@@ -22,6 +25,11 @@ export interface PreparedImage {
   /** Ancho y alto originales (ya enderezados). null si no se pudieron medir. */
   width: number | null;
   height: number | null;
+  /**
+   * Nitidez (varianza del laplaciano a SHARPNESS_SIDE px). null si no se pudo medir: sin sharp, imagen
+   * lisa o que sharp no pudo decodificar para medir.
+   */
+  sharpness: number | null;
   meta: Record<string, string>;
 }
 
@@ -46,6 +54,46 @@ function loadSharp(): Promise<SharpFactory | null> {
 export function setSharpLoaderForTests(loader: (() => Promise<SharpFactory | null>) | null): void {
   sharpPromise = null;
   loadSharpImpl = loader ?? importSharp;
+}
+
+/**
+ * Mide la nitidez: endereza según EXIF, aplana la transparencia sobre blanco, pasa a grises y reduce a
+ * SHARPNESS_SIDE px de lado largo (sin agrandar). null si falla.
+ */
+async function measureSharpness(sharp: SharpFactory, bytes: Uint8Array): Promise<number | null> {
+  try {
+    const { data, info } = await sharp(bytes, { failOn: "none", animated: false })
+      .rotate()
+      .flatten({ background: "#ffffff" })
+      .greyscale()
+      .resize({ width: SHARPNESS_SIDE, height: SHARPNESS_SIDE, fit: "inside", withoutEnlargement: true })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return laplacianVariance(data, info.width, info.height, info.channels);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Nitidez de una imagen en píxeles crudos (la imagen de una página de un PDF escaneado), igual que
+ * measureSharpness. null sin sharp, con un formato de píxel desconocido o si falla.
+ */
+export async function measureRawSharpness(pixels: Uint8Array | Uint8ClampedArray, width: number, height: number, channels: number): Promise<number | null> {
+  if (channels !== 1 && channels !== 2 && channels !== 3 && channels !== 4) return null;
+  const sharp = await loadSharp();
+  if (!sharp) return null;
+  try {
+    const { data, info } = await sharp(Buffer.from(pixels.buffer, pixels.byteOffset, pixels.byteLength), { raw: { width, height, channels } })
+      .flatten({ background: "#ffffff" })
+      .greyscale()
+      .resize({ width: SHARPNESS_SIDE, height: SHARPNESS_SIDE, fit: "inside", withoutEnlargement: true })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return laplacianVariance(data, info.width, info.height, info.channels);
+  } catch {
+    return null;
+  }
 }
 
 /** Intentos de reducción: el primero es el pedido (2000 px, calidad 85); los demás, por si aún pesa mucho. */
@@ -74,6 +122,7 @@ export async function prepareImage(
         part: { type: "image", mediaType: mediaType as NativeImageMediaType, base64: toBase64(bytes) },
         width: null,
         height: null,
+        sharpness: null,
         meta: { resized: "false" },
       };
     }
@@ -105,7 +154,9 @@ export async function prepareImage(
     throw new IngestError(`La imagen «${filename}» está dañada o incompleta.`, "corrupt");
   }
 
+  const sharpness = await measureSharpness(sharp, bytes);
   const baseMeta: Record<string, string> = { width: String(width), height: String(height) };
+  if (sharpness != null) baseMeta.sharpness = String(Math.round(sharpness));
   const needsProcessing =
     !native || bytes.byteLength > MAX_IMAGE_BYTES || Math.max(width, height) > MAX_IMAGE_SIDE || orientation !== 1;
 
@@ -114,6 +165,7 @@ export async function prepareImage(
       part: { type: "image", mediaType: mediaType as NativeImageMediaType, base64: toBase64(bytes) },
       width,
       height,
+      sharpness,
       meta: { ...baseMeta, resized: "false" },
     };
   }
@@ -135,6 +187,7 @@ export async function prepareImage(
         part: { type: "image", mediaType: "image/jpeg", base64: out.data.toString("base64") },
         width,
         height,
+        sharpness,
         meta: {
           ...baseMeta,
           resized: "true",

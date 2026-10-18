@@ -20,6 +20,27 @@ export const RESIZED_IMAGE_SIDE = 2000;
 /** Calidad JPEG de una imagen reducida. */
 export const RESIZED_JPEG_QUALITY = 85;
 
+/**
+ * Lado largo (px) al que se reduce una imagen para medir su nitidez (1200 × 1600 en una foto vertical
+ * 3:4; igual girada). Una imagen más chica se mide a su tamaño.
+ */
+export const SHARPNESS_SIDE = 1600;
+
+/**
+ * Nitidez mínima (varianza del laplaciano a SHARPNESS_SIDE px). Por debajo, la entrada deja el aviso
+ * `blurry_image` y la factura nunca se paga sola. En el set de estrés las fotos con el total borroso
+ * miden 49–107 y las demás 181 o más (ver src/ingest/sharpness.ts).
+ */
+export const MIN_IMAGE_SHARPNESS = 120;
+
+/**
+ * Páginas de un PDF escaneado (sin capa de texto) cuya nitidez se mide: la imagen más grande de cada
+ * una, si mide al menos MIN_SCANNED_PAGE_SIDE px de lado largo. PDF.js decodifica cada imagen (~0,7 s
+ * por página): las demás páginas no se miden.
+ */
+export const MAX_SHARPNESS_PDF_PAGES = 3;
+export const MIN_SCANNED_PAGE_SIDE = 600;
+
 /** Imágenes adjuntas a un correo con lado mayor por debajo de esto se ignoran (logos, firmas, píxeles de rastreo). */
 export const MIN_ATTACHMENT_IMAGE_SIDE = 64;
 

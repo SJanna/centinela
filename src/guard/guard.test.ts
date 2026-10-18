@@ -239,14 +239,14 @@ describe("G2 · lectura sólida", () => {
     [
       "ingestWarnings",
       ["El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado)"],
-      "la entrada avisa que el correo trae algo que la lectura no vio («El correo trae un adjunto que no se pudo leer: comprovante_pago.docx",
+      "la entrada dejó un aviso que la lectura no resuelve («El correo trae un adjunto que no se pudo leer: comprovante_pago.docx",
     ],
     [
       "ingestWarnings",
       ["El correo trae una versión HTML distinta del texto plano: el HTML dice «pagado» y el texto no"],
-      "la entrada avisa que el correo trae algo que la lectura no vio («El correo trae una versión HTML distinta del texto plano",
+      "la entrada dejó un aviso que la lectura no resuelve («El correo trae una versión HTML distinta del texto plano",
     ],
-    ["ingestWarnings", [""], "la entrada avisa que el correo trae algo que la lectura no vio"],
+    ["ingestWarnings", [""], "la entrada dejó un aviso que la lectura no resuelve"],
     ["voidDocumentMarkers", [{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" }], "el documento no es un cobro válido («ANULADA»)"],
     ["voidDocumentMarkers", [{ text: "  ", reason: "x" }], "el documento no es un cobro válido"],
   ];

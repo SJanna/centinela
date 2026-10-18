@@ -1,0 +1,89 @@
+{
+  "spentUsd": 0.37677179999999993,
+  "runs": [
+    {
+      "id": "HON-D1-foto-mes-pasado-fecha-cambiada",
+      "costUsd": 0.0268067,
+      "at": "2026-10-18T15:37:43.178Z",
+      "outcome": "FRENAR"
+    },
+    {
+      "id": "HON-D3-foto-mismo-numero-otro-mes",
+      "costUsd": 0.0274062,
+      "at": "2026-10-18T15:37:49.142Z",
+      "outcome": "FRENAR"
+    },
+    {
+      "id": "HON-L1-foto-jpeg-calidad-40",
+      "costUsd": 0.0273117,
+      "at": "2026-10-18T15:37:54.732Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-L2-foto-girada-90",
+      "costUsd": 0.0270677,
+      "at": "2026-10-18T15:38:00.744Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-L3-foto-girada-180",
+      "costUsd": 0.027787199999999998,
+      "at": "2026-10-18T15:38:07.669Z",
+      "outcome": "ESCALAR"
+    },
+    {
+      "id": "HON-L4-foto-bordes-cortados",
+      "costUsd": 0.0241096,
+      "at": "2026-10-18T15:38:13.081Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-L5-foto-reflejo",
+      "costUsd": 0.027228699999999998,
+      "at": "2026-10-18T15:38:19.244Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-L6-foto-de-pantalla",
+      "costUsd": 0.026288699999999998,
+      "at": "2026-10-18T15:38:24.030Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-L7-foto-whatsapp",
+      "costUsd": 0.024592799999999998,
+      "at": "2026-10-18T15:38:29.455Z",
+      "outcome": "PAGAR"
+    },
+    {
+      "id": "HON-T1-foto-sello-pagado-tenue",
+      "costUsd": 0.0285557,
+      "at": "2026-10-18T15:38:35.739Z",
+      "outcome": "ESCALAR"
+    },
+    {
+      "id": "HON-T2-foto-sello-pagado-cortado",
+      "costUsd": 0.0278092,
+      "at": "2026-10-18T15:38:43.016Z",
+      "outcome": "ESCALAR"
+    },
+    {
+      "id": "HON-T3-foto-anulada-desvaida",
+      "costUsd": 0.0276607,
+      "at": "2026-10-18T15:38:49.344Z",
+      "outcome": "ESCALAR"
+    },
+    {
+      "id": "HON-T4-foto-octubre-reenviada-periodo-borroso",
+      "costUsd": 0.0272467,
+      "at": "2026-10-18T15:38:55.626Z",
+      "outcome": "ESCALAR"
+    },
+    {
+      "id": "HON-T5-foto-duplicado-numero-nuevo-periodo-borroso",
+      "costUsd": 0.0269002,
+      "at": "2026-10-18T15:39:02.528Z",
+      "outcome": "FRENAR"
+    }
+  ]
+}

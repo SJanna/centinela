@@ -1,0 +1,95 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "Camila Restrepo Dev S.A.S.",
+    "evidence": "Emisor Camila Restrepo Dev S.A.S.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "901.456.789-1",
+    "evidence": "NIT: 901.456.789-1",
+    "legible": true
+  },
+  "billToName": {
+    "value": "Andes Labs Inc.",
+    "evidence": "Cliente Andes Labs Inc.",
+    "legible": true
+  },
+  "billToTaxId": {
+    "value": "93-4127765",
+    "evidence": "EIN: 93-4127765",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "CRD-1101",
+    "evidence": "FACTURA N.º CRD-1101",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-11-03",
+    "evidence": "FECHA DE EMISIÓN 03/11/2026",
+    "legible": true
+  },
+  "dueDate": {
+    "value": "2026-11-18",
+    "evidence": "VENCIMIENTO 18/11/2026",
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "PERIODO 10/2026",
+    "legible": false
+  },
+  "currency": {
+    "value": "COP",
+    "evidence": "MONEDA COP",
+    "legible": true
+  },
+  "subtotal": {
+    "value": 12000000,
+    "evidence": "Subtotal COP 12.000.000",
+    "legible": true
+  },
+  "tax": {
+    "value": 0,
+    "evidence": "IVA 0 % (exportación) COP 0",
+    "legible": true
+  },
+  "total": {
+    "value": 12000000,
+    "evidence": "TOTAL A PAGAR COP 12.000.000",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Desarrollo backend – tarifa fija mensual",
+      "quantity": 1,
+      "unitPrice": 12000000,
+      "amount": 12000000
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "Camila Restrepo Dev S.A.S.",
+      "evidence": "Beneficiario: Camila Restrepo Dev S.A.S.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Bancolombia",
+      "evidence": "Banco: Bancolombia",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "4512-0098-7731",
+      "evidence": "Cuenta corriente N.º: 4512-0098-7731",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "COLOCOBM",
+      "evidence": "SWIFT: COLOCOBM",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "El período (PERIODO) está borroso: el valor que se alcanza a leer es ilegible; se interpreta 10/2026 como periodo de servicio, pero es una lectura dudosa y el año 2026 se toma del encabezado de la fecha de emisión. Dirección del cliente no relevante. Moneda COP leída explícitamente en el documento."
+}

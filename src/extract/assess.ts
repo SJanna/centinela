@@ -32,6 +32,7 @@ import { detectPaidDocumentMarkers } from "./paid-markers";
 import { detectVoidDocumentMarkers } from "./void-markers";
 import { detectEarlierPeriodMarkers, type EarlierPeriodMarker, type EarlierPeriodSource } from "./period-markers";
 import { voidMarkersInNotes } from "./void-notes";
+import { periodDoubtsOf } from "./period-doubts";
 import { DOLLAR_SIGN_CURRENCIES, currencyMarkerIn, declaresCurrency, namesCurrency } from "./currency-written";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
@@ -561,8 +562,8 @@ export const INGEST_WARNING_WITHOUT_MESSAGE = "La entrada dejó un aviso sin det
 
 /**
  * Avisos de la entrada (NormalizedDoc.warnings): el correo trae una versión HTML distinta del texto
- * plano o un adjunto que no se pudo leer. Lo que una persona ve no es lo que leyeron los lectores:
- * cualquier aviso basta para no pagar (LEC-1 escala y la guardia rechaza). Un aviso sin mensaje se
+ * plano o un adjunto que no se pudo leer, o la foto está borrosa. Lo que una persona ve no es lo que
+ * leyeron los lectores: cualquier aviso basta para no pagar (LEC-1 escala y la guardia rechaza). Un aviso sin mensaje se
  * conserva con un texto genérico: descartarlo dejaría pasar el pago.
  */
 export function collectIngestWarnings(doc: NormalizedDoc): string[] {
@@ -573,6 +574,20 @@ export function collectIngestWarnings(doc: NormalizedDoc): string[] {
     const message = typeof (w as { message?: unknown })?.message === "string" ? (w as { message: string }).message : "";
     const text = message.replace(/\s+/g, " ").trim() || INGEST_WARNING_WITHOUT_MESSAGE;
     if (!out.includes(text)) out.push(text);
+  }
+  return out;
+}
+
+type IngestWarningCode = NonNullable<ReadingSignals["ingestWarningCodes"]>[number];
+
+/** Códigos de los avisos de la entrada, sin repetir (eligen la acción que se pide a la persona). */
+export function collectIngestWarningCodes(doc: NormalizedDoc): IngestWarningCode[] {
+  const warnings: unknown = doc.warnings;
+  if (!Array.isArray(warnings)) return [];
+  const out: IngestWarningCode[] = [];
+  for (const w of warnings as unknown[]) {
+    const code = (w as { code?: unknown })?.code;
+    if (typeof code === "string" && !out.includes(code as IngestWarningCode)) out.push(code as IngestWarningCode);
   }
   return out;
 }
@@ -980,10 +995,12 @@ export function assessReadings(
     evidenceNotFound: extraction ? findEvidenceNotFound(doc, extraction) : [],
     paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
     ingestWarnings: collectIngestWarnings(doc),
+    ingestWarningCodes: collectIngestWarningCodes(doc),
     voidDocumentMarkers: collectVoidDocumentMarkers(doc, [primary, secondary]),
     currencyOnlyDollarSign: currency.onlyDollarSign,
     currencyMarker: currency.marker,
     earlierPeriodMarkers: collectEarlierPeriodMarkers(doc, data, [primary, secondary]),
+    servicePeriodDoubts: periodDoubtsOf([primary, secondary]),
   };
 
   return { primary, secondary, data, signals };

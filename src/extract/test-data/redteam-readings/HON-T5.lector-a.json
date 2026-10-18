@@ -1,0 +1,95 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "CloudMetrics Inc.",
+    "evidence": "CloudMetrics Inc.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "88-1234567",
+    "evidence": "EIN: 88-1234567",
+    "legible": true
+  },
+  "billToName": {
+    "value": "Andes Labs Inc.",
+    "evidence": "Andes Labs Inc.",
+    "legible": true
+  },
+  "billToTaxId": {
+    "value": "93-4127765",
+    "evidence": "EIN: 93-4127765",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "CM-2026-1102",
+    "evidence": "CM-2026-1102",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-30",
+    "evidence": "Oct 30, 2026",
+    "legible": true
+  },
+  "dueDate": {
+    "value": "2026-11-14",
+    "evidence": "Nov 14, 2026",
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "BILLING PERIOD (texto borroso)",
+    "legible": false
+  },
+  "currency": {
+    "value": "USD",
+    "evidence": "CURRENCY USD",
+    "legible": true
+  },
+  "subtotal": {
+    "value": 1200,
+    "evidence": "Subtotal USD 1,200.00",
+    "legible": true
+  },
+  "tax": {
+    "value": 0,
+    "evidence": "Tax (0 %) USD 0.00",
+    "legible": true
+  },
+  "total": {
+    "value": 1200,
+    "evidence": "Amount due USD 1,200.00",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Monitoring SaaS – Team plan",
+      "quantity": 1,
+      "unitPrice": 1200,
+      "amount": 1200
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "CloudMetrics Inc.",
+      "evidence": "Beneficiario: CloudMetrics Inc.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Silicon Valley Bank",
+      "evidence": "Banco: Silicon Valley Bank",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "3300198822",
+      "evidence": "Account: 3300198822",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "121140399",
+      "evidence": "ABA routing: 121140399",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "El periodo de facturación está borroso en la imagen; el mes 10/2026 es una lectura aproximada. Los datos de pago son la cuenta normal de la factura."
+}

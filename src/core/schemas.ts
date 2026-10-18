@@ -80,9 +80,12 @@ export type DocPart =
  * - attachment_unreadable: un adjunto del correo no se pudo leer (formato no soportado, cifrado, dañado, demasiados).
  * - deceptive_text: el correo trae texto que se ve distinto de como se lee (orden de las letras
  *   invertido con forzados de dirección, letras de otro alfabeto que imitan latinas dentro de una palabra).
+ * - blurry_image: la foto (o una foto adjunta a un correo) está borrosa: su nitidez, medida sin modelo
+ *   (src/ingest/sharpness.ts), está por debajo del mínimo. Las dos lecturas pueden equivocarse igual en
+ *   una foto borrosa; una persona pide una copia legible.
  */
 export interface IngestWarning {
-  code: "html_text_mismatch" | "attachment_unreadable" | "deceptive_text";
+  code: "html_text_mismatch" | "attachment_unreadable" | "deceptive_text" | "blurry_image";
   /** Frase en español, con los valores concretos («El correo trae un adjunto que no se pudo leer: comprovante_pago.docx…»). */
   message: string;
 }
@@ -98,7 +101,7 @@ export interface NormalizedDoc {
   /** Texto plano extraído sin modelo (PDF con texto, correo, chat). null si es solo imagen. */
   plainText: string | null;
   meta: Record<string, string>;
-  /** Avisos de la entrada (hoy solo de correos). Si hay alguno, nunca se paga: LEC-1 escala y la guardia rechaza. */
+  /** Avisos de la entrada (correos y fotos borrosas). Si hay alguno, nunca se paga: LEC-1 escala y la guardia rechaza. */
   warnings?: IngestWarning[];
 }
 
@@ -169,12 +172,20 @@ export interface ReadingSignals {
   paidDocumentMarkers?: { text: string; source: "model" | "heuristic"; reason: string }[];
   /**
    * LEC-1: avisos de la entrada (NormalizedDoc.warnings), uno por mensaje: el correo trae una versión
-   * HTML distinta del texto plano o un adjunto que no se pudo leer. Lo que una persona ve en el correo
-   * no es lo que leyeron los lectores. Si no está vacía, nunca se paga: LEC-1 escala y la guardia
+   * HTML distinta del texto plano o un adjunto que no se pudo leer, o la foto está borrosa. Lo que una
+   * persona ve no es lo que leyeron los lectores (o en una foto borrosa los dos pueden equivocarse
+   * igual). Si no está vacía, nunca se paga: LEC-1 escala y la guardia
    * rechaza. La verificación siempre la llena; es opcional solo para leer registros guardados antes de
    * que existiera (la guardia la exige: si falta, las señales están incompletas y no aprueba).
    */
   ingestWarnings?: string[];
+  /**
+   * Códigos de esos avisos, sin repetir (p. ej. ["blurry_image"]): eligen qué acción se le pide a la
+   * persona (una foto borrosa → pedir una copia legible; un correo → abrir el original). Opcional en
+   * registros anteriores: sin códigos, los avisos se tratan como de un correo. No decide nada: lo que
+   * hace escalar es ingestWarnings.
+   */
+  ingestWarningCodes?: IngestWarning["code"][];
   /**
    * LEC-1: el documento NO es un cobro válido: una factura anulada, un borrador, una proforma, una
    * nota crédito o un documento que dice que no es una factura. Una entrada por cada línea marcada por
@@ -187,6 +198,15 @@ export interface ReadingSignals {
    * están incompletas y no aprueba).
    */
   voidDocumentMarkers?: { text: string; reason: string; kind?: VoidDocumentKind }[];
+  /**
+   * DUP-3: lecturas que dudan del periodo de servicio (src/extract/period-doubts.ts): lo marcan como
+   * ilegible (`servicePeriod.legible === false`, source "flag"; text = su cita) o anotan que está
+   * borroso o no se lee (source "note"; text = la parte de la nota). Un periodo que el documento trae
+   * pero no se lee no es un periodo ausente: con un acuerdo mensual, no se imputa al mes de la fecha
+   * (podría pagar dos veces un mes ya pagado) y DUP-3 queda sin evaluar. La guardia lo revisa con su
+   * propia lógica. Opcional en registros anteriores (el motor mira entonces la marca de las lecturas).
+   */
+  servicePeriodDoubts?: { readerId: string; source: "flag" | "note"; text: string }[];
   /**
    * ACU-2: la moneda leída (data.currency) es una de las que se escriben con un «$» solo (USD, COP,
    * MXN, CLP, ARS) y el documento no la nombra de forma explícita (código ISO como palabra, «US$»,
