@@ -1,0 +1,95 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "CloudMetrics Inc.",
+    "evidence": "CloudMetrics Inc.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "88-1234567",
+    "evidence": "EIN: 88-1234567",
+    "legible": true
+  },
+  "billToName": {
+    "value": "Andes Labs Inc.",
+    "evidence": "Cliente Andes Labs Inc.",
+    "legible": true
+  },
+  "billToTaxId": {
+    "value": "93-4127765",
+    "evidence": "EIN: 93-4127765",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "PF-2026-1012",
+    "evidence": "PROFORMA # PF-2026-1012",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-16",
+    "evidence": "DATE Oct 16, 2026",
+    "legible": true
+  },
+  "dueDate": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "PERIOD Oct 2026",
+    "legible": true
+  },
+  "currency": {
+    "value": "USD",
+    "evidence": "CURRENCY USD",
+    "legible": true
+  },
+  "subtotal": {
+    "value": 1200,
+    "evidence": "Subtotal $1,200.00",
+    "legible": true
+  },
+  "tax": {
+    "value": 0,
+    "evidence": "Tax $0.00",
+    "legible": true
+  },
+  "total": {
+    "value": 1200,
+    "evidence": "Total $1,200.00",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Team plan – monitoring subscription",
+      "quantity": 1,
+      "unitPrice": 1200,
+      "amount": 1200
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "CloudMetrics Inc.",
+      "evidence": "Beneficiario: CloudMetrics Inc.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Silicon Valley Bank",
+      "evidence": "Banco: Silicon Valley Bank",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "3300198822",
+      "evidence": "Account: 3300198822",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "121140399",
+      "evidence": "ABA: 121140399",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Documento titulado PROFORMA INVOICE; indica 'This proforma is not a tax invoice. The final invoice will be issued once the period closes.' No tiene fecha de vencimiento. Tratado como factura por contener un cobro de total y datos de pago."
+}

@@ -19,7 +19,7 @@ describe("voidMarkersInNotes: marca", () => {
 
   it("cita la parte de la nota", () => {
     expect(voidMarkersInNotes("Todo legible. La factura está anulada según el sello.")).toEqual([
-      { text: "La factura está anulada según el sello", reason: "está anulado" },
+      { text: "La factura está anulada según el sello", reason: "está anulado", kind: "void" },
     ]);
   });
 });

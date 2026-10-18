@@ -30,6 +30,7 @@ import {
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
 import { detectVoidDocumentMarkers } from "./void-markers";
+import { voidMarkersInNotes } from "./void-notes";
 import { DOLLAR_SIGN_CURRENCIES, currencyMarkerIn, declaresCurrency, namesCurrency } from "./currency-written";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
@@ -372,9 +373,22 @@ export function collectPaidDocumentMarkers(
  * mismo texto que revisa el detector de ya pagado. Cualquier entrada basta para no pagar: LEC-1 escala
  * y la guardia rechaza. Sin texto plano (una foto) depende de que una lectura diga «other».
  */
-export function collectVoidDocumentMarkers(doc: NormalizedDoc): NonNullable<ReadingSignals["voidDocumentMarkers"]> {
-  if (!doc.plainText) return [];
-  return detectVoidDocumentMarkers(doc.plainText).map((m) => ({ text: m.text, reason: m.reason, kind: m.kind }));
+export function collectVoidDocumentMarkers(
+  doc: NormalizedDoc,
+  readings: Array<ReaderResult | null> = [],
+): NonNullable<ReadingSignals["voidDocumentMarkers"]> {
+  const out: NonNullable<ReadingSignals["voidDocumentMarkers"]> = doc.plainText
+    ? detectVoidDocumentMarkers(doc.plainText).map((m) => ({ text: m.text, reason: m.reason, kind: m.kind }))
+    : [];
+  // Lo que la propia lectura anota (sello, marca de agua o título que vio), también en imágenes: una
+  // lectura puede anotar «marca de agua BORRADOR» y aun así clasificar el documento como factura.
+  for (const reading of readings) {
+    if (!reading?.ok) continue;
+    for (const note of voidMarkersInNotes(reading.extraction.readerNotes)) {
+      out.push({ text: `${reading.readerId} anota: «${note.text}»`, reason: `Una lectura anota que el documento ${note.reason}`, kind: note.kind });
+    }
+  }
+  return out;
 }
 
 /** Cómo escribe el documento la moneda del total: currencyOnlyDollarSign y currencyMarker de las señales. */
@@ -929,7 +943,7 @@ export function assessReadings(
     evidenceNotFound: extraction ? findEvidenceNotFound(doc, extraction) : [],
     paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
     ingestWarnings: collectIngestWarnings(doc),
-    voidDocumentMarkers: collectVoidDocumentMarkers(doc),
+    voidDocumentMarkers: collectVoidDocumentMarkers(doc, [primary, secondary]),
     currencyOnlyDollarSign: currency.onlyDollarSign,
     currencyMarker: currency.marker,
   };

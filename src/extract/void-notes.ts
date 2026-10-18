@@ -17,15 +17,18 @@
  * anulado», «sin marca de borrador», «no es un borrador», «no tiene notas crédito»).
  */
 
-const MARKERS: readonly { pattern: RegExp; reason: string }[] = [
-  { pattern: /\bborrador\b|\bdraft\b|\bdocumento\s+preliminar\b/g, reason: "es un borrador" },
-  { pattern: /\bpro[\s-]?forma\b/g, reason: "es una proforma" },
-  { pattern: /\banulad[oa]s?\b|\banulacion\b|\bvoid(?:ed)?\b/g, reason: "está anulado" },
-  { pattern: /\bnotas?\s+(?:de\s+)?credito\b|\bcredit\s+(?:note|memo)s?\b|\bnota\s+de\s+abono\b/g, reason: "es una nota crédito" },
+import type { VoidDocumentKind } from "../core/schemas";
+
+const MARKERS: readonly { pattern: RegExp; reason: string; kind: VoidDocumentKind }[] = [
+  { pattern: /\bborrador\b|\bdraft\b|\bdocumento\s+preliminar\b/g, reason: "es un borrador", kind: "draft" },
+  { pattern: /\bpro[\s-]?forma\b/g, reason: "es una proforma", kind: "draft" },
+  { pattern: /\banulad[oa]s?\b|\banulacion\b|\bvoid(?:ed)?\b/g, reason: "está anulado", kind: "void" },
+  { pattern: /\bnotas?\s+(?:de\s+)?credito\b|\bcredit\s+(?:note|memo)s?\b|\bnota\s+de\s+abono\b/g, reason: "es una nota crédito", kind: "credit_note" },
   {
     pattern:
       /\bno\s+es\s+(?:una\s+)?factura\b|\bnot\s+an?\s+(?:tax\s+|valid\s+|final\s+|real\s+)?invoice\b|\bsin\s+validez\b|\bno\s+(?:es\s+)?valid[oa]\s+como\s+factura\b|\bnot\s+valid\b/g,
     reason: "dice que no es una factura válida",
+    kind: "not_invoice",
   },
 ];
 
@@ -44,6 +47,8 @@ export interface VoidNote {
   text: string;
   /** Qué dice la nota del documento, en español («es un borrador»). */
   reason: string;
+  /** Clase de la primera marca de esa parte de la nota. */
+  kind: VoidDocumentKind;
 }
 
 /** Marcas de documento no cobrable en una nota de lector. Una por parte de la frase, en orden. */
@@ -54,13 +59,15 @@ export function voidMarkersInNotes(notes: string | null | undefined): VoidNote[]
   for (const raw of notes.split(/[.;:!?,\n]+/)) {
     const clause = fold(raw);
     const reasons: string[] = [];
-    for (const { pattern, reason } of MARKERS) {
+    let kind: VoidDocumentKind | null = null;
+    for (const { pattern, reason, kind: k } of MARKERS) {
       for (const m of clause.matchAll(pattern)) {
         if (NEGATION_BEFORE.test(clause.slice(0, m.index))) continue;
         if (!reasons.includes(reason)) reasons.push(reason);
+        kind ??= k;
       }
     }
-    if (reasons.length > 0) out.push({ text: raw.replace(/\s+/g, " ").trim().slice(0, 160), reason: reasons.join("; ") });
+    if (kind != null) out.push({ text: raw.replace(/\s+/g, " ").trim().slice(0, 160), reason: reasons.join("; "), kind });
   }
   return out;
 }
