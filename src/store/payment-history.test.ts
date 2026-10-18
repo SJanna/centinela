@@ -4,9 +4,10 @@
  * el mismo historial y registran dos PAGAR distintos: el segundo se rechaza.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { DbHandle } from "./db";
+import type { DbHandle, StoreQuery } from "./db";
 import { isPaymentHistoryChangedError, PaymentHistoryChangedError, isDuplicatePaymentError } from "./payment-keys";
-import { createRepo, type Repo } from "./repo";
+import { paymentKeysOf } from "./payment-keys";
+import { createRepo, PAYMENT_LOCK_KEY, paymentInsertQueries, type Repo } from "./repo";
 import { makeCompany, makeRecord, makeVendor, openFakeNeonDb, openMemoryDb, openTwoInstances } from "./test-helpers";
 
 const COMPANY = makeCompany({ vendors: [makeVendor("v-uno"), makeVendor("v-dos")] });
@@ -67,6 +68,32 @@ describe.each([
     expect(await repo.exportDecisions()).toEqual([]);
   });
 
+  it("un id que ya existe se rechaza aunque la condición no se cumpla (no se da por insertado)", async () => {
+    await repo.appendDecision(payment("d1", "v-uno", "F-1"), { paymentsSeen: 0 });
+    await expect(repo.appendDecision(payment("d1", "v-dos", "F-2"), { paymentsSeen: 0 })).rejects.toThrow(/Ya existe una decisión con id «d1»/);
+    const stored = await repo.exportDecisions();
+    expect(stored).toHaveLength(1);
+    expect(stored[0].reading.data?.invoiceNumber).toBe("F-1");
+  });
+
+  it("la inserción va en una transacción: READ COMMITTED, candado y la inserción condicional, en ese orden", async () => {
+    const seen: string[] = [];
+    const spy: DbHandle = {
+      ...handle,
+      atomic: (build) =>
+        handle.atomic((db) => {
+          const queries = build(db);
+          for (const q of queries) seen.push((q as unknown as { getQuery(): { sql: string } }).getQuery().sql.replace(/\s+/g, " ").trim());
+          return queries;
+        }),
+    };
+    await createRepo(spy).appendDecision(payment("d1", "v-uno", "F-1"), { paymentsSeen: 0 });
+    expect(seen).toHaveLength(3);
+    expect(seen[0]).toBe("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+    expect(seen[1]).toMatch(/^SELECT pg_advisory_xact_lock\(\$1::bigint\)$/);
+    expect(seen[2]).toMatch(/^INSERT INTO decisions .* WHERE \(SELECT count\(\*\) FROM decisions WHERE outcome = 'PAGAR'\) = \$\d+::bigint$/);
+  });
+
   it("sin paymentsSeen se inserta como antes", async () => {
     await repo.appendDecision(payment("d1", "v-uno", "F-1"));
     await repo.appendDecision(payment("d2", "v-dos", "F-2"));
@@ -97,5 +124,20 @@ describe("dos instancias sobre la misma base", () => {
     expect(rejected).toHaveLength(1);
     expect(isPaymentHistoryChangedError(rejected[0].reason)).toBe(true);
     expect(await a.exportDecisions()).toHaveLength(1);
+  });
+});
+
+describe("paymentInsertQueries", () => {
+  it("usa la clave fija del candado y los pagos vistos como parámetros", async () => {
+    const handle = await openMemoryDb();
+    try {
+      const record = payment("d1", "v-uno", "F-1");
+      const queries: StoreQuery[] = paymentInsertQueries(handle.db, record, paymentKeysOf(record), 7);
+      const built = queries.map((q) => (q as unknown as { getQuery(): { sql: string; params: unknown[] } }).getQuery());
+      expect(built[1].params).toEqual([PAYMENT_LOCK_KEY]);
+      expect(built[2].params.at(-1)).toBe(7);
+    } finally {
+      await handle.close();
+    }
   });
 });

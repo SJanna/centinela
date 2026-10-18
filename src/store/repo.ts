@@ -280,7 +280,6 @@ async function invoiceWithKey(db: Db, kind: PaymentKeyKind, key: string): Promis
   }
 }
 
-/** Repositorio sobre una conexión concreta (o una función que la entrega cuando se necesita). */
 export interface AppendDecisionOptions {
   /** Cuántos PAGAR había en el historial con que se tomó la decisión (solo cuenta para un PAGAR). */
   paymentsSeen?: number;
@@ -293,6 +292,22 @@ export interface AppendDecisionOptions {
 export const PAYMENT_LOCK_KEY = 4_317_202_610;
 
 /**
+ * Las tres sentencias de la inserción condicional de un PAGAR, en orden: aislamiento READ COMMITTED,
+ * candado de transacción y la inserción con la condición. Exportada para las pruebas.
+ */
+export function paymentInsertQueries(db: Db, record: DecisionRecord, keys: ReturnType<typeof paymentKeysOf>, paymentsSeen: number): StoreQuery[] {
+  return [
+    db.execute(sql`SET TRANSACTION ISOLATION LEVEL READ COMMITTED`),
+    db.execute(sql`SELECT pg_advisory_xact_lock(${PAYMENT_LOCK_KEY}::bigint)`),
+    db.execute(sql`
+      INSERT INTO decisions (id, invoice_id, decided_at, outcome, record, pay_file_key, pay_invoice_key, pay_period_key)
+      SELECT ${record.id}, ${record.invoiceId}, ${record.decidedAt}::timestamptz, ${record.decision.outcome},
+             ${JSON.stringify(record)}::jsonb, ${keys.file}, ${keys.invoice}, ${keys.period}
+      WHERE (SELECT count(*) FROM decisions WHERE outcome = 'PAGAR') = ${paymentsSeen}::bigint`),
+  ];
+}
+
+/**
  * Inserta un PAGAR solo si el registro sigue teniendo los mismos PAGAR que el historial con que se
  * decidió. LIM-2 (límite del mes) y FON-1 (fondo) suman pagos distintos, así que no caben en una
  * clave única: dos instancias podrían aprobar a la vez dos facturas que juntas se pasen. Aquí el
@@ -301,17 +316,22 @@ export const PAYMENT_LOCK_KEY = 4_317_202_610;
  * (transacción) y en Neon HTTP (batch, que corre en una sola transacción): el candado se suelta al
  * confirmar. El registro es de solo inserción, así que el número de PAGAR solo crece (salvo un
  * reinicio, que lo vacía todo).
+ *
+ * La transacción se fija en READ COMMITTED: el conteo tiene que ver lo que confirmó quien tuvo el
+ * candado antes. Con REPEATABLE READ o SERIALIZABLE (si la base los tuviera por defecto) el conteo
+ * usaría la foto del comienzo de la transacción y los dos PAGAR entrarían (comprobado contra
+ * Postgres 15 con dos sesiones).
+ *
+ * Esta transacción se comprueba con PGlite, que corre una transacción a la vez: las pruebas no
+ * ejercitan el candado entre sesiones. Por eso hay una prueba que exige las tres sentencias en orden.
+ * @throws Error si ya hay una decisión con ese id (el registro no se reescribe).
  * @throws PaymentHistoryChangedError si la condición no se cumplió (la fila no se insertó).
  */
 async function appendPaymentIfUnchanged(h: DbHandle, record: DecisionRecord, keys: ReturnType<typeof paymentKeysOf>, paymentsSeen: number): Promise<void> {
-  await h.atomic((db) => [
-    db.execute(sql`SELECT pg_advisory_xact_lock(${PAYMENT_LOCK_KEY}::bigint)`),
-    db.execute(sql`
-      INSERT INTO decisions (id, invoice_id, decided_at, outcome, record, pay_file_key, pay_invoice_key, pay_period_key)
-      SELECT ${record.id}, ${record.invoiceId}, ${record.decidedAt}::timestamptz, ${record.decision.outcome},
-             ${JSON.stringify(record)}::jsonb, ${keys.file}, ${keys.invoice}, ${keys.period}
-      WHERE (SELECT count(*) FROM decisions WHERE outcome = 'PAGAR') = ${paymentsSeen}::bigint`),
-  ]);
+  // Sin esto, una fila previa con el mismo id haría creer que la inserción entró.
+  const existing = await h.db.select({ id: decisions.id }).from(decisions).where(eq(decisions.id, record.id)).limit(1);
+  if (existing.length > 0) throw new Error(`Ya existe una decisión con id «${record.id}»: el registro no se puede reescribir.`);
+  await h.atomic((db) => paymentInsertQueries(db, record, keys, paymentsSeen));
   const inserted = await h.db.select({ id: decisions.id }).from(decisions).where(eq(decisions.id, record.id)).limit(1);
   if (inserted.length > 0) return;
   // No entró. Si el pago nuevo es equivalente a este (misma clave), se dice eso, que es más preciso.
@@ -325,6 +345,7 @@ async function appendPaymentIfUnchanged(h: DbHandle, record: DecisionRecord, key
   throw new PaymentHistoryChangedError({ decisionId: record.id, paymentsSeen, paymentsNow: Number(n) });
 }
 
+/** Repositorio sobre una conexión concreta (o una función que la entrega cuando se necesita). */
 export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
   const handle = (): Promise<DbHandle> => (typeof source === "function" ? source() : Promise.resolve(source));
   const database = async (): Promise<Db> => (await handle()).db;
