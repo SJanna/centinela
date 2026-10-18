@@ -9,6 +9,13 @@ import { makeCompany, makeExtraction, makeRecord, makeVendor, openFakeNeonDb, op
 const datasetCompany: Company = CompanySchema.parse(
   JSON.parse(readFileSync(path.resolve(__dirname, "../../dataset/company.json"), "utf8")),
 );
+/**
+ * Lo que la base guarda de la empresa: nombre, reglas y proveedores. La identidad de la compradora
+ * (`buyer`: razones sociales, alias e ids tributarios) todavía no se guarda; en la app, ACU-1 y la
+ * guardia comparan el destinatario de la factura con `name` (docs/ARCHITECTURE.md, «Factura dirigida
+ * a otra empresa»). Si la base empieza a guardarla, esta prueba debe pasar a comparar con `datasetCompany`.
+ */
+const storedDatasetCompany: Company = { name: datasetCompany.name, rules: datasetCompany.rules, vendors: datasetCompany.vendors };
 
 describe.each([
   ["PGlite", openMemoryDb],
@@ -32,7 +39,10 @@ describe.each([
 
     it("ida y vuelta de la empresa del dataset, con proveedores en orden", async () => {
       await repo.saveCompany(datasetCompany);
-      expect(await repo.getCompany()).toEqual(datasetCompany);
+      const got = await repo.getCompany();
+      expect(got).toEqual(storedDatasetCompany);
+      expect(datasetCompany.buyer?.legalNames).toEqual(["Andes Labs Inc."]);
+      expect(got?.buyer).toBeUndefined();
     });
 
     it("saveCompany reemplaza la empresa anterior por completo", async () => {
@@ -389,7 +399,7 @@ describe.each([
       expect(await repo.exportDecisions()).toEqual([]);
       expect(await repo.getHistory()).toEqual([]);
       expect((await repo.getStats("2026-10-16")).total).toBe(0);
-      expect(await repo.getCompany()).toEqual(datasetCompany);
+      expect(await repo.getCompany()).toEqual(storedDatasetCompany);
       expect(await cache.get("k1")).toEqual(makeExtraction());
       expect(await repo.getMeta("demo")).toBe("sí");
 

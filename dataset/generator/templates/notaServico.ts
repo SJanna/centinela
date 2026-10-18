@@ -80,9 +80,9 @@ export function renderNotaServico(spec: DocumentSpec): Canvas {
   // ── Tomador
   section("TOMADOR DE SERVIÇOS");
   const cu = spec.customer;
-  kv(X0 + 10, y + 16, "Nome/Razão Social:", cu.name, null, 500);
+  kv(X0 + 10, y + 16, "Nome/Razão Social:", cu.name, "billToName", 500);
   kv(X0 + 10, y + 30, "CPF/CNPJ:", "—", null, 200);
-  kv(X0 + 200, y + 30, "Identificação no exterior:", `${cu.taxIdLabel ?? ""} ${cu.taxId ?? ""}`.trim() || "—", null, 330);
+  kv(X0 + 200, y + 30, "Identificação no exterior:", `${cu.taxIdLabel ?? ""} ${cu.taxId ?? ""}`.trim() || "—", cu.taxId ? "billToTaxId" : null, 330);
   kv(X0 + 10, y + 44, "Endereço:", cu.address.join(" – "), null, 520);
   kv(X0 + 10, y + 58, "País:", td(spec, "customerCountry", "Estados Unidos"), null, 200);
   if (cu.email) kv(X0 + 290, y + 58, "E-mail:", cu.email, null, 240);

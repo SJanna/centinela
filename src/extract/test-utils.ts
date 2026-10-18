@@ -30,6 +30,9 @@ export function makeExtraction(overrides: Partial<Extraction> = {}): Extraction 
     documentType: "invoice",
     vendorName: field("Datos del Sur S.A.S.", "Datos del Sur S.A.S."),
     vendorTaxId: field("901.234.567-8", "NIT 901.234.567-8"),
+    // El texto de ejemplo no dice a quién va dirigida la factura (como muchos correos y chats).
+    billToName: field<string>(null),
+    billToTaxId: field<string>(null),
     invoiceNumber: field("DS-0458", "FACTURA DE VENTA N.º DS-0458"),
     issueDate: field("2026-10-15", "Fecha de emisión: 2026-10-15"),
     dueDate: field("2026-10-30", "Vencimiento: 2026-10-30"),

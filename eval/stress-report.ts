@@ -170,6 +170,7 @@ const TRAP_LABELS: Record<string, string> = {
   periodo_fuera_vigencia: "Periodo fuera de la vigencia",
   fecha_futura: "Fecha de emisión futura",
   periodo_futuro: "Periodo futuro",
+  otra_empresa: "Dirigida a otra empresa",
   sobre_umbral: "Sobre el umbral",
   limite_mes: "Límite del mes superado",
   fondo_insuficiente: "Fondo insuficiente",

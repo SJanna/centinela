@@ -44,10 +44,10 @@ export function renderCuentaCobro(spec: DocumentSpec): Canvas {
   let y = 232;
   c.text(M, y, td(spec, "salutation", "Señores"), { size: 10.5, font: serif, color: INK });
   y += 15;
-  c.text(M, y, spec.customer.name.toUpperCase(), { size: 11, font: serifBold, color: INK });
+  c.field("billToName", M, y, spec.customer.name.toUpperCase(), { size: 11, font: serifBold, color: INK });
   y += 14;
   if (spec.customer.taxId) {
-    c.text(M, y, `${spec.customer.taxIdLabel ?? "ID"} ${spec.customer.taxId}`, { size: 10, font: serif, color: INK });
+    c.field("billToTaxId", M, y, `${spec.customer.taxIdLabel ?? "ID"} ${spec.customer.taxId}`, { size: 10, font: serif, color: INK });
     y += 13;
   }
   c.text(M, y, spec.customer.address.join(", "), { size: 10, font: serif, color: INK });

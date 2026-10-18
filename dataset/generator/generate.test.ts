@@ -153,17 +153,31 @@ describe("lectura perfecta (groundTruth)", () => {
     expect(byId.get("H05")!.groundTruth.embeddedInstructions[0].text).toMatch(/^cambiamos de banco, paguen a la nueva cuenta/);
   });
 
+  it("el destinatario es Andes Labs Inc. donde el documento lo muestra (plantillas y adjuntos); los correos sin adjunto y los chats no lo dicen", () => {
+    for (const c of cases) {
+      const gt = c.groundTruth;
+      const textual = c.mediaType === "text/plain" || (c.mediaType === "message/rfc822" && c.attachment == null);
+      if (textual) {
+        expect(gt.billToName, c.caseId).toEqual({ value: null, evidence: null, legible: true });
+        continue;
+      }
+      expect(gt.billToName?.value?.toUpperCase(), c.caseId).toBe("ANDES LABS INC.");
+      // El portal (H11) no muestra el id tributario del cliente.
+      expect(gt.billToTaxId?.value ?? null, c.caseId).toBe(c.caseId === "H11" ? null : "93-4127765");
+    }
+  });
+
   it("las citas (evidence) aparecen literalmente en el texto del documento", async () => {
     for (const c of cases) {
       if (c.mediaType.startsWith("image/")) continue;
       const text = squash(await documentText(c));
       const gt = c.groundTruth;
       const fields = [
-        gt.vendorName, gt.vendorTaxId, gt.invoiceNumber, gt.issueDate, gt.dueDate, gt.servicePeriod, gt.currency,
+        gt.vendorName, gt.vendorTaxId, gt.billToName, gt.billToTaxId, gt.invoiceNumber, gt.issueDate, gt.dueDate, gt.servicePeriod, gt.currency,
         gt.subtotal, gt.tax, gt.total, gt.payment.beneficiaryName, gt.payment.bankName, gt.payment.accountNumber, gt.payment.routingOrSwift,
       ];
       for (const f of fields) {
-        if (f.evidence == null) continue;
+        if (f?.evidence == null) continue;
         expect(text, `${c.caseId}: «${f.evidence}»`).toContain(squash(f.evidence));
       }
       for (const ins of gt.embeddedInstructions) expect(text, `${c.caseId} instrucción`).toContain(squash(ins.text));

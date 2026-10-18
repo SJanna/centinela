@@ -1,5 +1,6 @@
 {
   "name": "Andes Labs Inc.",
+  "buyer": { "legalNames": ["Andes Labs Inc."], "aliases": ["Andes Labs", "Andes Labs, Inc."], "taxIds": ["93-4127765"] },
   "rules": {
     "approvalThresholdUsd": 5000,
     "periodLimitUsd": 25000,

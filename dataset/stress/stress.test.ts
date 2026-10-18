@@ -5,7 +5,7 @@
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { CHECK_BY_CODE } from "../../src/core/checks";
-import { normalizeTaxId } from "../../src/core/normalize";
+import { normalizeName, normalizeTaxId } from "../../src/core/normalize";
 import { parseStressCases } from "../../eval/datasets";
 import { readCompany } from "../generator/cases";
 import { documentText, squash } from "../generator/test-helpers";
@@ -182,6 +182,51 @@ describe("plan del set de estrés", () => {
     expect(checked).toBeGreaterThan(200);
   });
 
+  it("«otra_empresa»: 20 facturas en varios formatos, dirigidas a otra empresa, por lo demás impecables → ESCALAR [ACU-1]", () => {
+    const cases = plan.cases.filter((c) => c.traps.includes("otra_empresa"));
+    expect(cases).toHaveLength(20);
+    const buyer = new Set([company.name, ...(company.buyer?.legalNames ?? []), ...(company.buyer?.aliases ?? [])].map((n) => normalizeName(n)));
+    const buyerTax = new Set((company.buyer?.taxIds ?? []).map((t) => normalizeTaxId(t)));
+    for (const c of cases) {
+      const s = c.spec;
+      expect(isDocumentSpec(s), s.id).toBe(true);
+      if (!isDocumentSpec(s)) continue;
+      expect(c.traps, s.id).toEqual(["otra_empresa"]);
+      expect(c.row.decision_esperada, s.id).toBe("ESCALAR");
+      expect(c.row.codigos_esperados, s.id).toEqual(["ACU-1"]);
+      // Proveedor registrado, su cuenta registrada y el monto pactado.
+      const v = company.vendors.find((x) => x.id === s.vendorId)!;
+      expect(v, s.id).toBeDefined();
+      expect(s.vendor.name, s.id).toBe(v.name);
+      expect(s.payment?.accountNumber.replace(/\W/g, ""), s.id).toBe(v.account.accountNumber.replace(/\W/g, ""));
+      if (v.agreements[0].kind !== "hourly") expect(s.total, s.id).toBe(v.agreements[0].amount);
+      // Dirigida a otra empresa: otro nombre, u otro id tributario con el mismo nombre.
+      const sameName = buyer.has(normalizeName(s.customer.name));
+      expect(!sameName || !buyerTax.has(normalizeTaxId(s.customer.taxId)), s.id).toBe(true);
+      if (sameName) expect(s.template === "portal" || s.attachment?.template === "portal", `${s.id}: el id debe verse`).toBe(false);
+    }
+    // Varios formatos donde se ve el destinatario.
+    expect(new Set(cases.map((c) => c.row.plantilla.replace(/^correo\+adjunto_.*/, "correo+adjunto")))).toEqual(
+      new Set(["saas", "latam", "correo+adjunto", "correo_cuerpo", "chat"]),
+    );
+    expect(new Set(cases.map((c) => c.row.formato))).toEqual(new Set(["pdf", "png", "jpg", "eml", "txt"]));
+    // Lo inventado no pasa el dígito de control (NIT, RUT, RFC); el EIN no tiene.
+    for (const c of cases) {
+      const cu = (c.spec as { customer: { taxIdLabel: string | null; taxId: string | null } }).customer;
+      const tax = cu.taxId ?? "";
+      const d = tax.replace(/\D/g, "");
+      if (cu.taxIdLabel === "NIT") expect(nitCheckDigit(d.slice(0, -1)), tax).not.toBe(Number(d.slice(-1)));
+      if (cu.taxIdLabel === "RUT") expect(rutCheckDigit(tax.replace(/[^0-9Kk]/g, "").slice(0, -1)), tax).not.toBe(tax.slice(-1).toUpperCase());
+      if (cu.taxIdLabel === "RFC") expect(isValidRfc(tax), tax).toBe(false);
+    }
+    // Las demás facturas siguen dirigidas a Andes Labs Inc.
+    for (const c of plan.cases) {
+      if (c.traps.includes("otra_empresa") || !isDocumentSpec(c.spec)) continue;
+      expect(c.spec.customer.name, c.spec.id).toBe("Andes Labs Inc.");
+      expect(c.spec.customer.taxId, c.spec.id).toBe("93-4127765");
+    }
+  });
+
   it("casos.csv se lee con el lector del banco de pruebas y conserva las etiquetas", () => {
     const { rows, extras } = parseStressCases(casesCsv(plan.cases.map((c) => c.row)));
     expect(rows).toHaveLength(2000);
@@ -206,9 +251,9 @@ describe("plan del set de estrés", () => {
       if (g.mediaType.startsWith("image/")) continue;
       const text = squash(await documentText(g));
       const gt = g.groundTruth;
-      const fields = [gt.vendorName, gt.vendorTaxId, gt.invoiceNumber, gt.issueDate, gt.dueDate, gt.servicePeriod, gt.currency, gt.subtotal, gt.tax, gt.total, ...Object.values(gt.payment)];
+      const fields = [gt.vendorName, gt.vendorTaxId, gt.billToName, gt.billToTaxId, gt.invoiceNumber, gt.issueDate, gt.dueDate, gt.servicePeriod, gt.currency, gt.subtotal, gt.tax, gt.total, ...Object.values(gt.payment)];
       for (const f of fields) {
-        if (f.evidence == null) continue;
+        if (f?.evidence == null) continue;
         quotes++;
         expect(text, `${g.caseId}: «${f.evidence}»`).toContain(squash(f.evidence));
       }

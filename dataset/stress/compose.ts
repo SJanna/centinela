@@ -25,6 +25,11 @@ export interface InvoiceContent {
   /** id del proveedor registrado que la factura dice ser (null si no lo es). */
   vendorId: string | null;
   party: Party;
+  /**
+   * A quién va dirigida la factura cuando NO es Andes Labs Inc. (trampa «otra_empresa»). Sin definir, es
+   * CUSTOMER y los correos sin adjunto y los chats no lo dicen (así son las legítimas).
+   */
+  customer?: Party;
   documentType: DocumentSpec["documentType"];
   title: string;
   invoiceNumber: string;
@@ -85,6 +90,8 @@ export function formatOf(p: Presentation): DocumentSpec["format"] {
 // ───────────────────────── Textos por idioma ─────────────────────────
 
 interface Words {
+  /** Rótulo del destinatario en el detalle de un correo o un chat (solo si la factura es de otra empresa). */
+  billTo: string;
   number: string;
   issued: string;
   due: string;
@@ -139,6 +146,7 @@ function article(doc: string, lang: "es" | "pt"): string {
 
 const WORDS: Record<Lang, Words> = {
   es: {
+    billTo: "Facturar a",
     number: "N°",
     issued: "Fecha de emisión",
     due: "Vencimiento",
@@ -164,6 +172,7 @@ const WORDS: Record<Lang, Words> = {
     subject: (doc, number, period) => `${doc} ${number} – ${period}`,
   },
   pt: {
+    billTo: "Tomador",
     number: "nº",
     issued: "Data de emissão",
     due: "Vencimento",
@@ -189,6 +198,7 @@ const WORDS: Record<Lang, Words> = {
     subject: (doc, number, period) => `${doc} ${number} – ${period}`,
   },
   en: {
+    billTo: "Bill to",
     number: "#",
     issued: "Issue date",
     due: "Due date",
@@ -250,6 +260,14 @@ function detailBlock(c: InvoiceContent, p: Presentation, sep: string): { header:
   header.push(vendorLine);
   ev.vendorName = `${w.vendor}: ${c.party.name}`;
   if (c.party.taxId) ev.vendorTaxId = `${c.party.taxIdLabel ?? ""} ${c.party.taxId}`.trim();
+  // Solo la factura dirigida a otra empresa lo dice en el texto (las legítimas no cambian).
+  if (c.customer) {
+    const cu = c.customer;
+    const taxText = cu.taxId ? `${cu.taxIdLabel ?? ""} ${cu.taxId}`.trim() : null;
+    header.push(taxText ? `${w.billTo}: ${cu.name}${sep}${taxText}` : `${w.billTo}: ${cu.name}`);
+    ev.billToName = `${w.billTo}: ${cu.name}`;
+    if (taxText) ev.billToTaxId = taxText;
+  }
   const issued = `${w.issued}: ${shortDate(c.issueDate, p.language)}`;
   header.push(issued);
   ev.issueDate = issued;
@@ -343,7 +361,7 @@ export function composeSpec(id: string, about: string, c: InvoiceContent, p: Pre
     title: c.title,
     brand: c.vendor.brand,
     vendor: c.party,
-    customer: CUSTOMER,
+    customer: c.customer ?? CUSTOMER,
     invoiceNumber: c.invoiceNumber,
     issueDate: c.issueDate,
     issuePlace: null as string | null,
@@ -491,7 +509,8 @@ export function readerNotesOf(c: InvoiceContent, p: Presentation, extra: string 
   const total = c.blurTotal ? "total ilegible" : formatMoney(c.total, c.currency, "es-CO");
   const period = c.servicePeriod ? ` por ${periodText(c.servicePeriod, "es")}` : "";
   const pay = c.payment ? ` Pago a ${c.payment.bankName}, ${c.payment.accountLabel.replace(/:$/, "")} ${c.payment.accountNumber}.` : " No trae datos bancarios.";
-  return `${where}. ${what} ${c.invoiceNumber} de ${c.party.name}${period}: ${total}.${pay}${extra ? ` ${extra}` : ""}`;
+  const to = c.customer ? ` Dirigida a ${c.customer.name}${c.customer.taxId ? ` (${`${c.customer.taxIdLabel ?? ""} ${c.customer.taxId}`.trim()})` : ""}.` : "";
+  return `${where}. ${what} ${c.invoiceNumber} de ${c.party.name}${period}: ${total}.${pay}${to}${extra ? ` ${extra}` : ""}`;
 }
 
 export { WORDS, formatDate };

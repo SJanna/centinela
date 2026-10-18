@@ -22,6 +22,7 @@ import {
   fakeAba,
   fakeAccountLike,
   fakeBankAccount,
+  fakeTaxId,
   fictitiousProfiles,
   legalFor,
   lookalikeProfile,
@@ -143,6 +144,12 @@ export interface StressCase {
   presentation: Presentation | null;
   /** Plantilla visual del documento (para fotos de él). */
   template: TemplateKind | null;
+  /**
+   * Solo en las trampas «proveedor_parecido» puras: la misma factura con el proveedor registrado que se
+   * imita (su nombre, su cuenta, el monto pactado) y el periodo que cobra. De ahí sale la trampa
+   * «otra_empresa» (replaceWithOtherCompany).
+   */
+  genuine?: { content: InvoiceContent; period: string };
 }
 
 export interface StressPlan {
@@ -318,6 +325,8 @@ interface Draft {
   plantilla: string;
   /** La receta dice que se paga: si el libro no da PAGAR, el plan está mal. */
   legit: boolean;
+  /** Ver StressCase.genuine. */
+  genuine?: StressCase["genuine"];
 }
 
 interface Target {
@@ -984,6 +993,7 @@ class ScenarioBuilder {
       plantilla: d.plantilla,
     };
     const sc: StressCase = { spec: d.spec, row, facts, traps, content: d.content, presentation: d.presentation, template: d.template };
+    if (d.genuine) sc.genuine = d.genuine;
     this.cases.push(sc);
     return sc;
   }
@@ -1154,6 +1164,9 @@ class ScenarioBuilder {
         return this.futureIssue();
       case "periodo_futuro":
         return this.futurePeriod([]);
+      case "otra_empresa":
+        // No sale del mazo: la arma replaceWithOtherCompany sobre el plan terminado.
+        return null;
       case "sobre_umbral":
         return this.overThreshold([]);
       case "aritmetica":
@@ -1392,13 +1405,16 @@ class ScenarioBuilder {
       otra_razon_social: "otra razón social",
       mismo_nombre_otro_id: "el mismo nombre con otro id tributario",
     };
-    return this.draftOf(this.peekId(), ex.content, ex.presentation, {
+    const draft = this.draftOf(this.peekId(), ex.content, ex.presentation, {
       traps,
       facts: this.factsOf(ex.content, null, intrinsicCodes(traps)),
       difficulty: this.trapDifficulty(kind === "letra_cambiada" || kind === "otra_razon_social" ? "media" : "alta", p),
       description: `Se hace pasar por ${t.v.party.name} con ${kindText[kind]}: «${imp.party.name}»${imp.party.taxId ? ` (${imp.party.taxIdLabel} ${imp.party.taxId})` : " sin id tributario"} · ${this.fmtLabel(p)} · cobra a otra cuenta${ex.text}`,
       legit: false,
     });
+    // Sin consumir azar: la factura que imita (proveedor registrado, su cuenta, el monto pactado).
+    if (extraTraps.length === 0) draft.genuine = { content: c0, period: base.period };
+    return draft;
   }
 
   // Cuenta
@@ -2269,6 +2285,155 @@ class ScenarioBuilder {
   }
 }
 
+// ───────────────────────── Trampa «otra_empresa» ─────────────────────────
+
+/**
+ * Empresas a las que va dirigida una factura de la trampa «otra_empresa» (todas ficticias). Los ids
+ * tributarios se inventan con fakeTaxId (no pasan el dígito de control de su formato), salvo el de
+ * Pampa Labs Colombia, que es el del ataque LOG-11 del equipo rojo (901.888.123-4 tampoco lo pasa).
+ * «Andes Labs Inc.» con otro EIN es el caso «mismo nombre, otro id»: solo va donde se ve el id.
+ */
+const OTHER_COMPANIES: ReadonlyArray<{ party: Omit<Party, "taxId"> & { taxId: string | null }; country: "CO" | "CL" | "MX" | "US"; sameName: boolean; code: string }> = [
+  { party: { name: "Pampa Labs Colombia S.A.S.", taxIdLabel: "NIT", taxId: "901.888.123-4", address: ["Calle 93 # 11-26, Of. 502", "Bogotá D.C.", "Colombia"], email: "facturacion@pampalabs.co", phone: null }, country: "CO", sameName: false, code: "PLC" },
+  { party: { name: "Andes Labs Colombia S.A.S.", taxIdLabel: "NIT", taxId: null, address: ["Carrera 7 # 71-21, Torre B", "Bogotá D.C.", "Colombia"], email: "cuentas@andeslabs.com.co", phone: null }, country: "CO", sameName: false, code: "ALC" },
+  { party: { name: "Andes Labs Inc.", taxIdLabel: "EIN", taxId: null, address: ["200 Park Ave S, Floor 8", "New York, NY 10003", "Estados Unidos"], email: "ap@andes-labs.us", phone: null }, country: "US", sameName: true, code: "ALI" },
+  { party: { name: "Cordillera Analytics SpA", taxIdLabel: "RUT", taxId: null, address: ["Av. Apoquindo 4500, of. 1201", "Las Condes, Santiago", "Chile"], email: "pagos@cordillera-analytics.cl", phone: null }, country: "CL", sameName: false, code: "CAN" },
+  { party: { name: "Grupo Nopalli S.A. de C.V.", taxIdLabel: "RFC", taxId: null, address: ["Av. Insurgentes Sur 1602, piso 9", "Ciudad de México", "México"], email: "cxp@nopalli.mx", phone: null }, country: "MX", sameName: false, code: "GNO" },
+  { party: { name: "Brightwave Analytics LLC", taxIdLabel: "EIN", taxId: null, address: ["88 Pine St, Suite 1400", "San Francisco, CA 94111", "Estados Unidos"], email: "ap@brightwave-analytics.com", phone: null }, country: "US", sameName: false, code: "BWA" },
+];
+
+const COUNTRY_PT: Record<"CO" | "CL" | "MX" | "US", string> = { CO: "Colômbia", CL: "Chile", MX: "México", US: "Estados Unidos" };
+
+/** Cuántas facturas de cada forma se buscan para «otra_empresa» (en un plan de 2000; se escala con el total). */
+const OTHER_COMPANY_FORMATS: Array<[string, number]> = [
+  ["pdf", 6],
+  ["jpg", 4],
+  ["png", 2],
+  ["eml_attach", 3],
+  ["eml_body", 3],
+  ["txt", 2],
+];
+
+function formatGroup(p: Presentation): string {
+  const ch = p.channel;
+  if (ch.kind === "visual") return ch.format;
+  if (ch.kind === "email") return ch.attachment ? "eml_attach" : "eml_body";
+  return "txt";
+}
+
+/** ¿El documento muestra el id tributario del destinatario? El portal solo muestra el nombre. */
+function showsBillToTaxId(p: Presentation): boolean {
+  const ch = p.channel;
+  if (ch.kind === "visual") return ch.template !== "portal";
+  if (ch.kind === "email") return ch.attachment !== "portal";
+  return true;
+}
+
+/**
+ * Trampa «otra_empresa»: la factura de un proveedor registrado, con el monto pactado, a su cuenta
+ * registrada y por un periodo sin pagar, pero dirigida a otra empresa (otra razón social, o «Andes
+ * Labs Inc.» con otro EIN). Decisión esperada: ESCALAR por ACU-1 (el acuerdo es con Andes Labs Inc.).
+ *
+ * Para no mover el resto del set (mismas specs, mismos archivos, mismas etiquetas), se arma DESPUÉS
+ * de planear todo, con un azar propio, reemplazando trampas «proveedor_parecido» puras (la trampa más
+ * frecuente del set): cada una ya trae la factura que imita (`genuine`: el proveedor registrado, su
+ * cuenta, el monto pactado y un periodo sin pagar en ese punto del escenario). Una trampa ESCALAR que
+ * se cambia por otra ESCALAR no cambia el historial de pagos del escenario; solo se eligen las que
+ * ninguna copia exacta repite y en las que el libro da exactamente ESCALAR [ACU-1] (sin duplicado,
+ * umbral, límite ni fondo). Se busca un reparto por formato donde el destinatario se ve (PDF, foto,
+ * captura, correo con el PDF adjunto y, con una línea «Facturar a:», correo sin adjunto y chat).
+ */
+export function replaceWithOtherCompany(plan: StressPlan, company: Company, rng: Rng, count: number): void {
+  if (count <= 0) return;
+  const copied = new Set(plan.cases.flatMap((c) => ("copyOf" in c.spec ? [c.spec.copyOf] : "photoOf" in c.spec ? [c.spec.photoOf] : [])));
+  const eligible: Array<{ index: number; group: string }> = [];
+  for (const sc of plan.scenarios) {
+    const ledger = new Ledger({ ...company.rules, ...sc.rulesOverride });
+    plan.cases.forEach((c, index) => {
+      if (c.row.escenario !== sc.id) return;
+      const g = c.genuine;
+      if (g && c.presentation && c.traps.length === 1 && c.traps[0] === "proveedor_parecido" && !copied.has(c.spec.id)) {
+        const label = ledger.label(otherCompanyFacts(c.spec.id, g.content, g.period, ledger.rules));
+        if (label.outcome === "ESCALAR" && label.codes.length === 1 && label.codes[0] === "ACU-1") eligible.push({ index, group: formatGroup(c.presentation) });
+      }
+      ledger.commit(c.facts, c.row.decision_esperada);
+    });
+  }
+  const scale = count / 20;
+  const chosen = new Set<number>();
+  const pool = rng.shuffle([...eligible]);
+  for (const [group, n] of OTHER_COMPANY_FORMATS) {
+    const want = Math.round(n * scale);
+    for (const e of pool.filter((x) => x.group === group).slice(0, want)) if (chosen.size < count) chosen.add(e.index);
+  }
+  for (const e of pool) if (chosen.size < count) chosen.add(e.index);
+
+  for (const index of [...chosen].sort((a, b) => a - b)) {
+    const c = plan.cases[index];
+    const g = c.genuine!;
+    const p = c.presentation!;
+    const options = OTHER_COMPANIES.filter((o) => !o.sameName || showsBillToTaxId(p));
+    const o = rng.pick(options);
+    const taxId = o.party.taxId ?? fakeTaxId(o.country, rng);
+    const customer: Party = { ...o.party, taxId };
+    const template = p.channel.kind === "visual" ? p.channel.template : p.channel.kind === "email" ? p.channel.attachment : null;
+    const templateData = { ...g.content.templateData };
+    if ("customerId" in templateData) templateData.customerId = `${o.code}-${String(rng.int(100, 999))}`;
+    if (template === "nota_servico") templateData.customerCountry = COUNTRY_PT[o.country];
+    const content: InvoiceContent = { ...g.content, customer, templateData };
+    const fmt = formatOf(p);
+    const where = fmt === "eml" || fmt === "txt" ? presentationLabel(p) : `${fmt.toUpperCase()} ${presentationLabel(p)}`;
+    const shownTax = `${customer.taxIdLabel ?? ""} ${taxId}`.trim();
+    const description = `Dirigida a otra empresa: «${customer.name}» (${shownTax}) en vez de Andes Labs Inc.${o.sameName ? " (mismo nombre, otro EIN)" : ""} · ${content.party.name} · ${where} · ${formatMoney(content.total, content.currency, "es-CO")}, cuenta registrada y monto pactado`;
+    const spec = composeSpec(c.spec.id, description, content, p, readerNotesOf(content, p, null));
+    const rules = { ...company.rules, ...(plan.scenarios.find((s) => s.id === c.row.escenario)?.rulesOverride ?? {}) };
+    const facts = otherCompanyFacts(c.spec.id, content, g.period, rules);
+    const visualHard = fmt === "jpg" || fmt === "png";
+    plan.cases[index] = {
+      spec,
+      row: {
+        ...c.row,
+        proveedor: spec.vendorId ?? "",
+        descripcion: description,
+        decision_esperada: "ESCALAR",
+        codigos_esperados: ["ACU-1"],
+        trampa: "otra_empresa",
+        dificultad: o.sameName || visualHard ? "alta" : "media",
+      },
+      facts,
+      traps: ["otra_empresa"],
+      content,
+      presentation: p,
+      template: c.template,
+    };
+  }
+
+  // Control: con los reemplazos, el libro de cada escenario sigue dando la etiqueta de cada factura.
+  for (const sc of plan.scenarios) {
+    const ledger = new Ledger({ ...company.rules, ...sc.rulesOverride });
+    for (const c of plan.cases) {
+      if (c.row.escenario !== sc.id) continue;
+      const label = ledger.label(c.facts);
+      if (label.outcome !== c.row.decision_esperada || label.codes.join(",") !== c.row.codigos_esperados.join(",")) {
+        throw new Error(`${c.spec.id} (${sc.id}): tras «otra_empresa» el libro da ${label.outcome} [${label.codes.join(", ")}] y la fila dice ${c.row.decision_esperada} [${c.row.codigos_esperados.join(", ")}]`);
+      }
+      ledger.commit(c.facts, label.outcome);
+    }
+  }
+}
+
+function otherCompanyFacts(id: string, c: InvoiceContent, period: string, rules: Rules): Facts {
+  return {
+    vendorId: c.vendorId,
+    agreementId: c.vendorId ? c.vendor.agreement.id : null,
+    period,
+    numberKey: invoiceNumberKey(c.invoiceNumber),
+    fileKey: id,
+    usdCents: usdCentsOf(c.total, c.currency, rules),
+    intrinsic: ["ACU-1"],
+  };
+}
+
 // ───────────────────────── Plan completo ─────────────────────────
 
 export function planStress(company: Company, opts: { seed?: number; total?: number } = {}): StressPlan {
@@ -2302,7 +2467,10 @@ export function planStress(company: Company, opts: { seed?: number; total?: numb
     cases.push(...b.cases);
   });
   if (cases.length !== total) throw new Error(`El plan tiene ${cases.length} facturas y se pidieron ${total}`);
-  return { seed, scenarios, cases };
+  const plan: StressPlan = { seed, scenarios, cases };
+  // ~1 % del set (20 de 2000): ver replaceWithOtherCompany. Azar propio: no mueve el resto del plan.
+  replaceWithOtherCompany(plan, company, rng.fork("otra_empresa"), Math.max(1, Math.round(total / 100)));
+  return plan;
 }
 
 export { TRAPS };

@@ -9,11 +9,13 @@
  * - Proveedor: por nombre o alias normalizado, o por identificación tributaria.
  * - DUP-1 mira cualquier decisión anterior; DUP-2 y DUP-3, solo pagos.
  * - Periodo del acuerdo = servicePeriod o mes de emisión; acuerdos "once" se pagan una sola vez.
+ * - ACU-1 también falla si la factura dice a quién va dirigida y no es la compradora (company.buyer y
+ *   company.name: otro nombre normalizado u otro id tributario).
  */
 import type { CaseRow } from "../../src/core/ports";
 import type { CheckCode, Company, Extraction, Outcome, Rules, Vendor } from "../../src/core/schemas";
 import { CHECK_BY_CODE } from "../../src/core/checks";
-import { normalizeAccount, normalizeName, normalizeTaxId, toCents } from "../../src/core/normalize";
+import { normalizeAccount, normalizeName, normalizeTaxId, splitLegalForm, toCents } from "../../src/core/normalize";
 import type { Scenario } from "./cases";
 
 export interface OracleInput {
@@ -55,6 +57,23 @@ export function matchVendor(company: Company, gt: Extraction): Vendor | null {
   return null;
 }
 
+/**
+ * ¿La factura va dirigida a la compradora (o no dice a quién)? El nombre, sin forma societaria o con
+ * una registrada para ese nombre («Andes Labs S.A.S.» es otra razón social que «Andes Labs Inc.»).
+ */
+export function billToIsBuyer(company: Company, gt: Extraction): boolean {
+  const names = [company.name, ...(company.buyer?.legalNames ?? []), ...(company.buyer?.aliases ?? [])].map((n) => splitLegalForm(n));
+  const taxIds = (company.buyer?.taxIds ?? []).map((t) => normalizeTaxId(t));
+  const rawName = gt.billToName?.value ?? null;
+  const name = splitLegalForm(rawName);
+  const tax = normalizeTaxId(gt.billToTaxId?.value ?? null);
+  if (rawName != null && rawName.trim() !== "") {
+    if (name == null || !names.some((n) => n != null && n.base === name.base && (name.form === "" || n.form === name.form))) return false;
+  }
+  if (tax != null && taxIds.length > 0 && !taxIds.includes(tax)) return false;
+  return true;
+}
+
 /** Evalúa los casos de un escenario en orden (historial vacío al inicio). */
 export function evaluateScenario(company: Company, scenario: Scenario, cases: OracleInput[]): OracleResult[] {
   const rules: Rules = { ...company.rules, ...scenario.rulesOverride };
@@ -94,7 +113,8 @@ export function evaluateScenario(company: Company, scenario: Scenario, cases: Or
 
     const agreement = vendor?.agreements[0] ?? null;
     const date = gt.issueDate.value ?? scenario.now.slice(0, 10);
-    if (!agreement) set("ACU-1", "not_evaluable");
+    if (!billToIsBuyer(company, gt)) set("ACU-1", "fail");
+    else if (!agreement) set("ACU-1", "not_evaluable");
     else set("ACU-1", date >= agreement.validFrom && (agreement.validTo == null || date <= agreement.validTo) ? "pass" : "fail");
     const currency = gt.currency.value;
     if (!agreement || !currency) set("ACU-2", "not_evaluable");

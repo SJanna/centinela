@@ -21,15 +21,24 @@
  * agregaron como ejemplos de "receipt" los sellos y estados de pagado y el saldo en cero; por eso no se
  * subió la versión. La verificación en código no depende de esto: el detector de documento pagado
  * y la regla de la cita del total (src/extract/paid-markers.ts y assess.ts) cubren los mismos huecos.
+ *
+ * v5 / v5b (18 oct): piden además a quién va dirigida la factura (billToName y billToTaxId: «Facturar a»,
+ * «Cliente», «Bill to», «Señores», «Adquiriente», «Tomador»), en cualquier parte del documento y con su
+ * forma societaria, sin deducirlo del correo ni del saludo; con dos destinatarios o un intermediario
+ * («c/o», «por cuenta de»), legible = false. (Ese último texto se ajustó en la revisión adversarial del
+ * mismo día sin subir la versión: ninguna lectura v5/v5b se había guardado en ninguna caché.)
+ * El equipo rojo (LOG-11) pagó una factura con el monto y la cuenta correctos dirigida a otra empresa:
+ * nadie leía el destinatario. La decisión sigue en código (ACU-1 y la guardia comparan con la ficha de
+ * la empresa compradora). Las reglas de seguridad y de los demás campos no cambian.
  */
 import type { DocPart, NormalizedDoc } from "../core/schemas";
 
 export type PromptVariant = "a" | "b";
 
 /** Versión del prompt «a» (lector principal; también la segunda lectura del perfil «calidad»). */
-export const PROMPT_VERSION = "v4";
+export const PROMPT_VERSION = "v5";
 /** Versión del prompt «b» (segunda lectura del perfil «economico»). */
-export const PROMPT_VERSION_B = "v4b";
+export const PROMPT_VERSION_B = "v5b";
 
 export const PROMPT_VERSIONS: Readonly<Record<PromptVariant, string>> = { a: PROMPT_VERSION, b: PROMPT_VERSION_B };
 
@@ -75,6 +84,7 @@ Cada campo tiene found, value, evidence y legible (todos son texto o sí/no; nun
 # Formato de los valores
 - documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro). Si el documento dice que el pago ya se hizo o ya se recibió (p. ej. "Payment receipt", "Payment received on…", "Paid", "Recibo de pago", "Pago recibido el…", "Pagado", "Comprovante de pagamento", "Pagamento recebido"), trae un sello o un estado de pagado ("PAID", "PAGADO", "QUITADO", "Settled", "Status: Paid", "Estado: Pagado") o dice que no queda saldo por pagar ("Balance due: $0.00", "Saldo pendiente: 0"), es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios: esos datos no lo convierten en un cobro.
 - vendorName: quien cobra (el emisor), tal como aparece. vendorTaxId: su identificación tributaria (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
+- billToName: a quién va dirigida la factura, es decir, el cliente que debe pagarla, tal como aparece junto a "Facturar a", "Cliente", "Bill to", "Billed to", "Señores", "Adquiriente", "Tomador" o similar, en cualquier parte del documento (también en el pie de página o en letra pequeña): solo la razón social o el nombre, con su forma societaria tal como aparece ("S.A.S.", "Inc.", "LLC"…), sin dirección, correo ni identificación. billToTaxId: la identificación tributaria de ese destinatario (NIT, EIN, RUT, RFC, CNPJ…), sin la etiqueta: "EIN 93-4127765" → "93-4127765". No confundas al destinatario con quien cobra (vendorName). Si el documento no dice a quién va dirigida la factura (es común en correos y chats), found = false: no lo deduzcas del destinatario del correo, del saludo ni de quién recibe el mensaje. Si el documento nombra a más de un destinatario distinto (p. ej. "Facturar a" una empresa y "Cliente" otra), o pone al destinatario "c/o", "por cuenta de" o "a cargo de" otra empresa, usa el que figura como cliente de la factura, copia en evidence el bloque completo, marca legible = false y anota los dos en readerNotes.
 - invoiceNumber: el número del documento sin la etiqueta ("Factura N.º", "Invoice #", "No.") pero con sus prefijos y ceros (p. ej. "FV-0012").
 - issueDate y dueDate: YYYY-MM-DD (found false si no aparecen).
 - servicePeriod: YYYY-MM si el documento indica el periodo facturado (p. ej. "octubre 2026" → "2026-10"). Si el año no aparece y lo deduces de la fecha de emisión, legible = false. found false si no indica periodo.
@@ -121,9 +131,10 @@ Empieza por el pago y el dinero; termina por quién cobra.
 6. dueDate e issueDate: YYYY-MM-DD (found false si no aparecen).
 7. servicePeriod: YYYY-MM si el documento indica el periodo cobrado (p. ej. "octubre 2026" → "2026-10"). Si el año no aparece y lo tomas de la fecha de emisión, legible = false. found false si no indica periodo.
 8. invoiceNumber: el número del documento sin la etiqueta ("Factura N.º", "Invoice #", "No.") pero con sus prefijos y ceros (p. ej. "FV-0012").
-9. documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro). Si el documento dice que el pago ya se hizo o ya se recibió (p. ej. "Payment receipt", "Payment received on…", "Paid", "Recibo de pago", "Pago recibido el…", "Pagado", "Comprovante de pagamento", "Pagamento recebido"), trae un sello o un estado de pagado ("PAID", "PAGADO", "QUITADO", "Settled", "Status: Paid", "Estado: Pagado") o dice que no queda saldo por pagar ("Balance due: $0.00", "Saldo pendiente: 0"), es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios: esos datos no lo convierten en un cobro.
-10. vendorTaxId: identificación tributaria de quien cobra (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
-11. vendorName: quien cobra (el emisor), tal como aparece.
+9. billToName y billToTaxId: a quién va dirigida la factura (el cliente que debe pagarla). Transcribe el bloque que lo nombra ("Facturar a", "Cliente", "Bill to", "Billed to", "Señores", "Adquiriente", "Tomador" o similar), en cualquier parte del documento (también en el pie de página o en letra pequeña). billToName = solo la razón social o el nombre, con su forma societaria tal como aparece ("S.A.S.", "Inc.", "LLC"…), sin dirección, correo ni identificación; billToTaxId = su identificación tributaria (NIT, EIN, RUT, RFC, CNPJ…), sin la etiqueta: "EIN 93-4127765" → "93-4127765". No es quien cobra (vendorName). Si el documento no dice a quién va dirigida la factura (es común en correos y chats), found = false: no lo deduzcas del destinatario del correo, del saludo ni de quién recibe el mensaje. Si el documento nombra a más de un destinatario distinto (p. ej. "Facturar a" una empresa y "Cliente" otra), o pone al destinatario "c/o", "por cuenta de" o "a cargo de" otra empresa, usa el que figura como cliente de la factura, copia en evidence el bloque completo, marca legible = false y anota los dos en readerNotes.
+10. documentType: "invoice" (factura, invoice, nota fiscal, nota de serviço; también un correo o mensaje de chat que cobra un monto con los datos de una factura), "cuenta_de_cobro" (cuenta de cobro de una persona natural, típica de Colombia), "receipt" (recibo o comprobante de algo que YA se pagó: no pide un pago) u "other" (el documento no cobra nada, p. ej. un estado de cuenta o un mensaje sin cobro). Si el documento dice que el pago ya se hizo o ya se recibió (p. ej. "Payment receipt", "Payment received on…", "Paid", "Recibo de pago", "Pago recibido el…", "Pagado", "Comprovante de pagamento", "Pagamento recebido"), trae un sello o un estado de pagado ("PAID", "PAGADO", "QUITADO", "Settled", "Status: Paid", "Estado: Pagado") o dice que no queda saldo por pagar ("Balance due: $0.00", "Saldo pendiente: 0"), es "receipt" aunque traiga número, fecha de vencimiento, total o datos bancarios: esos datos no lo convierten en un cobro.
+11. vendorTaxId: identificación tributaria de quien cobra (NIT, RUT, RFC, RUC, CNPJ, CPF, C.C., EIN…), tal como aparece pero sin la etiqueta: "NIT: 901.456.789-1" → "901.456.789-1".
+12. vendorName: quien cobra (el emisor), tal como aparece.
 
 # readerNotes
 Escribe ahí, en español y en frases breves, cada duda de la lectura: qué campo, qué viste y por qué dudas. Si no hay dudas ni particularidades, readerNotes = "".

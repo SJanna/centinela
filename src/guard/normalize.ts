@@ -128,6 +128,23 @@ export function guardTaxId(raw: string | null | undefined): TaxId | null {
   return { full, base };
 }
 
+/** Etiquetas que se quitan al comienzo de un id tributario leído (en mayúsculas). */
+const GUARD_TAX_LABEL =
+  /^(?:NIT|EIN|FEIN|TIN|SSN|ITIN|RUT|RUN|RFC|RUC|CNPJ|CPF|CUIT|CUIL|CI|DNI|NIF|CIF|VAT(?:\s*(?:NO|NUMBER|ID))?|TAX\s*(?:ID|NO|NUMBER)|ID\s*FISCAL|C\.?\s?C\.?)\b\s*(?:N[O°º]\.?\s*)?[:#.\-]?\s*/;
+
+/**
+ * Id tributario del destinatario de una factura, sin su etiqueta inicial («EIN 93-4127765» →
+ * «93-4127765»): los ids de la empresa compradora se registran sin etiqueta y un lector a veces la
+ * deja en el valor. Solo se quita si después queda algún dígito. null si no es un id válido.
+ */
+export function guardBillToTaxId(raw: string | null | undefined): TaxId | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  const m = GUARD_TAX_LABEL.exec(v.toUpperCase());
+  const rest = m && m[0].length > 0 ? v.slice(m[0].length).trim() : v;
+  return guardTaxId(/[0-9]/.test(rest) ? rest : v);
+}
+
 /**
  * Dos ids tributarios son el mismo si coinciden completos, o si uno de los dos trae el dígito de
  * verificación separado y el otro (que NO lo trae) es exactamente el número sin ese dígito. Si
@@ -178,6 +195,103 @@ export function guardNameKey(raw: string | null | undefined): string | null {
   }
   const key = tokens.join("");
   return key.length > 0 ? key : null;
+}
+
+// ───────────────────────── Destinatario de la factura ─────────────────────────
+
+/**
+ * Formas societarias del destinatario, con su forma canónica. Aquí la forma NO se descarta: «Andes Labs
+ * S.A.S.» es otra razón social que «Andes Labs Inc.». Una forma desconocida queda como parte del nombre
+ * (el nombre deja de coincidir y la guardia no aprueba).
+ */
+const GUARD_LEGAL_FORMS: ReadonlyMap<string, string> = new Map([
+  ...[...CORPORATE_SUFFIXES, "ag", "bv", "nv", "pty", "ptyltd", "lda", "lp", "llp", "pllc", "sarl", "sasu"].map((f): [string, string] => [f, f]),
+  ["incorporated", "inc"],
+  ["corporation", "corp"],
+  ["limited", "ltd"],
+  ["limitada", "ltda"],
+]);
+
+function guardWords(raw: string): string[] {
+  const cleaned = stripDiacritics(raw)
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  return cleaned.length > 0 ? cleaned.split(" ") : [];
+}
+
+function guardFormAt(words: readonly string[], start: number): string | null {
+  for (let k = Math.min(6, words.length - start); k >= 1; k--) {
+    const form = GUARD_LEGAL_FORMS.get(words.slice(start, start + k).join(""));
+    if (form !== undefined) return form;
+  }
+  return null;
+}
+
+/**
+ * Razón social del destinatario: palabras del nombre (sin tildes, minúsculas, sin puntuación) y la forma
+ * societaria final, canónica («ANDES LABS, INC.» → { base: "andes labs", form: "inc" }; «Andes Labs» →
+ * form ""). null si no queda ninguna letra o dígito ASCII.
+ */
+export function guardLegalName(raw: string | null | undefined): { base: string; form: string } | null {
+  if (typeof raw !== "string") return null;
+  const words = guardWords(raw);
+  const forms: string[] = [];
+  let changed = true;
+  while (changed && words.length > 1) {
+    changed = false;
+    for (let k = Math.min(6, words.length - 1); k >= 1; k--) {
+      const form = GUARD_LEGAL_FORMS.get(words.slice(-k).join(""));
+      if (form !== undefined) {
+        forms.unshift(form);
+        words.splice(words.length - k, k);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return words.length > 0 ? { base: words.join(" "), form: forms.join("") } : null;
+}
+
+/** Formas societarias que siguen a cada aparición del nombre `base` en un texto ("" si ninguna). */
+export function guardFormsAfter(text: string | null | undefined, base: string): string[] {
+  if (typeof text !== "string" || base.length === 0) return [];
+  const words = guardWords(text);
+  const target = base.split(" ");
+  const out: string[] = [];
+  for (let i = 0; i + target.length <= words.length; i++) {
+    if (target.every((w, k) => words[i + k] === w)) out.push(guardFormAt(words, i + target.length) ?? "");
+  }
+  return out;
+}
+
+/** Rellenos que un lector escribe en vez de dejar vacío el destinatario (solo letras y dígitos ASCII). */
+const GUARD_BILL_TO_FILLERS = new Set([
+  "na", "nd", "sn", "none", "null", "nil", "unknown", "ninguno", "ninguna", "desconocido", "desconocida", "noaplica",
+  "noindica", "noaparece", "nodisponible", "noespecificado", "noespecificada", "sindato", "sindatos", "notavailable",
+  "notprovided", "notapplicable", "notspecified",
+]);
+
+/**
+ * Texto del destinatario: null si no viene, si no tiene ninguna letra ni dígito de ningún alfabeto
+ * («—») o si es un relleno («N/A»). Un nombre en otro alfabeto SÍ es un destinatario: para el
+ * destinatario, «ausente» es lo que deja pagar.
+ */
+export function guardBillToText(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  if (!/[\p{L}\p{N}]/u.test(v)) return null;
+  const canon = stripDiacritics(v.normalize("NFKC")).toLowerCase().replace(/[^a-z0-9]/g, "");
+  return GUARD_BILL_TO_FILLERS.has(canon) ? null : v;
+}
+
+const GUARD_INTERMEDIARY =
+  /(?:^|[^\p{L}\p{N}])(?:c\s*\/\s*o|(?:in\s+)?care\s+of|on\s+behalf\s+of|por\s+cuenta\s+(?:y\s+orden\s+)?de|en\s+nombre\s+y\s+por\s+cuenta\s+de|en\s+representacion\s+de|aos\s+cuidados\s+de|por\s+conta\s+(?:e\s+ordem\s+)?de)(?![\p{L}\p{N}])/u;
+
+/** ¿El texto pone a un tercero junto al destinatario («c/o», «por cuenta de», «care of», «aos cuidados de»)? */
+export function guardNamesIntermediary(text: string | null): boolean {
+  return typeof text === "string" && GUARD_INTERMEDIARY.test(stripDiacritics(text).toLowerCase());
 }
 
 // ───────────────────────── Números de factura ─────────────────────────

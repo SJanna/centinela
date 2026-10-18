@@ -35,11 +35,13 @@ import {
   normalizeInvoiceNumber,
   periodOf,
   roundCents,
+  type BillTo,
   type Facts,
   type UsdAmount,
 } from "./facts";
 import {
   fieldLabel,
+  taxIdLabelIn,
   formatDate,
   formatNumber,
   formatPct,
@@ -855,7 +857,115 @@ function referenceText(date: string, source: "issue_date" | "now" | null): strin
 
 const ACTION_DATE = "Confirmar la fecha de emisión de la factura para revisar la vigencia del acuerdo.";
 
-const acu1: Evaluator = (f, _input, ctx) => {
+/** Cierra una frase con punto sin duplicarlo («… no a Andes Labs Inc.»). */
+function endSentence(text: string): string {
+  return text.endsWith(".") ? text : `${text}.`;
+}
+
+/** «Pampa Labs Colombia S.A.S. (NIT 901.888.123-4)»: el destinatario como lo trae la factura (recortado). */
+function billToText(b: BillTo): string {
+  const name = b.name != null ? truncate(b.name, 80) : null;
+  const tax = b.taxId != null ? truncate(b.taxId, 40) : null;
+  if (tax == null) return name ?? "";
+  const label = taxIdLabelIn(b.taxIdEvidence) ?? taxIdLabelIn(b.taxId);
+  const shownTax = label != null && !tax.toUpperCase().includes(label.toUpperCase()) ? `${label} ${tax}` : tax;
+  if (name == null) return `la empresa con ${label != null ? shownTax : `id tributario ${shownTax}`}`;
+  return `${name} (${shownTax})`;
+}
+
+/**
+ * El destinatario de la factura frente a la compradora: null si no hay problema (no lo dice o es la
+ * compradora); si no, la evaluación que corresponde (otra empresa → fail; ilegible o sin cómo
+ * comprobarlo → sin evaluar).
+ */
+function billToProblem(f: Facts): Evaluation | null {
+  const v = f.billTo;
+  if (v.status === "absent" || v.status === "buyer") return null;
+  const b = v.billTo;
+  const buyer = f.buyer.displayName;
+  const who = billToText(b);
+  // Si solo la segunda lectura trae el destinatario, se dice.
+  const invoice = b.source === "secondary" ? "Según la segunda lectura, la factura" : "La factura";
+  const params = {
+    billToName: b.name != null ? truncate(b.name, 80) : null,
+    billToTaxId: b.taxId != null ? truncate(b.taxId, 40) : null,
+    billToStatus: v.status,
+    billToSource: b.source,
+    buyer,
+  };
+  switch (v.status) {
+    case "other_company": {
+      const registered = f.buyer.taxIds.join(", ");
+      const shown = v.shown != null ? `«${truncate(v.shown, 80)}»` : who;
+      const explanation =
+        v.reason === "tax_id"
+          ? `${invoice} está dirigida a ${who}, pero ese id tributario no es el de ${buyer} (${registered}): puede ser otra empresa con el mismo nombre.`
+          : v.reason === "legal_form"
+            ? `${invoice} está dirigida a ${shown}, no a ${buyer}: tiene otra forma societaria y puede ser otra entidad (por ejemplo, una filial).`
+            : endSentence(`${invoice} está dirigida a ${who}, no a ${buyer}`);
+      return fail(
+        explanation,
+        `Confirmar con el proveedor a qué empresa corresponde la factura: si es de otra empresa, no se paga; si es de ${buyer}, pedir que la emita a su nombre (razón social e id tributario de ${buyer}).`,
+        { ...params, billToMatches: false },
+      );
+    }
+    case "ambiguous":
+      return notEvaluable(
+        `${invoice} nombra a otra empresa junto al destinatario («${truncate(v.shown, 100)}»); no se puede confirmar que esté dirigida a ${buyer}.`,
+        `Confirmar con el proveedor a qué empresa corresponde la factura: si es de otra empresa, no se paga; si es de ${buyer}, pedir que la emita a su nombre, sin intermediarios.`,
+        { ...params, billToMatches: null },
+      );
+    case "unreadable":
+      return notEvaluable(
+        endSentence(
+          `${b.source === "secondary" ? "Según la segunda lectura, no" : "No"} se lee con claridad a quién va dirigida la factura${who ? ` («${who}»)` : b.nameEvidence ? ` («${truncate(b.nameEvidence, 80)}»)` : ""}; no se puede confirmar que sea ${buyer}`,
+        ),
+        `Revisar en el documento original a quién va dirigida la factura: si no es ${buyer}, no se paga.`,
+        { ...params, billToMatches: null },
+      );
+    case "unverifiable":
+      return notEvaluable(
+        `${invoice} está dirigida a ${who}, pero la ficha de la empresa no tiene ids tributarios registrados con qué compararlo.`,
+        `Confirmar que ${who} es ${buyer} y registrar el id tributario de la empresa en su ficha.`,
+        { ...params, billToMatches: null },
+      );
+  }
+}
+
+/**
+ * ACU-1: el acuerdo es entre el proveedor y NUESTRA empresa. Si la factura dice a quién va dirigida y
+ * no es la compradora (otra razón social u otro id tributario), no se paga aunque haya un acuerdo
+ * vigente con ese proveedor. Si además el acuerdo no está vigente, se dicen las dos cosas.
+ */
+const acu1: Evaluator = (f, input, ctx) => {
+  const agreement = agreementInForce(f, input, ctx);
+  if (f.data == null) return agreement;
+  const problem = billToProblem(f);
+  if (problem == null) {
+    const v = f.billTo;
+    if (v.status !== "buyer" || agreement.status !== "pass") return agreement;
+    return {
+      ...agreement,
+      explanation: `${agreement.explanation} La factura está dirigida a ${f.buyer.displayName}, nuestra empresa.`,
+      params: { ...agreement.params, billToName: v.billTo.name != null ? truncate(v.billTo.name, 80) : null, billToTaxId: v.billTo.taxId != null ? truncate(v.billTo.taxId, 40) : null, billToMatches: true },
+    };
+  }
+  if (agreement.status === "pass" || agreement.derived) {
+    return { ...problem, params: { ...agreement.params, ...problem.params } };
+  }
+  // Las dos cosas fallan: el destinatario y el acuerdo.
+  const status = problem.status === "fail" || agreement.status === "fail" ? "fail" : "not_evaluable";
+  return {
+    status,
+    explanation: `${problem.explanation} ${agreement.explanation}`,
+    params: { ...agreement.params, ...problem.params },
+    action: unique([problem.action, agreement.action].filter((a): a is string => a != null)).join(" "),
+    derived: false,
+  };
+};
+
+/** Vigencia del acuerdo con el proveedor para la fecha (y el periodo) de la factura. */
+const agreementInForce: Evaluator = (f, _input, ctx) => {
   if (f.data == null) return derived(NO_DATA);
   const vendor = f.vendor;
   const sel = f.selection;

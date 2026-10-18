@@ -1,10 +1,10 @@
 {
- "generatedAt": "2026-10-17T21:41:16.311Z",
+ "generatedAt": "2026-10-18T07:29:13.521Z",
  "reader": "simulated",
  "dataset": "stress",
  "split": "all",
  "caseFilter": null,
- "promptVersion": "v3",
+ "promptVersion": "v5",
  "models": [
   "simulado"
  ],
@@ -13,12 +13,12 @@
   {
    "id": "lector-a",
    "model": "simulado",
-   "promptVersion": "v3"
+   "promptVersion": "v5"
   },
   {
    "id": "lector-b",
    "model": "simulado",
-   "promptVersion": "v3"
+   "promptVersion": "v5"
   }
  ],
  "metrics": {
@@ -4815,29 +4815,22 @@
    "split": "train",
    "escenario": "e03-volumen",
    "formato": "eml",
-   "descripcion": "Se hace pasar por Soporte Caribe S.A.S. con un homoglifo (letra cirílica): «Soportе Caribe S.A.S.» (NIT 996.821.798-7) · correo_cuerpo · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Cordillera Analytics SpA» (RUT 75.651.788-2) en vez de Andes Labs Inc. · Soporte Caribe S.A.S. · correo_cuerpo · COP 8.400.000, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "alta",
+    "trampa": "otra_empresa",
+    "dificultad": "media",
     "idioma": "en",
     "plantilla": "correo_cuerpo"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -5790,6 +5783,7 @@
    },
    "outcome": "ESCALAR",
    "failCodes": [
+    "LEC-1",
     "PRV-1"
    ],
    "notEvaluableCodes": [
@@ -8440,29 +8434,22 @@
    "split": "train",
    "escenario": "e06-fondo-bajo",
    "formato": "jpg",
-   "descripcion": "Se hace pasar por Pampa Ops SRL con una letra cambiada: «Pampa Opps SRL» (CUIT 30-48443068-4) · JPG saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Brightwave Analytics LLC» (EIN 17-7369840) en vez de Andes Labs Inc. · Pampa Ops SRL · JPG saas · USD 2.800,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "en",
     "plantilla": "saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -11796,6 +11783,7 @@
    },
    "outcome": "ESCALAR",
    "failCodes": [
+    "LEC-1",
     "PRV-1"
    ],
    "notEvaluableCodes": [
@@ -12645,29 +12633,22 @@
    "split": "train",
    "escenario": "e08-volumen",
    "formato": "png",
-   "descripcion": "Se hace pasar por Soporte Caribe S.A.S. con una letra cambiada: «Soporte Caribbe S.A.S.» sin id tributario · PNG latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Brightwave Analytics LLC» (EIN 96-2232175) en vez de Andes Labs Inc. · Soporte Caribe S.A.S. · PNG latam · COP 8.880.000, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -16828,29 +16809,22 @@
    "split": "train",
    "escenario": "e11-volumen",
    "formato": "eml",
-   "descripcion": "Se hace pasar por Pampa Ops SRL con otra razón social: «Pampa Ops Consulting SRL» (CUIT 30-48931794-1) · correo+adjunto_saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Brightwave Analytics LLC» (EIN 89-1494209) en vez de Andes Labs Inc. · Pampa Ops SRL · correo+adjunto_saas · USD 2.800,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "es",
     "plantilla": "correo+adjunto_saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -30581,29 +30555,22 @@
    "split": "holdout",
    "escenario": "e20-volumen",
    "formato": "eml",
-   "descripcion": "Se hace pasar por Datos del Sur SpA con un homoglifo (letra cirílica): «Datоs del Sur SpA» sin id tributario · correo_cuerpo · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC QOR181212QX5) en vez de Andes Labs Inc. · Datos del Sur SpA · correo_cuerpo · USD 720,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "alta",
+    "trampa": "otra_empresa",
+    "dificultad": "media",
     "idioma": "es",
     "plantilla": "correo_cuerpo"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -31587,29 +31554,22 @@
    "split": "train",
    "escenario": "e21-volumen",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por Testa Qualidade Ltda con una letra cambiada: «Testa Quallidade Ltda» sin id tributario · PDF saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Pampa Labs Colombia S.A.S.» (NIT 901.888.123-4) en vez de Andes Labs Inc. · Testa Qualidade Ltda · PDF saas · R$ 9.500,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "en",
     "plantilla": "saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -31725,29 +31685,22 @@
    "split": "train",
    "escenario": "e21-volumen",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por Datos del Sur SpA con una letra cambiada: «Datos de Sur SpA» (RUT 72.093.262-6) · PDF latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Brightwave Analytics LLC» (EIN 17-8318515) en vez de Andes Labs Inc. · Datos del Sur SpA · PDF latam · USD 2.340,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -34536,29 +34489,22 @@
    "split": "train",
    "escenario": "e23-reglas-base",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por Pampa Ops SRL con una letra cambiada: «Pampa Opps SRL» sin id tributario · PDF latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Inc.» (EIN 07-7658251) en vez de Andes Labs Inc. (mismo nombre, otro EIN) · Pampa Ops SRL · PDF latam · USD 2.800,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "media",
+    "trampa": "otra_empresa",
+    "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -37235,6 +37181,7 @@
    },
    "outcome": "ESCALAR",
    "failCodes": [
+    "LEC-1",
     "PRV-1"
    ],
    "notEvaluableCodes": [
@@ -38306,29 +38253,22 @@
    "split": "train",
    "escenario": "e26-tolerancia-2",
    "formato": "eml",
-   "descripcion": "Se hace pasar por CloudMetrics Inc. con otra razón social: «CloudMetrics Labs Inc.» sin id tributario · correo+adjunto_saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC ZOR230808QZ8) en vez de Andes Labs Inc. · CloudMetrics Inc. · correo+adjunto_saas · USD 1.200,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "en",
     "plantilla": "correo+adjunto_saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -42253,29 +42193,22 @@
    "split": "train",
    "escenario": "e28-limite-bajo",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por Inca Contenidos S.A.C. con otra razón social: «Inca Contenidos Digitales S.A.C.» sin id tributario · PDF saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Inc.» (EIN 07-4692332) en vez de Andes Labs Inc. (mismo nombre, otro EIN) · Inca Contenidos S.A.C. · PDF saas · S/ 6.000,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "media",
+    "trampa": "otra_empresa",
+    "dificultad": "alta",
     "idioma": "en",
     "plantilla": "saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -45755,29 +45688,22 @@
    "split": "train",
    "escenario": "e31-volumen",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por CloudMetrics Inc. con una letra cambiada: «CloudMetrlcs Inc.» sin id tributario · PDF latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Inc.» (EIN 89-9911904) en vez de Andes Labs Inc. (mismo nombre, otro EIN) · CloudMetrics Inc. · PDF latam · USD 1.200,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "media",
+    "trampa": "otra_empresa",
+    "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -49250,29 +49176,22 @@
    "split": "train",
    "escenario": "e33-volumen",
    "formato": "png",
-   "descripcion": "Se hace pasar por Datos del Sur SpA con otra razón social: «Datos del Sur Analytics SpA» (RUT 72.814.105-4) · PNG latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Colombia S.A.S.» (NIT 991.372.599-7) en vez de Andes Labs Inc. · Datos del Sur SpA · PNG latam · USD 3.120,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -49597,29 +49516,22 @@
    "split": "train",
    "escenario": "e33-volumen",
    "formato": "pdf",
-   "descripcion": "Se hace pasar por Datos del Sur SpA con una letra cambiada: «Datos de Sur SpA» sin id tributario · PDF saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC ZAN150327QX3) en vez de Andes Labs Inc. · Datos del Sur SpA · PDF saas · USD 3.060,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "en",
     "plantilla": "saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -50300,29 +50212,22 @@
    "split": "train",
    "escenario": "e33-volumen",
    "formato": "jpg",
-   "descripcion": "Se hace pasar por CloudMetrics Inc. con otra razón social: «CloudMetrics Labs Inc.» (EIN 07-6275688) · JPG latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC XAN200314QX1) en vez de Andes Labs Inc. · CloudMetrics Inc. · JPG latam · USD 1.200,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -50778,29 +50683,22 @@
    "split": "train",
    "escenario": "e34-volumen",
    "formato": "txt",
-   "descripcion": "Se hace pasar por Testa Qualidade Ltda con un homoglifo (letra cirílica): «Тesta Qualidade Ltda» sin id tributario · chat · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Pampa Labs Colombia S.A.S.» (NIT 901.888.123-4) en vez de Andes Labs Inc. · Testa Qualidade Ltda · chat · R$ 9.500,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "alta",
+    "trampa": "otra_empresa",
+    "dificultad": "media",
     "idioma": "pt",
     "plantilla": "chat"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -51273,29 +51171,22 @@
    "split": "train",
    "escenario": "e34-volumen",
    "formato": "eml",
-   "descripcion": "Se hace pasar por CloudMetrics Inc. con un homoglifo (letra cirílica): «CloudMеtrics Inc.» sin id tributario · correo_cuerpo · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC QEL150606QX7) en vez de Andes Labs Inc. · CloudMetrics Inc. · correo_cuerpo · USD 1.200,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "alta",
+    "trampa": "otra_empresa",
+    "dificultad": "media",
     "idioma": "en",
     "plantilla": "correo_cuerpo"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -52058,29 +51949,22 @@
    "split": "holdout",
    "escenario": "e35-volumen",
    "formato": "jpg",
-   "descripcion": "Se hace pasar por Bufete Andino Abogados S.A.S. con el mismo nombre con otro id tributario: «Bufete Andino Abogados S.A.S.» (NIT 992.598.353-1) · JPG latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Colombia S.A.S.» (NIT 970.689.831-9) en vez de Andes Labs Inc. · Bufete Andino Abogados S.A.S. · JPG latam · USD 4.500,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "es",
     "plantilla": "latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -53191,29 +53075,22 @@
    "split": "holdout",
    "escenario": "e35-volumen",
    "formato": "jpg",
-   "descripcion": "Se hace pasar por Pampa Ops SRL con otra razón social: «Pampa Ops Consulting SRL» (CUIT 30-33025909-9) · JPG saas · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Grupo Nopalli S.A. de C.V.» (RFC XIR210217QX2) en vez de Andes Labs Inc. · Pampa Ops SRL · JPG saas · USD 2.800,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "alta",
     "idioma": "en",
     "plantilla": "saas"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -55701,29 +55578,22 @@
    "split": "train",
    "escenario": "e37-tolerancia-2",
    "formato": "eml",
-   "descripcion": "Se hace pasar por Bufete Andino Abogados S.A.S. con el mismo nombre con otro id tributario: «Bufete Andino Abogados S.A.S.» (NIT 914.427.603-3) · correo+adjunto_latam · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Andes Labs Colombia S.A.S.» (NIT 914.177.982-1) en vez de Andes Labs Inc. · Bufete Andino Abogados S.A.S. · correo+adjunto_latam · USD 4.500,00, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
-    "dificultad": "alta",
+    "trampa": "otra_empresa",
+    "dificultad": "media",
     "idioma": "es",
     "plantilla": "correo+adjunto_latam"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -57560,6 +57430,7 @@
    },
    "outcome": "ESCALAR",
    "failCodes": [
+    "LEC-1",
     "PRV-1"
    ],
    "notEvaluableCodes": [
@@ -59290,29 +59161,22 @@
    "split": "train",
    "escenario": "e39-volumen",
    "formato": "txt",
-   "descripcion": "Se hace pasar por Camila Restrepo Dev S.A.S. con una letra cambiada: «Camila Restrepo Deb S.A.S.» sin id tributario · chat · cobra a otra cuenta",
+   "descripcion": "Dirigida a otra empresa: «Brightwave Analytics LLC» (EIN 89-7969366) en vez de Andes Labs Inc. · Camila Restrepo Dev S.A.S. · chat · COP 12.000.000, cuenta registrada y monto pactado",
    "expected": "ESCALAR",
    "expectedCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
    "extras": {
-    "trampa": "proveedor_parecido",
+    "trampa": "otra_empresa",
     "dificultad": "media",
     "idioma": "es",
     "plantilla": "chat"
    },
    "outcome": "ESCALAR",
    "failCodes": [
-    "PRV-1"
+    "ACU-1"
    ],
-   "notEvaluableCodes": [
-    "DUP-2",
-    "DUP-3",
-    "PRV-2",
-    "ACU-1",
-    "ACU-2",
-    "ACU-3"
-   ],
+   "notEvaluableCodes": [],
    "missingCodes": [],
    "correct": true,
    "improperPayment": false,
@@ -61957,60 +61821,6 @@
     "costUsd": null,
     "tokens": null
    },
-   "proveedor_parecido": {
-    "metrics": {
-     "total": 83,
-     "correct": 83,
-     "accuracy": 1,
-     "improperPayments": 0,
-     "shouldNotPay": 83,
-     "overEscalations": 0,
-     "overFreezes": 0,
-     "notFreeze": 83,
-     "autonomy": {
-      "resolved": 0,
-      "eligible": 0,
-      "rate": 0
-     }
-    },
-    "accuracy": {
-     "rate": 1,
-     "low": 0.9565288478338516,
-     "high": 1,
-     "k": 83,
-     "n": 83
-    },
-    "improperPayments": {
-     "rate": 0,
-     "low": 0,
-     "high": 0.043471152166148386,
-     "k": 0,
-     "n": 83
-    },
-    "overEscalations": {
-     "rate": 0,
-     "low": 0,
-     "high": 1,
-     "k": 0,
-     "n": 0
-    },
-    "overFreezes": {
-     "rate": 0,
-     "low": 0,
-     "high": 0.043471152166148386,
-     "k": 0,
-     "n": 83
-    },
-    "autonomy": {
-     "rate": 0,
-     "low": 0,
-     "high": 1,
-     "k": 0,
-     "n": 0
-    },
-    "costUsd": null,
-    "tokens": null
-   },
    "monto_fuera_tolerancia": {
     "metrics": {
      "total": 74,
@@ -62169,6 +61979,60 @@
      "high": 1,
      "k": 63,
      "n": 63
+    },
+    "costUsd": null,
+    "tokens": null
+   },
+   "proveedor_parecido": {
+    "metrics": {
+     "total": 63,
+     "correct": 63,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 63,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 63,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.9431276476675521,
+     "high": 1,
+     "k": 63,
+     "n": 63
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.05687235233244792,
+     "k": 0,
+     "n": 63
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.05687235233244792,
+     "k": 0,
+     "n": 63
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
     },
     "costUsd": null,
     "tokens": null
@@ -63242,6 +63106,60 @@
      "high": 0.14818512891497448,
      "k": 0,
      "n": 23
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": null,
+    "tokens": null
+   },
+   "otra_empresa": {
+    "metrics": {
+     "total": 20,
+     "correct": 20,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 20,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 20,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.8315665290169818,
+     "high": 1,
+     "k": 20,
+     "n": 20
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.1684334709830182,
+     "k": 0,
+     "n": 20
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.1684334709830182,
+     "k": 0,
+     "n": 20
     },
     "autonomy": {
      "rate": 0,
@@ -64667,14 +64585,14 @@
   "byDifficulty": {
    "media": {
     "metrics": {
-     "total": 933,
-     "correct": 933,
+     "total": 935,
+     "correct": 935,
      "accuracy": 1,
      "improperPayments": 0,
-     "shouldNotPay": 598,
+     "shouldNotPay": 600,
      "overEscalations": 0,
      "overFreezes": 0,
-     "notFreeze": 780,
+     "notFreeze": 782,
      "autonomy": {
       "resolved": 488,
       "eligible": 488,
@@ -64683,17 +64601,17 @@
     },
     "accuracy": {
      "rate": 1,
-     "low": 0.9960540229999424,
+     "low": 0.996062446952692,
      "high": 1,
-     "k": 933,
-     "n": 933
+     "k": 935,
+     "n": 935
     },
     "improperPayments": {
      "rate": 0,
      "low": 0,
-     "high": 0.006149707404347282,
+     "high": 0.00612927133033736,
      "k": 0,
-     "n": 598
+     "n": 600
     },
     "overEscalations": {
      "rate": 0,
@@ -64705,9 +64623,9 @@
     "overFreezes": {
      "rate": 0,
      "low": 0,
-     "high": 0.004718166949260194,
+     "high": 0.004706128464476933,
      "k": 0,
-     "n": 780
+     "n": 782
     },
     "autonomy": {
      "rate": 1,
@@ -64721,14 +64639,14 @@
    },
    "alta": {
     "metrics": {
-     "total": 748,
-     "correct": 748,
+     "total": 746,
+     "correct": 746,
      "accuracy": 1,
      "improperPayments": 0,
-     "shouldNotPay": 316,
+     "shouldNotPay": 314,
      "overEscalations": 0,
      "overFreezes": 0,
-     "notFreeze": 728,
+     "notFreeze": 726,
      "autonomy": {
       "resolved": 452,
       "eligible": 452,
@@ -64737,17 +64655,17 @@
     },
     "accuracy": {
      "rate": 1,
-     "low": 0.9950804836303178,
+     "low": 0.9950673271600863,
      "high": 1,
-     "k": 748,
-     "n": 748
+     "k": 746,
+     "n": 746
     },
     "improperPayments": {
      "rate": 0,
      "low": 0,
-     "high": 0.01160579624820457,
+     "high": 0.011679285152695229,
      "k": 0,
-     "n": 316
+     "n": 314
     },
     "overEscalations": {
      "rate": 0,
@@ -64759,9 +64677,9 @@
     "overFreezes": {
      "rate": 0,
      "low": 0,
-     "high": 0.005054325798937498,
+     "high": 0.005068214217772038,
      "k": 0,
-     "n": 728
+     "n": 726
     },
     "autonomy": {
      "rate": 1,

@@ -16,13 +16,30 @@ import {
   type ReadingAssessment,
   type ReadingSignals,
 } from "../core/schemas";
-import { formatMoney, normalizeAccount, normalizeName, toCents } from "../core/normalize";
+import {
+  formatMoney,
+  legalFormsAfter,
+  normalizeAccount,
+  normalizeName,
+  splitLegalForm,
+  stripTaxIdLabel,
+  taxIdsEquivalent,
+  toCents,
+} from "../core/normalize";
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
 /** Clave en readersDisagreeOn cuando las dos lecturas imputan la factura a meses distintos. */
 export const PERIOD_DISAGREEMENT = "periodo";
+/** Clave en readersDisagreeOn cuando las dos lecturas dicen que la factura va dirigida a empresas distintas. */
+export const BILL_TO_DISAGREEMENT = "destinatario";
+
+/** Campos del destinatario de la factura (a quién va dirigida). No son críticos: si faltan, no se penaliza. */
+export const BILL_TO_FIELDS = ["billToName", "billToTaxId"] as const;
+export type BillToField = (typeof BILL_TO_FIELDS)[number];
+/** Campos cuya cita se comprueba contra el texto del documento (evidenceNotFound). */
+export type VerifiedField = CriticalField | BillToField;
 
 // ───────────────────────── Normalización ─────────────────────────
 
@@ -74,11 +91,24 @@ function criticalText(value: string | null | undefined): string | null {
   return v == null || isPlaceholder(v) ? null : v;
 }
 
+/**
+ * Texto del destinatario de la factura. Al revés que en un campo crítico, aquí «ausente» es lo que deja
+ * pagar: solo es relleno lo que no tiene ninguna letra ni dígito de ningún alfabeto («—») o un relleno
+ * conocido («N/A»). Un nombre en cirílico, griego, chino o de ancho completo es un destinatario.
+ */
+function billToText(value: string | null | undefined): string | null {
+  const v = cleanText(value);
+  if (v == null || !/[\p{L}\p{N}]/u.test(v)) return null;
+  return PLACEHOLDERS.has(canonicalText(v)) ? null : v;
+}
+
 export function toInvoiceData(e: Extraction): InvoiceData {
   return {
     documentType: e.documentType,
     vendorName: criticalText(e.vendorName.value),
     vendorTaxId: cleanText(e.vendorTaxId.value),
+    billToName: billToText(e.billToName?.value),
+    billToTaxId: billToText(e.billToTaxId?.value),
     invoiceNumber: criticalText(e.invoiceNumber.value),
     issueDate: cleanText(e.issueDate.value),
     dueDate: cleanText(e.dueDate.value),
@@ -176,8 +206,36 @@ function periodKeyOfReading(e: Extraction | null): string | null {
 }
 
 /**
- * LEC-2: campos críticos en que las lecturas no coinciden y, además, "periodo" si las dos lecturas
- * imputan la factura a meses distintos (servicePeriod, o el mes de issueDate si no hay). Si una de
+ * ¿Las dos lecturas dicen que la factura va dirigida a empresas distintas? Solo se compara lo que traen
+ * las DOS: el nombre (sin forma societaria final: «Andes Labs Inc.» = «ANDES LABS») si ambas lo traen,
+ * y el id tributario (sin etiqueta) si ambas lo traen. Que una lo traiga y la otra no, no es desacuerdo.
+ */
+export function billToDisagrees(a: Extraction | null, b: Extraction | null): boolean {
+  if (!a || !b) return false;
+  const nameA = billToText(a.billToName?.value);
+  const nameB = billToText(b.billToName?.value);
+  if (nameA != null && nameB != null && !sameBillToName(nameA, nameB)) return true;
+  const taxA = billToText(a.billToTaxId?.value);
+  const taxB = billToText(b.billToTaxId?.value);
+  return taxA != null && taxB != null && !taxIdsEquivalent(stripTaxIdLabel(taxA), stripTaxIdLabel(taxB));
+}
+
+/**
+ * ¿Dos lecturas nombran al mismo destinatario? Mismo nombre y, si las dos traen forma societaria, la
+ * misma («Andes Labs» = «Andes Labs Inc.», pero «Andes Labs Inc.» ≠ «Andes Labs LLC»). Un nombre sin
+ * letras ASCII (otro alfabeto) se compara letra a letra.
+ */
+function sameBillToName(a: string, b: string): boolean {
+  const pa = splitLegalForm(a);
+  const pb = splitLegalForm(b);
+  if (pa == null || pb == null) return unicodeCanonical(a) === unicodeCanonical(b);
+  return pa.base === pb.base && (pa.form === "" || pb.form === "" || pa.form === pb.form);
+}
+
+/**
+ * LEC-2: campos críticos en que las lecturas no coinciden; además, "periodo" si las dos lecturas
+ * imputan la factura a meses distintos (servicePeriod, o el mes de issueDate si no hay), y
+ * "destinatario" si las dos dicen a quién va dirigida y no coinciden (billToDisagrees). Si una de
  * las dos no trae el dato, eso no cuenta como desacuerdo; si lo trae escrito de una forma que no es
  * un mes válido, no confirma el de la otra y sí cuenta (salvo que las dos digan exactamente lo mismo).
  */
@@ -189,6 +247,7 @@ export function compareReadings(primary: ReaderResult, secondary: ReaderResult |
   const periodA = periodKeyOfReading(a);
   const periodB = periodKeyOfReading(b);
   if (periodA != null && periodB != null && periodA !== periodB) out.push(PERIOD_DISAGREEMENT);
+  if (billToDisagrees(a, b)) out.push(BILL_TO_DISAGREEMENT);
   return out;
 }
 
@@ -393,7 +452,7 @@ function currencyCodeAppears(code: string, lowerText: string): boolean {
  * ¿El valor leído está en el texto del documento? Una cita que sí está en el texto no basta: el
  * lector podría citar la línea correcta y devolver otro valor, o no citar nada.
  */
-function valueFound(field: CriticalField, value: string | number, doc: SearchableText): boolean {
+function valueFound(field: VerifiedField, value: string | number, doc: SearchableText): boolean {
   if (typeof value === "number") return Number.isFinite(value) && amountAppears(value, doc.normalized);
   if (field === "currency") {
     const code = value.toLowerCase().replace(/\s+/g, "");
@@ -401,6 +460,7 @@ function valueFound(field: CriticalField, value: string | number, doc: Searchabl
     const aliases = CURRENCY_ALIASES[code.toUpperCase()] ?? [];
     return aliases.some((alias) => doc.collapsed.includes(alias));
   }
+  if (field === "billToName") return billToNameFound(value, doc);
   const canon = canonicalText(value);
   if (canon.length > 0 && doc.canonical.includes(canon)) return true;
   // El nombre del proveedor puede venir sin la forma societaria que el lector agregó («Inc.», «S.A.S.»).
@@ -409,6 +469,30 @@ function valueFound(field: CriticalField, value: string | number, doc: Searchabl
     return base.length > 0 && doc.canonical.includes(base);
   }
   return false;
+}
+
+/** Solo letras y dígitos de cualquier alfabeto, en minúsculas (NFKC: el ancho completo pasa a ASCII). */
+function unicodeCanonical(s: string): string {
+  return s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+/**
+ * ¿El destinatario leído está en el texto? Como el nombre del proveedor, puede venir sin la forma
+ * societaria, o con una que el texto no trae (el lector la agregó). Pero si el texto solo lo muestra
+ * con OTRA forma societaria («Andes Labs S.A.S.»), una lectura que dice «Andes Labs Inc.» no está
+ * respaldada: es otra razón social. Un nombre en otro alfabeto se busca letra a letra.
+ */
+function billToNameFound(value: string, doc: SearchableText): boolean {
+  const canon = canonicalText(value);
+  const parts = splitLegalForm(value);
+  if (parts == null) {
+    const u = unicodeCanonical(value);
+    return u.length > 0 && unicodeCanonical(doc.lower).includes(u);
+  }
+  const forms = legalFormsAfter(doc.lower, parts.base);
+  if (forms.length === 0) return canon.length > 0 && doc.canonical.includes(canon);
+  if (parts.form === "" || forms.includes(parts.form)) return true;
+  return forms.every((f) => f === "");
 }
 
 interface SearchableText {
@@ -458,7 +542,7 @@ function includesWithoutSplittingNumbers(haystack: string, needle: string): bool
  * de PDF con espacios entre letras o dígitos («2 . 4 0 0 , 0 0»), donde el número no se lee entero
  * pero la cita sí aparece. Una cita hecha solo de símbolos («$», «R$») respalda únicamente la moneda.
  */
-function quoteBacksValue(field: CriticalField, value: string | number, evidence: string | null, doc: SearchableText): boolean {
+function quoteBacksValue(field: VerifiedField, value: string | number, evidence: string | null, doc: SearchableText): boolean {
   const ev = evidence?.trim() ?? "";
   if (ev.length === 0) return false;
   const canon = canonicalText(ev);
@@ -605,20 +689,31 @@ export function totalDoubtedInNotes(doc: NormalizedDoc, extraction: Extraction):
  * subcadena de dígitos: «240» no está en «2.400,00»), ni la cita del lector lo contiene. Que la cita
  * exista no basta: un lector engañado puede citar la línea correcta y devolver otro valor, o no
  * citar nada. Un campo sin valor no se marca (eso es LEC-1, dato ausente).
- * Solo aplica cuando hay texto plano y el documento no es una imagen; tampoco cuando trae alguna
- * imagen adjunta (p. ej. un correo con una foto), porque lo leído en la imagen nunca está en el
+ * Lo mismo con el destinatario de la factura (billToName, billToTaxId) cuando la lectura lo trae: si
+ * un lector dice que va dirigida a la empresa y eso no está en el texto, no se le cree (el destinatario
+ * decide ACU-1). Solo aplica cuando hay texto plano y el documento no es una imagen; tampoco cuando trae
+ * alguna imagen adjunta (p. ej. un correo con una foto), porque lo leído en la imagen nunca está en el
  * texto plano y daría falsos positivos.
  */
-export function findEvidenceNotFound(doc: NormalizedDoc, extraction: Extraction): CriticalField[] {
+export function findEvidenceNotFound(doc: NormalizedDoc, extraction: Extraction): VerifiedField[] {
   if (!hasVerifiableText(doc) || doc.plainText == null) return [];
   const text = searchable(doc.plainText);
-  const notFound: CriticalField[] = [];
+  const notFound: VerifiedField[] = [];
 
   for (const field of CRITICAL_FIELDS) {
     const f = criticalField(extraction, field);
     if (f.value == null) continue;
     if (valueFound(field, f.value, text)) continue;
     if (quoteBacksValue(field, f.value, f.evidence, text)) continue;
+    notFound.push(field);
+  }
+  for (const field of BILL_TO_FIELDS) {
+    const f = extraction[field];
+    const value = billToText(f?.value);
+    if (value == null) continue;
+    if (valueFound(field, value, text)) continue;
+    if (field === "billToTaxId" && valueFound(field, stripTaxIdLabel(value), text)) continue;
+    if (quoteBacksValue(field, value, f?.evidence ?? null, text)) continue;
     notFound.push(field);
   }
   return notFound;
