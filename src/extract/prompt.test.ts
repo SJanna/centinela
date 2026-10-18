@@ -17,7 +17,7 @@ import { makeDoc } from "./test-utils";
 describe("buildReaderMessages", () => {
   it("usa un prompt de sistema en español que declara el documento como dato no confiable", () => {
     const { system } = buildReaderMessages(makeDoc());
-    expect(PROMPT_VERSION).toBe("v4");
+    expect(PROMPT_VERSION).toBe("v6");
     expect(system).toBe(READER_SYSTEM_PROMPT);
     expect(system).toContain("componente de extracción de datos");
     expect(system).toContain("DATO NO CONFIABLE");
@@ -116,10 +116,10 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     buildReaderMessages(doc, variant).content.map((b) => (b.type === "text" ? b.text : `[${b.type}]`));
 
   it("tiene su propia versión, distinta de la del prompt «a», para que la caché las distinga", () => {
-    expect(PROMPT_VERSION_B).toBe("v4b");
+    expect(PROMPT_VERSION_B).toBe("v6b");
     expect(PROMPT_VERSIONS).toEqual({ a: PROMPT_VERSION, b: PROMPT_VERSION_B });
-    expect(promptVersionOf("a")).toBe("v4");
-    expect(promptVersionOf("b")).toBe("v4b");
+    expect(promptVersionOf("a")).toBe("v6");
+    expect(promptVersionOf("b")).toBe("v6b");
     expect(PROMPT_VERSION_B).not.toBe(PROMPT_VERSION);
   });
 
@@ -155,7 +155,8 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     const b = READER_SYSTEM_PROMPT_B;
     expect(at(b, "1. payment:")).toBeLessThan(at(b, "2. total:"));
     expect(at(b, "2. total:")).toBeLessThan(at(b, "8. invoiceNumber:"));
-    expect(at(b, "8. invoiceNumber:")).toBeLessThan(at(b, "11. vendorName:"));
+    expect(at(b, "8. invoiceNumber:")).toBeLessThan(at(b, "9. billToName y billToTaxId:"));
+    expect(at(b, "9. billToName y billToTaxId:")).toBeLessThan(at(b, "12. vendorName:"));
     // En el «a» el proveedor va antes que el pago.
     const a = READER_SYSTEM_PROMPT;
     expect(at(a, "- vendorName:")).toBeLessThan(at(a, "- payment:"));
@@ -235,6 +236,22 @@ describe("prompt «b» (segunda lectura del perfil económico)", () => {
     ["cita del total con su etiqueta", /línea del total con su etiqueta, tal cual aparece/],
     ["sello o estado de pagado es recibo", /trae un sello o un estado de pagado \("PAID", "PAGADO"/],
     ["saldo por pagar en cero es recibo", /dice que no queda saldo por pagar \("Balance due: \$0\.00"/],
+    // v5 / v5b: a quién va dirigida la factura (LOG-11 del equipo rojo: factura de otra empresa pagada).
+    ["destinatario de la factura", /billToName[^\n]*a quién va dirigida la factura/],
+    ["etiquetas del destinatario", /"Facturar a", "Cliente", "Bill to", "Billed to", "Señores", "Adquiriente", "Tomador"/],
+    ["destinatario: solo el nombre, con su forma societaria", /solo la razón social o el nombre, con su forma societaria tal como aparece \("S\.A\.S\.", "Inc\.", "LLC"…\), sin dirección, correo ni identificación/],
+    ["destinatario en cualquier parte, también en el pie", /en cualquier parte del documento \(también en el pie de página o en letra pequeña\)/],
+    ["id tributario del destinatario sin etiqueta", /"EIN 93-4127765" → "93-4127765"/],
+    ["destinatario distinto de quien cobra", /(?:No confundas al destinatario con quien cobra|No es quien cobra) \(vendorName\)/],
+    ["destinatario ausente: found false", /no dice a quién va dirigida la factura \(es común en correos y chats\), found = false/],
+    ["no deducir el destinatario del correo ni del saludo", /no lo deduzcas del destinatario del correo, del saludo ni de quién recibe el mensaje/],
+    // Revisión adversarial: con dos destinatarios o un intermediario la lectura lo marca dudoso (ACU-1 escala).
+    ["dos destinatarios o intermediario: legible = false", /nombra a más de un destinatario distinto \(p\. ej\. "Facturar a" una empresa y "Cliente" otra\), o pone al destinatario "c\/o", "por cuenta de" o "a cargo de" otra empresa, usa el que figura como cliente de la factura, copia en evidence el bloque completo, marca legible = false y anota los dos en readerNotes/],
+    // v6 / v6b: documento no cobrable (ronda 2 del equipo rojo: proforma y foto con «BORRADOR» pagadas con v5).
+    ["anulado, borrador, proforma, nota crédito o muestra es other", /es un borrador o un documento preliminar \("BORRADOR", "DRAFT", "Preliminar"\), una proforma \("PROFORMA"[^\n]*una nota crédito \("NOTA CRÉDITO"[^\n]*es "other" aunque traiga número, total y datos bancarios/],
+    ["anulado o cancelado es other", /Si el documento está anulado o cancelado \("ANULADA", "ANULADO", "VOID"/],
+    ["también con sello o marca de agua", /también si la marca es un sello o una marca de agua/],
+    ["anotar la marca", /Anota en readerNotes qué marca viste/],
   ];
 
   it.each(SAFEGUARDS)("la salvaguarda «%s» está en los dos prompts", (_name, pattern) => {

@@ -20,6 +20,14 @@ export const ExtractionSchema = z.object({
   documentType: z.enum(["invoice", "cuenta_de_cobro", "receipt", "other"]),
   vendorName: field(z.string()),
   vendorTaxId: field(z.string()),
+  /**
+   * A quién va dirigida la factura (el cliente que debe pagarla: «Facturar a», «Cliente», «Bill to»,
+   * «Señores», «Adquiriente», «Tomador»), tal como aparece. Opcional: las lecturas guardadas antes de
+   * que existiera (prompts v4/v4b) no lo traen, y muchos correos y chats no lo dicen (value null).
+   */
+  billToName: field(z.string()).optional(),
+  /** Identificación tributaria del destinatario (NIT, EIN, RUT…), sin la etiqueta. Opcional, como billToName. */
+  billToTaxId: field(z.string()).optional(),
   invoiceNumber: field(z.string()),
   /** YYYY-MM-DD */
   issueDate: field(z.string()),
@@ -113,6 +121,10 @@ export interface InvoiceData {
   documentType: Extraction["documentType"];
   vendorName: string | null;
   vendorTaxId: string | null;
+  /** A quién va dirigida la factura (null o ausente si no lo dice). Ausente en registros anteriores. */
+  billToName?: string | null;
+  /** Id tributario del destinatario, tal como se leyó (null o ausente si no lo trae). */
+  billToTaxId?: string | null;
   invoiceNumber: string | null;
   issueDate: string | null;
   dueDate: string | null;
@@ -271,10 +283,29 @@ export const RulesSchema = z.object({
 });
 export type Rules = z.infer<typeof RulesSchema>;
 
+/**
+ * Identidad de la empresa compradora: a nombre de quién deben venir las facturas. Una factura dirigida
+ * a otra razón social o a otro id tributario no le corresponde pagarla (ACU-1).
+ */
+export const BuyerSchema = z.object({
+  /** Razones sociales de la empresa («Andes Labs Inc.»). La forma societaria final se ignora al comparar. */
+  legalNames: z.array(z.string()),
+  /** Otros nombres con que puede aparecer como destinataria («Andes Labs»). */
+  aliases: z.array(z.string()).optional(),
+  /** Identificaciones tributarias de la empresa («93-4127765»). */
+  taxIds: z.array(z.string()),
+});
+export type Buyer = z.infer<typeof BuyerSchema>;
+
 export const CompanySchema = z.object({
   name: z.string(),
   rules: RulesSchema,
   vendors: z.array(VendorSchema),
+  /**
+   * Opcional. Sin este bloque, la razón social de la compradora es `name` y no hay ids tributarios con
+   * qué comparar. La base lo guarda en `company_settings.buyer`.
+   */
+  buyer: BuyerSchema.optional(),
 });
 export type Company = z.infer<typeof CompanySchema>;
 

@@ -1,0 +1,85 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "Camila Restrepo Dev S.A.S.",
+    "evidence": "Emisor Camila Restrepo Dev S.A.S.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "901.456.789-1",
+    "evidence": "NIT: 901.456.789-1",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "CRD-1072",
+    "evidence": "FACTURA N.º CRD-1072",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-16",
+    "evidence": "FECHA DE EMISIÓN 16/10/2026",
+    "legible": true
+  },
+  "dueDate": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "PERIODO Octubre 2026",
+    "legible": true
+  },
+  "currency": {
+    "value": "COP",
+    "evidence": "MONEDA COP",
+    "legible": true
+  },
+  "subtotal": {
+    "value": 12000000,
+    "evidence": "Subtotal COP 12.000.000",
+    "legible": true
+  },
+  "tax": {
+    "value": 0,
+    "evidence": "IVA 0 % (exportación) COP 0",
+    "legible": true
+  },
+  "total": {
+    "value": 12000000,
+    "evidence": "TOTAL A PAGAR COP 12.000.000",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Desarrollo backend – tarifa fija mensual",
+      "quantity": 1,
+      "unitPrice": 12000000,
+      "amount": 12000000
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "Camila Restrepo Dev S.A.S.",
+      "evidence": "Beneficiario: Camila Restrepo Dev S.A.S.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Bancolombia",
+      "evidence": "Banco: Bancolombia",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "4512 0098 7731",
+      "evidence": "Cuenta corriente N.º: 4512 0098 7731",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "COLOCOBM",
+      "evidence": "SWIFT: COLOCOBM",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Cliente: Pampa Labs Colombia S.A.S. (NIT 901.888.123-4). No aparece fecha de vencimiento. IVA 0% por exportación, tal como indica el documento."
+}

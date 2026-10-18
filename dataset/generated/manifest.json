@@ -16,6 +16,16 @@
         "evidence": "NIT 901.456.789-1",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CRD-1045",
         "evidence": "N° CRD-1045",
@@ -105,6 +115,16 @@
       "vendorTaxId": {
         "value": "88-1234567",
         "evidence": "EIN 88-1234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -198,6 +218,16 @@
         "evidence": "CNPJ 12.345.678/0001-90",
         "legible": true
       },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "TQ-2026-0198",
         "evidence": "Factura N°: TQ-2026-0198",
@@ -287,6 +317,16 @@
       "vendorTaxId": {
         "value": "ENO210415AB3",
         "evidence": "RFC ENO210415AB3",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -380,6 +420,16 @@
         "evidence": "CUIT 30-71234567-8",
         "legible": true
       },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "0003-00000871",
         "evidence": "Factura E N° 0003-00000871",
@@ -469,6 +519,16 @@
       "vendorTaxId": {
         "value": "901.456.789-1",
         "evidence": "NIT 901.456.789-1",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -562,6 +622,16 @@
         "evidence": "EIN 88-1234567",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CM-INV-2026-10-0412",
         "evidence": "CM-INV-2026-10-0412",
@@ -651,6 +721,16 @@
       "vendorTaxId": {
         "value": "88-1234567",
         "evidence": "EIN 88-1234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
         "legible": true
       },
       "invoiceNumber": {
@@ -744,6 +824,16 @@
         "evidence": "EIN 85-3319042",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "QF-0193",
         "evidence": "QF-0193",
@@ -833,6 +923,16 @@
       "vendorTaxId": {
         "value": "20601234567",
         "evidence": "RUC 20601234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -926,6 +1026,16 @@
         "evidence": "EIN 47-9988776",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "NWH-2026-10-118",
         "evidence": "NWH-2026-10-118",
@@ -1015,6 +1125,16 @@
       "vendorTaxId": {
         "value": "901.777.888-2",
         "evidence": "NIT 901.777.888-2",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -1108,6 +1228,16 @@
         "evidence": "RUT 76.543.210-K",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "1287",
         "evidence": "N° 1287",
@@ -1197,6 +1327,16 @@
       "vendorTaxId": {
         "value": "900.222.333-4",
         "evidence": "NIT 900.222.333-4",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -1290,6 +1430,16 @@
         "evidence": "NIT 900.222.333-4",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "BA-0881",
         "evidence": "N° BA-0881",
@@ -1379,6 +1529,16 @@
       "vendorTaxId": {
         "value": "76.543.210-K",
         "evidence": "RUT 76.543.210-K",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -1477,6 +1637,16 @@
         "evidence": "RUT 76.543.210-K",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "1293",
         "evidence": "N° 1293",
@@ -1566,6 +1736,16 @@
       "vendorTaxId": {
         "value": "76.543.210-K",
         "evidence": "RUT 76.543.210-K",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -1659,6 +1839,16 @@
         "evidence": "RUT 76.543.210-K",
         "legible": true
       },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "1296",
         "evidence": "Factura de exportación electrónica N° 1296",
@@ -1748,6 +1938,16 @@
       "vendorTaxId": {
         "value": "20601234567",
         "evidence": "RUC 20601234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -1841,6 +2041,16 @@
         "evidence": "NIT 901.777.888-2",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "SC-2214",
         "evidence": "N° SC-2214",
@@ -1930,6 +2140,16 @@
       "vendorTaxId": {
         "value": "900.111.000-5",
         "evidence": "NIT 900.111.000-5",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -2023,6 +2243,16 @@
         "evidence": "EIN 47-9988776",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "NWH-2026-10-131",
         "evidence": "NWH-2026-10-131",
@@ -2112,6 +2342,16 @@
       "vendorTaxId": {
         "value": "901.456.789-1",
         "evidence": "NIT 901.456.789-1",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -2205,6 +2445,16 @@
         "evidence": "EIN 88-1234567",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CM-INV-2026-10-0587",
         "evidence": "CM-INV-2026-10-0587",
@@ -2294,6 +2544,16 @@
       "vendorTaxId": {
         "value": "12.345.678/0001-90",
         "evidence": "CNPJ 12.345.678/0001-90",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -2387,6 +2647,16 @@
         "evidence": "NIT 901.456.789-1",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CRD-1048",
         "evidence": "N° CRD-1048",
@@ -2476,6 +2746,16 @@
       "vendorTaxId": {
         "value": "88-1234567",
         "evidence": "EIN 88-1234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -2569,6 +2849,16 @@
         "evidence": "NIT 901.456.789-1",
         "legible": true
       },
+      "billToName": {
+        "value": "ANDES LABS INC.",
+        "evidence": "ANDES LABS INC.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CC-2026-031",
         "evidence": "CUENTA DE COBRO N° CC-2026-031",
@@ -2658,6 +2948,16 @@
       "vendorTaxId": {
         "value": "12.345.678/0001-90",
         "evidence": "12.345.678/0001-90",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -2751,6 +3051,16 @@
         "evidence": "NIT 901.456.789-1",
         "legible": true
       },
+      "billToName": {
+        "value": "ANDES LABS INC.",
+        "evidence": "ANDES LABS INC.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CC-2026-031",
         "evidence": "CUENTA DE COBRO N° CC-2026-031",
@@ -2842,6 +3152,16 @@
         "evidence": "RUT 76.543.210-K",
         "legible": true
       },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "1302",
         "evidence": "Invoice no.: 1302",
@@ -2931,6 +3251,16 @@
       "vendorTaxId": {
         "value": "30-71234567-8",
         "evidence": "CUIT 30-71234567-8",
+        "legible": true
+      },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
         "legible": true
       },
       "invoiceNumber": {
@@ -3029,6 +3359,16 @@
         "evidence": "NIT 901.888.231-6",
         "legible": true
       },
+      "billToName": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "PP-2026-017",
         "evidence": "CUENTA DE COBRO N° PP-2026-017",
@@ -3118,6 +3458,16 @@
       "vendorTaxId": {
         "value": "88-1234567",
         "evidence": "EIN 88-1234567",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -3217,6 +3567,16 @@
         "evidence": "RUC 20601234567",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "F001-000252",
         "evidence": "N° F001-000252",
@@ -3314,6 +3674,16 @@
         "evidence": "NIT 901.777.888-2",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "SC-2231",
         "evidence": "N° SC-2231",
@@ -3403,6 +3773,16 @@
       "vendorTaxId": {
         "value": "ENO210415AB3",
         "evidence": "RFC ENO210415AB3",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {
@@ -3501,6 +3881,16 @@
         "evidence": "EIN 88-1234567",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": null,
+        "evidence": null,
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "CM-INV-2026-10-0802",
         "evidence": "Invoice CM-INV-2026-10-0802",
@@ -3592,6 +3982,16 @@
         "evidence": "NIT 900.222.333-4",
         "legible": true
       },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
+        "legible": true
+      },
       "invoiceNumber": {
         "value": "BA-0893",
         "evidence": "N° BA-0893",
@@ -3681,6 +4081,16 @@
       "vendorTaxId": {
         "value": "900.222.333-4",
         "evidence": "NIT 900.222.333-4",
+        "legible": true
+      },
+      "billToName": {
+        "value": "Andes Labs Inc.",
+        "evidence": "Andes Labs Inc.",
+        "legible": true
+      },
+      "billToTaxId": {
+        "value": "93-4127765",
+        "evidence": "EIN 93-4127765",
         "legible": true
       },
       "invoiceNumber": {

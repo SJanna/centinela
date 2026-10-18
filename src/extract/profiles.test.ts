@@ -16,7 +16,7 @@ describe("perfiles de lectura", () => {
       secondary: { model: "claude-haiku-5-5", promptVariant: "b" },
     });
     expect(profileModels("economico")).toEqual(["claude-haiku-5-5"]);
-    expect(profilePromptVersions("economico")).toEqual({ primary: "v4", secondary: "v4b" });
+    expect(profilePromptVersions("economico")).toEqual({ primary: "v6", secondary: "v6b" });
   });
 
   it("calidad: Sonnet 5.5 + Haiku 5.5 con el prompt «a» (el comportamiento anterior)", () => {
@@ -25,7 +25,7 @@ describe("perfiles de lectura", () => {
       secondary: { model: "claude-haiku-5-5", promptVariant: "a" },
     });
     expect(profileModels("calidad")).toEqual(["claude-sonnet-5-5", "claude-haiku-5-5"]);
-    expect(profilePromptVersions("calidad")).toEqual({ primary: "v4", secondary: "v4" });
+    expect(profilePromptVersions("calidad")).toEqual({ primary: "v6", secondary: "v6" });
   });
 
   it("si las dos lecturas usan el mismo modelo, usan prompts distintos (no son dos copias)", () => {

@@ -1,11 +1,25 @@
 {
-  "generatedAt": "2026-10-17T10:23:39.330Z",
+  "generatedAt": "2026-10-18T07:29:07.275Z",
   "reader": "simulated",
+  "dataset": "base",
   "split": "all",
   "caseFilter": null,
-  "promptVersion": "v2",
+  "promptVersion": "v5",
   "models": [
     "simulado"
+  ],
+  "readerProfile": null,
+  "readers": [
+    {
+      "id": "lector-a",
+      "model": "simulado",
+      "promptVersion": "v5"
+    },
+    {
+      "id": "lector-b",
+      "model": "simulado",
+      "promptVersion": "v5"
+    }
   ],
   "metrics": {
     "total": {
@@ -13,8 +27,10 @@
       "correct": 41,
       "accuracy": 1,
       "improperPayments": 0,
+      "shouldNotPay": 23,
       "overEscalations": 0,
       "overFreezes": 0,
+      "notFreeze": 35,
       "autonomy": {
         "resolved": 24,
         "eligible": 24,
@@ -27,8 +43,10 @@
         "correct": 28,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 16,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 24,
         "autonomy": {
           "resolved": 16,
           "eligible": 16,
@@ -40,8 +58,10 @@
         "correct": 13,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 7,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 11,
         "autonomy": {
           "resolved": 8,
           "eligible": 8,
@@ -55,8 +75,10 @@
         "correct": 23,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 14,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 20,
         "autonomy": {
           "resolved": 12,
           "eligible": 12,
@@ -68,8 +90,10 @@
         "correct": 3,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 1,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 3,
         "autonomy": {
           "resolved": 2,
           "eligible": 2,
@@ -81,8 +105,10 @@
         "correct": 2,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 1,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 1,
         "autonomy": {
           "resolved": 2,
           "eligible": 2,
@@ -94,8 +120,10 @@
         "correct": 13,
         "accuracy": 1,
         "improperPayments": 0,
+        "shouldNotPay": 7,
         "overEscalations": 0,
         "overFreezes": 0,
+        "notFreeze": 11,
         "autonomy": {
           "resolved": 8,
           "eligible": 8,
@@ -1096,5 +1124,8 @@
   ],
   "contextCases": [],
   "cacheMisses": 0,
-  "usage": null
+  "usage": null,
+  "sample": null,
+  "concurrency": 1,
+  "warnings": []
 }

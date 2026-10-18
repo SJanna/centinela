@@ -2,11 +2,22 @@
  * Hechos derivados de la factura y la ficha de la empresa que usan varias comprobaciones:
  * proveedor emparejado, acuerdo vigente, periodo y monto en USD. Todo puro y determinista.
  */
-import { monthOf, normalizeName, normalizeTaxId, taxIdsEquivalent, toCents } from "../core/normalize";
+import {
+  legalFormsAfter,
+  monthOf,
+  normalizeName,
+  normalizeTaxId,
+  splitLegalForm,
+  stripTaxIdLabel,
+  taxIdsEquivalent,
+  toCents,
+} from "../core/normalize";
 import type {
   Agreement,
+  Company,
   DecisionContext,
   EngineInput,
+  Extraction,
   HistoryEntry,
   InvoiceData,
   Rules,
@@ -552,6 +563,203 @@ export function computeUsdAmount(data: InvoiceData | null, rules: Rules): UsdAmo
 
 // ───────────────────────── Hechos completos ─────────────────────────
 
+// ───────────────────────── Destinatario de la factura ─────────────────────────
+
+/** La empresa compradora: a nombre de quién deben venir las facturas. */
+export interface BuyerIdentity {
+  /** Cómo se nombra en las explicaciones («Andes Labs Inc.»). */
+  displayName: string;
+  /** Nombres sin forma societaria (`splitLegalForm`) de razones sociales y alias, incluido `company.name`. */
+  nameKeys: ReadonlySet<string>;
+  /**
+   * Formas societarias registradas para cada nombre («andes labs» → {"inc", ""}: «Andes Labs Inc.» y el
+   * alias «Andes Labs»). Una factura con otra forma («Andes Labs S.A.S.») es otra razón social.
+   */
+  forms: ReadonlyMap<string, ReadonlySet<string>>;
+  /** Ids tributarios registrados, tal como están en la ficha (vacío si no hay). */
+  taxIds: readonly string[];
+}
+
+function stringsOf(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string" && x.trim().length > 0) : [];
+}
+
+/**
+ * Identidad de la compradora según la ficha: `company.buyer` (razones sociales, alias, ids tributarios)
+ * más `company.name`. Sin bloque `buyer` (p. ej. la empresa guardada en la base, que hoy solo guarda
+ * nombre y reglas) queda solo el nombre y ningún id tributario con qué comparar.
+ */
+export function buyerIdentity(company: Company): BuyerIdentity {
+  const buyer: unknown = company?.buyer;
+  const b = buyer != null && typeof buyer === "object" ? (buyer as Record<string, unknown>) : {};
+  const legalNames = stringsOf(b.legalNames);
+  const name = typeof company?.name === "string" ? company.name.trim() : "";
+  const names = [...legalNames, ...(name ? [name] : []), ...stringsOf(b.aliases)];
+  const forms = new Map<string, Set<string>>();
+  for (const n of names) {
+    const parts = splitLegalForm(n);
+    if (parts == null) continue;
+    const set = forms.get(parts.base) ?? new Set<string>();
+    set.add(parts.form);
+    forms.set(parts.base, set);
+  }
+  return { displayName: legalNames[0]?.trim() || name || "la empresa", nameKeys: new Set(forms.keys()), forms, taxIds: stringsOf(b.taxIds) };
+}
+
+/**
+ * Lo que un lector escribe a veces en vez de dejar el dato vacío («N/A», «—», «Sin dato»): cuenta como
+ * dato ausente. Forma canónica: minúsculas, solo letras y dígitos ASCII, sin tildes.
+ */
+const BILL_TO_PLACEHOLDERS: ReadonlySet<string> = new Set([
+  "na", "nd", "sn", "none", "null", "nil", "unknown", "ninguno", "ninguna", "desconocido", "desconocida", "noaplica",
+  "noindica", "noaparece", "nodisponible", "noespecificado", "noespecificada", "sindato", "sindatos", "notavailable",
+  "notprovided", "notapplicable", "notspecified",
+]);
+
+/**
+ * Texto presente del destinatario. Para el destinatario, «ausente» es lo que deja pagar: solo cuenta
+ * como ausente lo que no tiene ninguna letra ni dígito, de ningún alfabeto («—», «-»), o un relleno
+ * conocido («N/A»). Un nombre en cirílico, griego, chino o con letras de ancho completo SÍ es un
+ * destinatario (y, como no es la compradora, escala).
+ */
+function presentText(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  if (!/[\p{L}\p{N}]/u.test(v)) return null;
+  const canon = v.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return BILL_TO_PLACEHOLDERS.has(canon) ? null : v;
+}
+
+/**
+ * Frases que ponen a un tercero junto al destinatario: «Pampa Labs c/o Andes Labs Inc.», «Andes Labs
+ * Inc. por cuenta de Pampa Labs», «care of», «on behalf of», «aos cuidados de», «por conta de». Con
+ * ellas no se puede saber de quién es la factura. «A nombre de» no cuenta (es la forma normal de decir
+ * a quién se factura).
+ */
+const INTERMEDIARY =
+  /(?:^|[^\p{L}\p{N}])(?:c\s*\/\s*o|(?:in\s+)?care\s+of|on\s+behalf\s+of|por\s+cuenta\s+(?:y\s+orden\s+)?de|en\s+nombre\s+y\s+por\s+cuenta\s+de|en\s+representacion\s+de|aos\s+cuidados\s+de|por\s+conta\s+(?:e\s+ordem\s+)?de)(?![\p{L}\p{N}])/u;
+
+function namesIntermediary(text: string | null): boolean {
+  return text != null && INTERMEDIARY.test(text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+}
+
+/** A quién dice una lectura que va dirigida la factura. */
+export interface BillTo {
+  name: string | null;
+  taxId: string | null;
+  /** Cita del id tributario (de ahí sale su etiqueta: «NIT 901.888.123-4»). */
+  taxIdEvidence: string | null;
+  /** Cita del nombre. */
+  nameEvidence: string | null;
+  /** false si la lectura marcó el nombre o el id como ilegibles. */
+  legible: boolean;
+  source: "primary" | "secondary";
+}
+
+export type BillToVerdict =
+  /** Ninguna lectura dice a quién va dirigida (común en correos y chats): no se penaliza. */
+  | { status: "absent" }
+  /** Va dirigida a la compradora (nombre o alias y, si trae id y la ficha tiene ids, también el id). */
+  | { status: "buyer"; billTo: BillTo }
+  /**
+   * Va dirigida a otra empresa: otro nombre, otra forma societaria («Andes Labs S.A.S.»: otra razón
+   * social), u otro id tributario aunque el nombre sea el mismo. `shown`: la cita que lo muestra, si
+   * el valor leído no lo dice (una lectura que escribió «Andes Labs» y citó «Andes Labs S.A.S.»).
+   */
+  | { status: "other_company"; billTo: BillTo; reason: "name" | "legal_form" | "tax_id"; shown?: string }
+  /** El destinatario viene con un tercero («c/o», «por cuenta de»): no se sabe de quién es la factura. */
+  | { status: "ambiguous"; billTo: BillTo; shown: string }
+  /** La lectura dice que hay destinatario pero lo marca como ilegible. */
+  | { status: "unreadable"; billTo: BillTo }
+  /** Trae solo un id tributario y la ficha no tiene ids con qué compararlo. */
+  | { status: "unverifiable"; billTo: BillTo };
+
+function billToOf(e: Extraction | null, data: InvoiceData | null, source: BillTo["source"]): BillTo | null {
+  if (e == null && data == null) return null;
+  const nameField = e?.billToName;
+  const taxField = e?.billToTaxId;
+  const name = presentText(data != null && data.billToName !== undefined ? data.billToName : nameField?.value);
+  const taxId = presentText(data != null && data.billToTaxId !== undefined ? data.billToTaxId : taxField?.value);
+  const nameEvidence = presentText(nameField?.evidence);
+  const taxIdEvidence = presentText(taxField?.evidence);
+  // Ilegible si la lectura trae el campo y no lo marca como legible, aunque no traiga valor ni cita: el
+  // prompt pide found = true, value "" y legible = false para un destinatario que está pero no se lee
+  // (un dato ausente viene con legible = true).
+  const doubtful = (f: { legible?: unknown } | undefined) => f != null && f.legible !== true;
+  const legible = !doubtful(nameField) && !doubtful(taxField);
+  return { name, taxId, nameEvidence, taxIdEvidence, legible, source };
+}
+
+/** ¿El nombre es de la compradora? «Andes Labs» (sin forma) o con una forma registrada para ese nombre. */
+function nameMatch(name: string, buyer: BuyerIdentity): "buyer" | "legal_form" | "other" {
+  const parts = splitLegalForm(name);
+  const forms = parts != null ? buyer.forms.get(parts.base) : undefined;
+  if (parts == null || forms == null) return "other";
+  return parts.form === "" || forms.has(parts.form) ? "buyer" : "legal_form";
+}
+
+/**
+ * ¿La cita del nombre muestra a la compradora con una forma societaria que no es la suya? Una lectura
+ * puede escribir «Andes Labs» y citar «Cliente: Andes Labs S.A.S.».
+ */
+function evidenceShowsOtherForm(evidence: string | null, buyer: BuyerIdentity): boolean {
+  if (evidence == null) return false;
+  for (const [base, forms] of buyer.forms) {
+    if (legalFormsAfter(evidence, base).some((f) => f !== "" && !forms.has(f))) return true;
+  }
+  return false;
+}
+
+function judgeBillTo(b: BillTo, buyer: BuyerIdentity): BillToVerdict {
+  if (!b.legible) return { status: "unreadable", billTo: b };
+  if (b.name == null && b.taxId == null) return { status: "absent" };
+  const match = b.name != null ? nameMatch(b.name, buyer) : null;
+  if (b.taxId != null) {
+    if (buyer.taxIds.length > 0) {
+      const own = stripTaxIdLabel(b.taxId);
+      if (!buyer.taxIds.some((t) => taxIdsEquivalent(own, t))) {
+        return { status: "other_company", billTo: b, reason: match === "buyer" ? "tax_id" : match === "legal_form" ? "legal_form" : "name" };
+      }
+    } else if (b.name == null) {
+      return { status: "unverifiable", billTo: b };
+    }
+  }
+  if (match === "other") return { status: "other_company", billTo: b, reason: "name" };
+  if (match === "legal_form") return { status: "other_company", billTo: b, reason: "legal_form" };
+  if (evidenceShowsOtherForm(b.nameEvidence, buyer)) {
+    return { status: "other_company", billTo: b, reason: "legal_form", shown: b.nameEvidence ?? undefined };
+  }
+  if (namesIntermediary(b.name) || namesIntermediary(b.nameEvidence)) {
+    return { status: "ambiguous", billTo: b, shown: namesIntermediary(b.nameEvidence) ? b.nameEvidence! : b.name! };
+  }
+  return { status: "buyer", billTo: b };
+}
+
+/**
+ * ¿A quién va dirigida la factura, según las dos lecturas? Corresponde a la compradora si el nombre
+ * es una de sus razones sociales o alias —sin forma societaria («Andes Labs») o con una forma
+ * registrada para ese nombre («Andes Labs, Inc.»); otra forma («Andes Labs S.A.S.», «Andes Labs LLC»)
+ * es otra razón social— Y, si trae id tributario y la ficha tiene ids, ese id es uno de los suyos (sin
+ * etiqueta y sin dígito de verificación separado). Un id distinto basta para que no corresponda aunque
+ * el nombre sea igual. Se revisan la lectura principal y la segunda: basta que UNA diga otra empresa, un
+ * tercero junto al destinatario («c/o») o un destinatario ilegible para no darlo por bueno. Sin
+ * destinatario en ninguna lectura no se penaliza.
+ */
+export function judgeBillToOfReadings(input: EngineInput, company: Company): BillToVerdict {
+  const r = input.reading;
+  const primary = r.primary?.ok ? r.primary.extraction : null;
+  const secondary = r.secondary?.ok ? r.secondary.extraction : null;
+  const buyer = buyerIdentity(company);
+  const verdicts = [billToOf(primary, r.data, "primary"), billToOf(secondary, null, "secondary")]
+    .filter((b): b is BillTo => b != null)
+    .map((b) => judgeBillTo(b, buyer));
+  for (const status of ["other_company", "ambiguous", "unreadable", "unverifiable", "buyer"] as const) {
+    const found = verdicts.find((v) => v.status === status);
+    if (found) return found;
+  }
+  return { status: "absent" };
+}
+
 export interface Facts {
   data: InvoiceData | null;
   match: VendorMatch | null;
@@ -570,6 +778,10 @@ export interface Facts {
    * duplicados, límite del mes y fondo no se dan por buenos mientras existan.
    */
   unknownOutcome: HistoryEntry[];
+  /** A quién va dirigida la factura comparado con la empresa compradora (ACU-1). */
+  billTo: BillToVerdict;
+  /** La empresa compradora según la ficha. */
+  buyer: BuyerIdentity;
 }
 
 const KNOWN_OUTCOMES: readonly unknown[] = ["PAGAR", "FRENAR", "ESCALAR"];
@@ -592,5 +804,7 @@ export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
     usd: computeUsdAmount(data, ctx.company.rules),
     paid: ctx.history.filter((h) => h.outcome === "PAGAR"),
     unknownOutcome: ctx.history.filter((h) => !KNOWN_OUTCOMES.includes(h.outcome)),
+    billTo: data != null ? judgeBillToOfReadings(input, ctx.company) : { status: "absent" },
+    buyer: buyerIdentity(ctx.company),
   };
 }

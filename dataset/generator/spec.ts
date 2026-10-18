@@ -35,6 +35,8 @@ export type LogoKind = (typeof LOGOS)[number];
 export const EVIDENCE_KEYS = [
   "vendorName",
   "vendorTaxId",
+  "billToName",
+  "billToTaxId",
   "invoiceNumber",
   "issueDate",
   "dueDate",

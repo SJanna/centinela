@@ -9,7 +9,6 @@ import { makeCompany, makeExtraction, makeRecord, makeVendor, openFakeNeonDb, op
 const datasetCompany: Company = CompanySchema.parse(
   JSON.parse(readFileSync(path.resolve(__dirname, "../../dataset/company.json"), "utf8")),
 );
-
 describe.each([
   ["PGlite", openMemoryDb],
   ["Neon HTTP (simulado)", openFakeNeonDb],
@@ -30,9 +29,21 @@ describe.each([
       expect(await repo.getCompany()).toBeNull();
     });
 
-    it("ida y vuelta de la empresa del dataset, con proveedores en orden", async () => {
+    it("ida y vuelta de la empresa del dataset, con proveedores en orden e identidad de compradora", async () => {
       await repo.saveCompany(datasetCompany);
-      expect(await repo.getCompany()).toEqual(datasetCompany);
+      const got = await repo.getCompany();
+      expect(got).toEqual(datasetCompany);
+      expect(got?.buyer?.legalNames).toEqual(["Andes Labs Inc."]);
+      expect(got?.buyer?.taxIds).toEqual(["93-4127765"]);
+    });
+
+    it("una empresa sin identidad de compradora vuelve sin ella, y guardarla sin ella borra la anterior", async () => {
+      const withoutBuyer: Company = { name: datasetCompany.name, rules: datasetCompany.rules, vendors: datasetCompany.vendors };
+      await repo.saveCompany(datasetCompany);
+      await repo.saveCompany(withoutBuyer);
+      const got = await repo.getCompany();
+      expect(got).toEqual(withoutBuyer);
+      expect(got && "buyer" in got).toBe(false);
     });
 
     it("saveCompany reemplaza la empresa anterior por completo", async () => {

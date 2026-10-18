@@ -54,10 +54,10 @@ export function renderLatam(spec: DocumentSpec): Canvas {
   const leftW = 246;
   c.rect(M, cardY, leftW, cardH, { fill: CARD, stroke: HAIR, lineWidth: 0.8, radius: 8 });
   c.text(M + 14, cardY + 20, "FACTURAR A", { size: 7, font: "sansBold", color, letterSpacing: 0.8 });
-  c.text(M + 14, cardY + 37, spec.customer.name, { size: 10.5, font: "sansBold", color: INK });
+  c.field("billToName", M + 14, cardY + 37, spec.customer.name, { size: 10.5, font: "sansBold", color: INK });
   let ly = cardY + 51;
   if (spec.customer.taxId) {
-    c.text(M + 14, ly, `${spec.customer.taxIdLabel ?? "ID"} ${spec.customer.taxId}`, { size: 8, color: MUTED });
+    c.field("billToTaxId", M + 14, ly, `${spec.customer.taxIdLabel ?? "ID"} ${spec.customer.taxId}`, { size: 8, color: MUTED });
     ly += 11.5;
   }
   for (const line of spec.customer.address) {

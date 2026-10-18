@@ -29,11 +29,16 @@ import {
   guardBankNameConflict,
   guardCents,
   guardCurrency,
+  guardBillToTaxId,
+  guardBillToText,
   guardDate,
+  guardFormsAfter,
   guardHash,
   guardInstantDays,
   guardInvoiceKey,
+  guardLegalName,
   guardNameKey,
+  guardNamesIntermediary,
   guardPeriod,
   guardStoredCents,
   guardTaxId,
@@ -61,6 +66,9 @@ const FIELD_LABEL: Record<string, string> = {
   tax: "impuestos",
   total: "total",
   accountNumber: "cuenta destino",
+  billToName: "destinatario",
+  billToTaxId: "id tributario del destinatario",
+  destinatario: "destinatario",
   segunda_lectura_no_disponible: "segunda lectura no disponible",
 };
 
@@ -168,6 +176,9 @@ function evaluate(input: EngineInput, ctx: DecisionContext, decision: Decision):
 
   // G2 · lectura sólida
   const invoice = checkReading(input.reading, nowDays, v);
+
+  // G2b · destinatario: la factura va dirigida a la empresa compradora (si dice a quién)
+  checkBillTo(input.reading, ctx.company, v);
 
   // G3 · proveedor
   const vendor = invoice ? checkVendor(invoice, ctx.company.vendors, decision, v) : null;
@@ -521,6 +532,91 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     referenceDay,
     period,
   };
+}
+
+// ───────────────────────── G2b · Destinatario ─────────────────────────
+
+function stringList(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string" && x.trim().length > 0) : [];
+}
+
+/**
+ * La factura debe ir dirigida a la empresa compradora: si una lectura (o los datos) dice a quién va
+ * dirigida, el nombre tiene que ser una razón social o alias de la empresa (o su nombre en la ficha),
+ * sin forma societaria o con una forma registrada para ese nombre («Andes Labs S.A.S.» es otra razón
+ * social que «Andes Labs Inc.»), y, si trae id tributario y la ficha registra ids, ese id tiene que ser
+ * uno de ellos. Tampoco se aprueba si la cita muestra el nombre con otra forma societaria, si nombra a
+ * un tercero junto al destinatario («c/o», «por cuenta de»), si una lectura lo marca ilegible o si
+ * solo trae un id que no se puede comparar. Sin destinatario en ninguna lectura no hay nada que
+ * revisar (es común en correos y chats). Un nombre en otro alfabeto es un destinatario, no un vacío.
+ */
+function checkBillTo(reading: ReadingAssessment, company: Company, v: Violations): void {
+  const buyerRaw: unknown = company?.buyer;
+  const buyer = buyerRaw != null && typeof buyerRaw === "object" ? (buyerRaw as Record<string, unknown>) : {};
+  const legal = stringList(buyer.legalNames);
+  const companyName = typeof company?.name === "string" && company.name.trim() !== "" ? company.name.trim() : null;
+  const names = [...legal, ...(companyName ? [companyName] : []), ...stringList(buyer.aliases)];
+  const forms = new Map<string, Set<string>>();
+  for (const n of names) {
+    const parts = guardLegalName(n);
+    if (parts === null) continue;
+    const set = forms.get(parts.base) ?? new Set<string>();
+    set.add(parts.form);
+    forms.set(parts.base, set);
+  }
+  const taxIds = stringList(buyer.taxIds)
+    .map((t) => guardTaxId(t))
+    .filter((t): t is TaxId => t !== null);
+  const buyerName = legal[0] ?? companyName ?? "la empresa";
+
+  const sources: { name: unknown; taxId: unknown; evidence: string | null; doubtful: boolean }[] = [];
+  const data = reading?.data;
+  if (data != null) sources.push({ name: data.billToName, taxId: data.billToTaxId, evidence: null, doubtful: false });
+  for (const r of [reading?.primary, reading?.secondary]) {
+    if (r?.ok !== true) continue;
+    const e = r.extraction;
+    // Un campo del destinatario que no viene marcado como legible no se da por bueno, traiga o no valor.
+    const doubtful = [e?.billToName, e?.billToTaxId].some((f) => f != null && f.legible !== true);
+    sources.push({ name: e?.billToName?.value, taxId: e?.billToTaxId?.value, evidence: guardBillToText(e?.billToName?.evidence), doubtful });
+  }
+
+  for (const s of sources) {
+    const name = guardBillToText(s.name);
+    const taxRaw = guardBillToText(s.taxId);
+    if (s.doubtful) {
+      v.add("no se lee con claridad a quién va dirigida la factura");
+      continue;
+    }
+    if (name !== null) {
+      const parts = guardLegalName(name);
+      const registered = parts !== null ? forms.get(parts.base) : undefined;
+      if (parts === null || registered === undefined) v.add(`la factura está dirigida a «${shown(name, 80)}», no a ${buyerName}`);
+      else if (parts.form !== "" && !registered.has(parts.form)) {
+        v.add(`la factura está dirigida a «${shown(name, 80)}», otra razón social (otra forma societaria) que ${buyerName}`);
+      }
+    }
+    if (s.evidence !== null) {
+      const otherForm = [...forms].some(([base, own]) => guardFormsAfter(s.evidence, base).some((f) => f !== "" && !own.has(f)));
+      if (otherForm) v.add(`la cita del destinatario («${shown(s.evidence, 80)}») lo muestra con otra forma societaria: no es ${buyerName}`);
+    }
+    for (const text of [name, s.evidence]) {
+      if (text !== null && guardNamesIntermediary(text)) {
+        v.add(`la factura nombra a otra empresa junto al destinatario («${shown(text, 100)}»)`);
+        break;
+      }
+    }
+    if (taxRaw !== null) {
+      if (taxIds.length > 0) {
+        const tax = guardBillToTaxId(taxRaw);
+        if (tax === null) v.add(`el id tributario del destinatario no es válido (${shown(taxRaw, 40)})`);
+        else if (!taxIds.some((t) => sameTaxId(tax, t))) {
+          v.add(`la factura está dirigida al id tributario ${shown(taxRaw, 40)}, que no es el de ${buyerName}`);
+        }
+      } else if (name === null) {
+        v.add(`la factura está dirigida al id tributario ${shown(taxRaw, 40)} y la ficha de la empresa no tiene ids tributarios con qué compararlo`);
+      }
+    }
+  }
 }
 
 // ───────────────────────── G3 · Proveedor ─────────────────────────

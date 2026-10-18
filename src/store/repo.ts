@@ -14,6 +14,7 @@ import {
   ExtractionSchema,
   RulesSchema,
   VendorSchema,
+  type Buyer,
   type Company,
   type DecisionRecord,
   type HistoryEntry,
@@ -28,7 +29,16 @@ import { getDbHandle, type Db, type DbHandle, type StoreQuery } from "./db";
 import { appMeta, companySettings, decisions, invoices, readingCache, vendors } from "./schema";
 import { toDecisionSummary, type DecisionSummary } from "./mappers";
 import { toJsonbSafe, toPgSafeString } from "./jsonb";
-import { DuplicatePaymentError, PAYMENT_KEY_INDEX, PAYMENT_KEY_KINDS, paymentKeysOf, type PaymentKeyKind } from "./payment-keys";
+import {
+  DuplicatePaymentError,
+  isDuplicatePaymentError,
+  isPaymentHistoryChangedError,
+  PAYMENT_KEY_INDEX,
+  PAYMENT_KEY_KINDS,
+  PaymentHistoryChangedError,
+  paymentKeysOf,
+  type PaymentKeyKind,
+} from "./payment-keys";
 
 export type { DecisionSummary } from "./mappers";
 export { toDecisionSummary, toHistoryEntry } from "./mappers";
@@ -80,8 +90,13 @@ export interface Repo {
   replaceVendors(vendors: Vendor[]): Promise<void>;
   saveInvoice(input: SaveInvoiceInput): Promise<{ id: string }>;
   getInvoiceFile(id: string): Promise<InvoiceFile | null>;
-  /** @throws DuplicatePaymentError si es un PAGAR y ya hay un pago registrado con una de sus claves. */
-  appendDecision(record: DecisionRecord): Promise<void>;
+  /**
+   * Registra una decisión. Para un PAGAR, `opts.paymentsSeen` es cuántos PAGAR traía el historial con
+   * que se decidió: la base solo lo inserta si siguen siendo esos (ver `appendPaymentIfUnchanged`).
+   * @throws DuplicatePaymentError si es un PAGAR y ya hay un pago registrado con una de sus claves.
+   * @throws PaymentHistoryChangedError si es un PAGAR con `paymentsSeen` y entretanto se registró otro pago.
+   */
+  appendDecision(record: DecisionRecord, opts?: AppendDecisionOptions): Promise<void>;
   getHistory(): Promise<HistoryEntry[]>;
   listDecisions(opts?: { limit?: number }): Promise<DecisionSummary[]>;
   getDecision(id: string): Promise<DecisionRecord | null>;
@@ -221,13 +236,13 @@ function validateRecord(record: DecisionRecord): void {
 
 // Consultas reutilizables (se construyen sobre la base que reciban, también dentro de una transacción).
 
-function upsertSettingsQuery(db: Db, name: string, rules: Rules) {
+function upsertSettingsQuery(db: Db, name: string, rules: Rules, buyer: Buyer | null) {
   return db
     .insert(companySettings)
-    .values({ id: COMPANY_ROW_ID, name, rules })
+    .values({ id: COMPANY_ROW_ID, name, rules, buyer })
     .onConflictDoUpdate({
       target: companySettings.id,
-      set: { name: sql`excluded.name`, rules: sql`excluded.rules`, updatedAt: sql`now()` },
+      set: { name: sql`excluded.name`, rules: sql`excluded.rules`, buyer: sql`excluded.buyer`, updatedAt: sql`now()` },
     });
 }
 
@@ -266,6 +281,71 @@ async function invoiceWithKey(db: Db, kind: PaymentKeyKind, key: string): Promis
   }
 }
 
+export interface AppendDecisionOptions {
+  /** Cuántos PAGAR había en el historial con que se tomó la decisión (solo cuenta para un PAGAR). */
+  paymentsSeen?: number;
+}
+
+/**
+ * Clave del candado de transacción (pg_advisory_xact_lock) que ordena las inserciones de PAGAR entre
+ * instancias. Un número fijo cualquiera, propio de Centinela.
+ */
+export const PAYMENT_LOCK_KEY = 4_317_202_610;
+
+/**
+ * Las tres sentencias de la inserción condicional de un PAGAR, en orden: aislamiento READ COMMITTED,
+ * candado de transacción y la inserción con la condición. Exportada para las pruebas.
+ */
+export function paymentInsertQueries(db: Db, record: DecisionRecord, keys: ReturnType<typeof paymentKeysOf>, paymentsSeen: number): StoreQuery[] {
+  return [
+    db.execute(sql`SET TRANSACTION ISOLATION LEVEL READ COMMITTED`),
+    db.execute(sql`SELECT pg_advisory_xact_lock(${PAYMENT_LOCK_KEY}::bigint)`),
+    db.execute(sql`
+      INSERT INTO decisions (id, invoice_id, decided_at, outcome, record, pay_file_key, pay_invoice_key, pay_period_key)
+      SELECT ${record.id}, ${record.invoiceId}, ${record.decidedAt}::timestamptz, ${record.decision.outcome},
+             ${JSON.stringify(record)}::jsonb, ${keys.file}, ${keys.invoice}, ${keys.period}
+      WHERE (SELECT count(*) FROM decisions WHERE outcome = 'PAGAR') = ${paymentsSeen}::bigint`),
+  ];
+}
+
+/**
+ * Inserta un PAGAR solo si el registro sigue teniendo los mismos PAGAR que el historial con que se
+ * decidió. LIM-2 (límite del mes) y FON-1 (fondo) suman pagos distintos, así que no caben en una
+ * clave única: dos instancias podrían aprobar a la vez dos facturas que juntas se pasen. Aquí el
+ * candado de transacción ordena las inserciones de PAGAR y la condición (mismo número de PAGAR)
+ * rechaza el segundo si el primero entró después de leer el historial. Funciona igual en PGlite
+ * (transacción) y en Neon HTTP (batch, que corre en una sola transacción): el candado se suelta al
+ * confirmar. El registro es de solo inserción, así que el número de PAGAR solo crece (salvo un
+ * reinicio, que lo vacía todo).
+ *
+ * La transacción se fija en READ COMMITTED: el conteo tiene que ver lo que confirmó quien tuvo el
+ * candado antes. Con REPEATABLE READ o SERIALIZABLE (si la base los tuviera por defecto) el conteo
+ * usaría la foto del comienzo de la transacción y los dos PAGAR entrarían (comprobado contra
+ * Postgres 15 con dos sesiones).
+ *
+ * Esta transacción se comprueba con PGlite, que corre una transacción a la vez: las pruebas no
+ * ejercitan el candado entre sesiones. Por eso hay una prueba que exige las tres sentencias en orden.
+ * @throws Error si ya hay una decisión con ese id (el registro no se reescribe).
+ * @throws PaymentHistoryChangedError si la condición no se cumplió (la fila no se insertó).
+ */
+async function appendPaymentIfUnchanged(h: DbHandle, record: DecisionRecord, keys: ReturnType<typeof paymentKeysOf>, paymentsSeen: number): Promise<void> {
+  // Sin esto, una fila previa con el mismo id haría creer que la inserción entró.
+  const existing = await h.db.select({ id: decisions.id }).from(decisions).where(eq(decisions.id, record.id)).limit(1);
+  if (existing.length > 0) throw new Error(`Ya existe una decisión con id «${record.id}»: el registro no se puede reescribir.`);
+  await h.atomic((db) => paymentInsertQueries(db, record, keys, paymentsSeen));
+  const inserted = await h.db.select({ id: decisions.id }).from(decisions).where(eq(decisions.id, record.id)).limit(1);
+  if (inserted.length > 0) return;
+  // No entró. Si el pago nuevo es equivalente a este (misma clave), se dice eso, que es más preciso.
+  for (const kind of PAYMENT_KEY_KINDS) {
+    const key = keys[kind];
+    if (key == null) continue;
+    const conflictingInvoiceId = await invoiceWithKey(h.db, kind, key);
+    if (conflictingInvoiceId != null) throw new DuplicatePaymentError({ kind, key, decisionId: record.id, conflictingInvoiceId });
+  }
+  const [{ n }] = await h.db.select({ n: sql<number>`count(*)::int` }).from(decisions).where(eq(decisions.outcome, "PAGAR"));
+  throw new PaymentHistoryChangedError({ decisionId: record.id, paymentsSeen, paymentsNow: Number(n) });
+}
+
 /** Repositorio sobre una conexión concreta (o una función que la entrega cuando se necesita). */
 export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
   const handle = (): Promise<DbHandle> => (typeof source === "function" ? source() : Promise.resolve(source));
@@ -280,10 +360,12 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       ]);
       const settings = settingsRows[0];
       if (!settings) return null;
+      const buyer = settings.buyer == null ? null : fromJson<Buyer | null>(settings.buyer);
       return {
         name: settings.name,
         rules: fromJson<Rules>(settings.rules),
         vendors: vendorRows.map((r) => fromJson<Vendor>(r.data)),
+        ...(buyer ? { buyer } : {}),
       };
     },
 
@@ -291,7 +373,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       const c = toJsonbSafe(parseOrThrow(CompanySchema, company, "La empresa no es válida"));
       assertUniqueVendorIds(c.vendors);
       const h = await handle();
-      await h.atomic((db) => [upsertSettingsQuery(db, c.name, c.rules), ...replaceVendorsQueries(db, c.vendors)]);
+      await h.atomic((db) => [upsertSettingsQuery(db, c.name, c.rules, c.buyer ?? null), ...replaceVendorsQueries(db, c.vendors)]);
     },
 
     async saveRules(rules) {
@@ -352,23 +434,33 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       return { filename: row.filename, mediaType: row.mediaType, bytes: base64ToBytes(row.bytesB64) };
     },
 
-    async appendDecision(input) {
+    async appendDecision(input, opts) {
       validateRecord(input);
       const record = toJsonbSafe(input);
       const keys = paymentKeysOf(record);
-      const db = await database();
+      const h = await handle();
+      const db = h.db;
+      const paymentsSeen = opts?.paymentsSeen;
+      if (paymentsSeen !== undefined && (!Number.isSafeInteger(paymentsSeen) || paymentsSeen < 0)) {
+        throw new Error(`paymentsSeen debe ser un entero no negativo (llegó ${String(paymentsSeen)}).`);
+      }
       try {
-        await db.insert(decisions).values({
-          id: record.id,
-          invoiceId: record.invoiceId,
-          decidedAt: record.decidedAt,
-          outcome: record.decision.outcome,
-          record,
-          payFileKey: keys.file,
-          payInvoiceKey: keys.invoice,
-          payPeriodKey: keys.period,
-        });
+        if (record.decision.outcome === "PAGAR" && paymentsSeen !== undefined) {
+          await appendPaymentIfUnchanged(h, record, keys, paymentsSeen);
+        } else {
+          await db.insert(decisions).values({
+            id: record.id,
+            invoiceId: record.invoiceId,
+            decidedAt: record.decidedAt,
+            outcome: record.decision.outcome,
+            record,
+            payFileKey: keys.file,
+            payInvoiceKey: keys.invoice,
+            payPeriodKey: keys.period,
+          });
+        }
       } catch (err) {
+        if (isPaymentHistoryChangedError(err) || isDuplicatePaymentError(err)) throw err;
         const violation = uniqueViolation(err);
         if (violation == null) throw err;
         const kind = collidedPaymentKey(violation);
@@ -495,7 +587,7 @@ export function createRepo(source: DbHandle | (() => Promise<DbHandle>)): Repo {
       await h.atomic((db) => [
         // TRUNCATE (y no DELETE) porque el registro de decisiones rechaza borrados fila por fila.
         db.execute(sql`TRUNCATE TABLE ${invoices}, ${decisions} RESTART IDENTITY`),
-        upsertSettingsQuery(db, c.name, c.rules),
+        upsertSettingsQuery(db, c.name, c.rules, c.buyer ?? null),
         ...replaceVendorsQueries(db, c.vendors),
       ]);
     },
@@ -581,8 +673,8 @@ export function getInvoiceFile(id: string): Promise<InvoiceFile | null> {
  * Agrega una decisión al registro. Falla si ya existe una con el mismo id. Un PAGAR guarda sus claves
  * de pago; si otra decisión PAGAR ya tiene una de ellas, lanza DuplicatePaymentError y no guarda nada.
  */
-export function appendDecision(record: DecisionRecord): Promise<void> {
-  return shared.appendDecision(record);
+export function appendDecision(record: DecisionRecord, opts?: AppendDecisionOptions): Promise<void> {
+  return shared.appendDecision(record, opts);
 }
 /** Historial para el motor y la guardia, del más antiguo al más reciente. */
 export function getHistory(): Promise<HistoryEntry[]> {

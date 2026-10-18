@@ -75,11 +75,12 @@ export function renderSaas(spec: DocumentSpec): Canvas {
     c.text(cx, cy, line, { size: 8.5, color: MUTED });
     cy += 12;
   }
+  c.cite("billToName", spec.customer.name);
   if (spec.customer.email) {
     c.text(cx, cy, spec.customer.email, { size: 8.5, color: MUTED });
     cy += 12;
   }
-  if (spec.customer.taxId) c.text(cx, cy, `${spec.customer.taxIdLabel ?? "Tax ID"} ${spec.customer.taxId}`, { size: 8.5, color: MUTED });
+  if (spec.customer.taxId) c.field("billToTaxId", cx, cy, `${spec.customer.taxIdLabel ?? "Tax ID"} ${spec.customer.taxId}`, { size: 8.5, color: MUTED });
   // Referencias
   const rx = M + 360;
   let ry = top;

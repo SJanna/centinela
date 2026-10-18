@@ -1,0 +1,4497 @@
+{
+ "generatedAt": "2026-10-18T07:22:05.204Z",
+ "reader": "live",
+ "dataset": "stress",
+ "split": "all",
+ "caseFilter": [
+  "S0083",
+  "S0140",
+  "S0239",
+  "S0283",
+  "S0310",
+  "S0357",
+  "S0374",
+  "S0410",
+  "S0427",
+  "S0433",
+  "S0616",
+  "S0692",
+  "S0768",
+  "S0861",
+  "S0922",
+  "S1027",
+  "S1246",
+  "S1249",
+  "S1351",
+  "S1673",
+  "S1698",
+  "S1838",
+  "S1970"
+ ],
+ "promptVersion": "v5 + v5b",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "readerProfile": "economico",
+ "readers": [
+  {
+   "id": "lector-a",
+   "model": "claude-haiku-5-5",
+   "promptVersion": "v5"
+  },
+  {
+   "id": "lector-b",
+   "model": "claude-haiku-5-5",
+   "promptVersion": "v5b"
+  }
+ ],
+ "metrics": {
+  "total": {
+   "total": 23,
+   "correct": 23,
+   "accuracy": 1,
+   "improperPayments": 0,
+   "shouldNotPay": 23,
+   "overEscalations": 0,
+   "overFreezes": 0,
+   "notFreeze": 21,
+   "autonomy": {
+    "resolved": 2,
+    "eligible": 2,
+    "rate": 1
+   }
+  },
+  "bySplit": {
+   "train": {
+    "total": 19,
+    "correct": 19,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 19,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 17,
+    "autonomy": {
+     "resolved": 2,
+     "eligible": 2,
+     "rate": 1
+    }
+   },
+   "holdout": {
+    "total": 4,
+    "correct": 4,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 4,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 4,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   }
+  },
+  "byScenario": {
+   "e02-umbral-bajo": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e03-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e05-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e06-fondo-bajo": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e07-tolerancia-0": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e08-volumen": {
+    "total": 2,
+    "correct": 2,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 2,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 1,
+     "eligible": 1,
+     "rate": 1
+    }
+   },
+   "e09-limite-bajo": {
+    "total": 3,
+    "correct": 3,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 3,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 3,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e13-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 0,
+    "autonomy": {
+     "resolved": 1,
+     "eligible": 1,
+     "rate": 1
+    }
+   },
+   "e15-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e16-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e18-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e19-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e21-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e26-tolerancia-2": {
+    "total": 2,
+    "correct": 2,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 2,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 2,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e28-limite-bajo": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e34-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e35-volumen": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e37-tolerancia-2": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   },
+   "e40-fondo-bajo": {
+    "total": 1,
+    "correct": 1,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 1,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 1,
+    "autonomy": {
+     "resolved": 0,
+     "eligible": 0,
+     "rate": 0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "caseId": "S0083",
+   "split": "train",
+   "escenario": "e02-umbral-bajo",
+   "formato": "jpg",
+   "descripcion": "Datos del Sur SpA · JPG saas · USD 2.800,20 = USD 2800.20, sobre el umbral de USD 2800",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LIM-1"
+   ],
+   "extras": {
+    "trampa": "sobre_umbral",
+    "dificultad": "alta",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LIM-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 911
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 980
+    }
+   ]
+  },
+  {
+   "caseId": "S0140",
+   "split": "train",
+   "escenario": "e03-volumen",
+   "formato": "eml",
+   "descripcion": "Se hace pasar por Testa Qualidade Ltda con una letra cambiada: «Testa Qualidad Ltda» (CNPJ 48.429.889/0001-41) · correo+adjunto_nota_servico · cobra a otra cuenta",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_parecido",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "correo+adjunto_nota_servico"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7442,
+     "outputTokens": 1094
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7856,
+     "outputTokens": 1189
+    }
+   ]
+  },
+  {
+   "caseId": "S0239",
+   "split": "holdout",
+   "escenario": "e05-volumen",
+   "formato": "pdf",
+   "descripcion": "CloudMetrics · PDF latam · USD 1.200,00 sin datos bancarios",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "sin_datos_bancarios",
+    "dificultad": "baja",
+    "idioma": "es",
+    "plantilla": "latam"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [
+    "PRV-2"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 6695,
+     "outputTokens": 840
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7109,
+     "outputTokens": 865
+    }
+   ]
+  },
+  {
+   "caseId": "S0283",
+   "split": "train",
+   "escenario": "e06-fondo-bajo",
+   "formato": "txt",
+   "descripcion": "Soporte Caribe · chat · factura en USD (USD 480,00) cuando el acuerdo es en COP",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-2"
+   ],
+   "extras": {
+    "trampa": "otra_moneda",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "chat"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-2"
+   ],
+   "notEvaluableCodes": [
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5162,
+     "outputTokens": 1568
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5576,
+     "outputTokens": 2168
+    }
+   ]
+  },
+  {
+   "caseId": "S0310",
+   "split": "train",
+   "escenario": "e07-tolerancia-0",
+   "formato": "jpg",
+   "descripcion": "Datos del Sur SpA · JPG saas · USD 5.520,00 sin datos bancarios",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1",
+    "LIM-1"
+   ],
+   "extras": {
+    "trampa": "sin_datos_bancarios+sobre_umbral",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1",
+    "LIM-1"
+   ],
+   "notEvaluableCodes": [
+    "PRV-2"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 1530
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 868
+    }
+   ]
+  },
+  {
+   "caseId": "S0357",
+   "split": "train",
+   "escenario": "e08-volumen",
+   "formato": "pdf",
+   "descripcion": "Testa Qualidade Ltda · PDF nota_servico · emitida el 2026-09-22 por enero de 2026, antes del inicio del acuerdo (2026-02-01)",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-1"
+   ],
+   "extras": {
+    "trampa": "periodo_fuera_vigencia",
+    "dificultad": "alta",
+    "idioma": "pt",
+    "plantilla": "nota_servico"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-3",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7149,
+     "outputTokens": 1032
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7563,
+     "outputTokens": 1116
+    }
+   ]
+  },
+  {
+   "caseId": "S0374",
+   "split": "train",
+   "escenario": "e08-volumen",
+   "formato": "jpg",
+   "descripcion": "Foto impresa de S0369 (ya pagada, mismo número CM-INV-2026-1092)",
+   "expected": "FRENAR",
+   "expectedCodes": [
+    "DUP-2",
+    "DUP-3"
+   ],
+   "extras": {
+    "trampa": "duplicado_foto",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "foto_latam"
+   },
+   "outcome": "FRENAR",
+   "failCodes": [
+    "DUP-2",
+    "DUP-3"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 911
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 987
+    }
+   ]
+  },
+  {
+   "caseId": "S0410",
+   "split": "train",
+   "escenario": "e09-limite-bajo",
+   "formato": "pdf",
+   "descripcion": "Proveedor no registrado: Quantum Freelance LLC · PDF saas · USD 1.740,00",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_no_registrado",
+    "dificultad": "baja",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 6739,
+     "outputTokens": 846
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7153,
+     "outputTokens": 1480
+    }
+   ]
+  },
+  {
+   "caseId": "S0427",
+   "split": "train",
+   "escenario": "e09-limite-bajo",
+   "formato": "jpg",
+   "descripcion": "Estudio Nopal · JPG latam · 42 h a $810,00 MXN cuando la tarifa pactada es $900,00 MXN",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-3"
+   ],
+   "extras": {
+    "trampa": "tarifa_distinta",
+    "dificultad": "alta",
+    "idioma": "es",
+    "plantilla": "latam"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-3"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 914
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 1046
+    }
+   ]
+  },
+  {
+   "caseId": "S0433",
+   "split": "train",
+   "escenario": "e09-limite-bajo",
+   "formato": "pdf",
+   "descripcion": "Estudio Nopal S. de R.L. · PDF latam · $94.500,00 MXN = USD 5197.50, sobre el umbral de USD 5000",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LIM-1",
+    "LIM-2"
+   ],
+   "extras": {
+    "trampa": "sobre_umbral+limite_mes",
+    "dificultad": "baja",
+    "idioma": "es",
+    "plantilla": "latam"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1",
+    "LIM-1",
+    "LIM-2"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 6921,
+     "outputTokens": 1422
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7335,
+     "outputTokens": 1729
+    }
+   ]
+  },
+  {
+   "caseId": "S0616",
+   "split": "train",
+   "escenario": "e13-volumen",
+   "formato": "pdf",
+   "descripcion": "Recibo del pago de S0586 (TQ-2026-4324, ya pagada) · PDF nota_servico",
+   "expected": "FRENAR",
+   "expectedCodes": [
+    "LEC-1",
+    "DUP-2",
+    "DUP-3"
+   ],
+   "extras": {
+    "trampa": "recibo+duplicado_numero+duplicado_periodo",
+    "dificultad": "media",
+    "idioma": "pt",
+    "plantilla": "nota_servico"
+   },
+   "outcome": "FRENAR",
+   "failCodes": [
+    "LEC-1",
+    "DUP-2",
+    "DUP-3"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7172,
+     "outputTokens": 1745
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7586,
+     "outputTokens": 2290
+    }
+   ]
+  },
+  {
+   "caseId": "S0692",
+   "split": "holdout",
+   "escenario": "e15-volumen",
+   "formato": "eml",
+   "descripcion": "Estudio Nopal S. de R.L. · correo+adjunto_saas · $100.800,00 MXN = USD 5544.00, sobre el umbral de USD 5000",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LIM-1"
+   ],
+   "extras": {
+    "trampa": "sobre_umbral",
+    "dificultad": "baja",
+    "idioma": "es",
+    "plantilla": "correo+adjunto_saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LIM-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7175,
+     "outputTokens": 959
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7589,
+     "outputTokens": 2598
+    }
+   ]
+  },
+  {
+   "caseId": "S0768",
+   "split": "train",
+   "escenario": "e16-volumen",
+   "formato": "eml",
+   "descripcion": "Recibo de pago (no es una factura) de Soporte Caribe · correo_cuerpo · COP 1.080.000",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "recibo",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "correo_cuerpo"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5069,
+     "outputTokens": 2232
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5483,
+     "outputTokens": 2166
+    }
+   ]
+  },
+  {
+   "caseId": "S0861",
+   "split": "train",
+   "escenario": "e18-volumen",
+   "formato": "jpg",
+   "descripcion": "Pampa Ops SRL · foto latam muy desenfocada: el total no se puede leer",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "total_borroso",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "latam"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [
+    "ACU-1",
+    "ACU-3",
+    "LIM-1",
+    "LIM-2",
+    "FON-1"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 1551
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 2255
+    }
+   ]
+  },
+  {
+   "caseId": "S0922",
+   "split": "train",
+   "escenario": "e19-volumen",
+   "formato": "jpg",
+   "descripcion": "Estudio Nopal S. de R.L. · foto saas muy desenfocada: el total no se puede leer",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "LEC-1"
+   ],
+   "extras": {
+    "trampa": "total_borroso",
+    "dificultad": "media",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1"
+   ],
+   "notEvaluableCodes": [],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 1954
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 2701
+    }
+   ]
+  },
+  {
+   "caseId": "S1027",
+   "split": "train",
+   "escenario": "e21-volumen",
+   "formato": "png",
+   "descripcion": "Estudio Nopal S. de R.L. · PNG saas · emitida el 2026-09-20 por febrero de 2026, antes del inicio del acuerdo (2026-03-01)",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-1"
+   ],
+   "extras": {
+    "trampa": "periodo_fuera_vigencia",
+    "dificultad": "alta",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-3",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7235,
+     "outputTokens": 910
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7649,
+     "outputTokens": 2444
+    }
+   ]
+  },
+  {
+   "caseId": "S1246",
+   "split": "train",
+   "escenario": "e26-tolerancia-2",
+   "formato": "pdf",
+   "descripcion": "Se hace pasar por Camila Restrepo Dev S.A.S. con otra razón social: «CR Devs S.A.S.» sin id tributario · PDF cuenta_cobro · cobra a otra cuenta",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_parecido",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "cuenta_cobro"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 6801,
+     "outputTokens": 1788
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 7215,
+     "outputTokens": 1899
+    }
+   ]
+  },
+  {
+   "caseId": "S1249",
+   "split": "train",
+   "escenario": "e26-tolerancia-2",
+   "formato": "jpg",
+   "descripcion": "Se hace pasar por Soporte Caribe S.A.S. con una letra cambiada: «Soporte Carive S.A.S.» (NIT 931.000.837-6) · JPG saas · cobra a otra cuenta",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_parecido",
+    "dificultad": "alta",
+    "idioma": "en",
+    "plantilla": "saas"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1",
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 1726
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 3058
+    }
+   ]
+  },
+  {
+   "caseId": "S1351",
+   "split": "train",
+   "escenario": "e28-limite-bajo",
+   "formato": "jpg",
+   "descripcion": "Proveedor no registrado: Río Claro DevOps SRL · JPG latam · USD 3.007,00",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_no_registrado",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "latam"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8200,
+     "outputTokens": 984
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 8614,
+     "outputTokens": 2032
+    }
+   ]
+  },
+  {
+   "caseId": "S1673",
+   "split": "train",
+   "escenario": "e34-volumen",
+   "formato": "txt",
+   "descripcion": "Proveedor no registrado: Lumen QA Ltda · chat · R$ 8.580,00",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_no_registrado",
+    "dificultad": "baja",
+    "idioma": "es",
+    "plantilla": "chat"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "LEC-1",
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5176,
+     "outputTokens": 1647
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5590,
+     "outputTokens": 2098
+    }
+   ]
+  },
+  {
+   "caseId": "S1698",
+   "split": "holdout",
+   "escenario": "e35-volumen",
+   "formato": "eml",
+   "descripcion": "Pampa Ops SRL · correo_cuerpo · cobra diciembre de 2026, un mes que todavía no empieza",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-1"
+   ],
+   "extras": {
+    "trampa": "periodo_futuro",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "correo_cuerpo"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-3",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5050,
+     "outputTokens": 1618
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5464,
+     "outputTokens": 953
+    }
+   ]
+  },
+  {
+   "caseId": "S1838",
+   "split": "train",
+   "escenario": "e37-tolerancia-2",
+   "formato": "txt",
+   "descripcion": "Se hace pasar por Testa Qualidade Ltda con una letra cambiada: «Testa Qualidad Ltda» sin id tributario · chat · cobra a otra cuenta",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "PRV-1"
+   ],
+   "extras": {
+    "trampa": "proveedor_parecido",
+    "dificultad": "media",
+    "idioma": "pt",
+    "plantilla": "chat"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "PRV-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-2",
+    "DUP-3",
+    "PRV-2",
+    "ACU-1",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5185,
+     "outputTokens": 1579
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5599,
+     "outputTokens": 2247
+    }
+   ]
+  },
+  {
+   "caseId": "S1970",
+   "split": "holdout",
+   "escenario": "e40-fondo-bajo",
+   "formato": "txt",
+   "descripcion": "Datos del Sur SpA · chat · cobra diciembre de 2026, un mes que todavía no empieza",
+   "expected": "ESCALAR",
+   "expectedCodes": [
+    "ACU-1"
+   ],
+   "extras": {
+    "trampa": "periodo_futuro",
+    "dificultad": "media",
+    "idioma": "es",
+    "plantilla": "chat"
+   },
+   "outcome": "ESCALAR",
+   "failCodes": [
+    "ACU-1"
+   ],
+   "notEvaluableCodes": [
+    "DUP-3",
+    "ACU-2",
+    "ACU-3"
+   ],
+   "missingCodes": [],
+   "correct": true,
+   "improperPayment": false,
+   "overEscalation": false,
+   "overFreeze": false,
+   "guardOverride": false,
+   "summary": "",
+   "readerErrors": [],
+   "usage": [
+    {
+     "readerId": "lector-a",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5191,
+     "outputTokens": 1654
+    },
+    {
+     "readerId": "lector-b",
+     "model": "claude-haiku-5-5",
+     "inputTokens": 5605,
+     "outputTokens": 1809
+    }
+   ]
+  }
+ ],
+ "contextCases": [
+  "S0056",
+  "S0057",
+  "S0058",
+  "S0059",
+  "S0060",
+  "S0061",
+  "S0062",
+  "S0063",
+  "S0064",
+  "S0065",
+  "S0066",
+  "S0067",
+  "S0068",
+  "S0069",
+  "S0070",
+  "S0071",
+  "S0072",
+  "S0073",
+  "S0074",
+  "S0075",
+  "S0076",
+  "S0077",
+  "S0078",
+  "S0079",
+  "S0080",
+  "S0081",
+  "S0082",
+  "S0110",
+  "S0111",
+  "S0112",
+  "S0113",
+  "S0114",
+  "S0115",
+  "S0116",
+  "S0117",
+  "S0118",
+  "S0119",
+  "S0120",
+  "S0121",
+  "S0122",
+  "S0123",
+  "S0124",
+  "S0125",
+  "S0126",
+  "S0127",
+  "S0128",
+  "S0129",
+  "S0130",
+  "S0131",
+  "S0132",
+  "S0133",
+  "S0134",
+  "S0135",
+  "S0136",
+  "S0137",
+  "S0138",
+  "S0139",
+  "S0206",
+  "S0207",
+  "S0208",
+  "S0209",
+  "S0210",
+  "S0211",
+  "S0212",
+  "S0213",
+  "S0214",
+  "S0215",
+  "S0216",
+  "S0217",
+  "S0218",
+  "S0219",
+  "S0220",
+  "S0221",
+  "S0222",
+  "S0223",
+  "S0224",
+  "S0225",
+  "S0226",
+  "S0227",
+  "S0228",
+  "S0229",
+  "S0230",
+  "S0231",
+  "S0232",
+  "S0233",
+  "S0234",
+  "S0235",
+  "S0236",
+  "S0237",
+  "S0238",
+  "S0256",
+  "S0257",
+  "S0258",
+  "S0259",
+  "S0260",
+  "S0261",
+  "S0262",
+  "S0263",
+  "S0264",
+  "S0265",
+  "S0266",
+  "S0267",
+  "S0268",
+  "S0269",
+  "S0270",
+  "S0271",
+  "S0272",
+  "S0273",
+  "S0274",
+  "S0275",
+  "S0276",
+  "S0277",
+  "S0278",
+  "S0279",
+  "S0280",
+  "S0281",
+  "S0282",
+  "S0296",
+  "S0297",
+  "S0298",
+  "S0299",
+  "S0300",
+  "S0301",
+  "S0302",
+  "S0303",
+  "S0304",
+  "S0305",
+  "S0306",
+  "S0307",
+  "S0308",
+  "S0309",
+  "S0354",
+  "S0355",
+  "S0356",
+  "S0358",
+  "S0359",
+  "S0360",
+  "S0361",
+  "S0362",
+  "S0363",
+  "S0364",
+  "S0365",
+  "S0366",
+  "S0367",
+  "S0368",
+  "S0369",
+  "S0370",
+  "S0371",
+  "S0372",
+  "S0373",
+  "S0403",
+  "S0404",
+  "S0405",
+  "S0406",
+  "S0407",
+  "S0408",
+  "S0409",
+  "S0411",
+  "S0412",
+  "S0413",
+  "S0414",
+  "S0415",
+  "S0416",
+  "S0417",
+  "S0418",
+  "S0419",
+  "S0420",
+  "S0421",
+  "S0422",
+  "S0423",
+  "S0424",
+  "S0425",
+  "S0426",
+  "S0428",
+  "S0429",
+  "S0430",
+  "S0431",
+  "S0432",
+  "S0584",
+  "S0585",
+  "S0586",
+  "S0587",
+  "S0588",
+  "S0589",
+  "S0590",
+  "S0591",
+  "S0592",
+  "S0593",
+  "S0594",
+  "S0595",
+  "S0596",
+  "S0597",
+  "S0598",
+  "S0599",
+  "S0600",
+  "S0601",
+  "S0602",
+  "S0603",
+  "S0604",
+  "S0605",
+  "S0606",
+  "S0607",
+  "S0608",
+  "S0609",
+  "S0610",
+  "S0611",
+  "S0612",
+  "S0613",
+  "S0614",
+  "S0615",
+  "S0683",
+  "S0684",
+  "S0685",
+  "S0686",
+  "S0687",
+  "S0688",
+  "S0689",
+  "S0690",
+  "S0691",
+  "S0736",
+  "S0737",
+  "S0738",
+  "S0739",
+  "S0740",
+  "S0741",
+  "S0742",
+  "S0743",
+  "S0744",
+  "S0745",
+  "S0746",
+  "S0747",
+  "S0748",
+  "S0749",
+  "S0750",
+  "S0751",
+  "S0752",
+  "S0753",
+  "S0754",
+  "S0755",
+  "S0756",
+  "S0757",
+  "S0758",
+  "S0759",
+  "S0760",
+  "S0761",
+  "S0762",
+  "S0763",
+  "S0764",
+  "S0765",
+  "S0766",
+  "S0767",
+  "S0832",
+  "S0833",
+  "S0834",
+  "S0835",
+  "S0836",
+  "S0837",
+  "S0838",
+  "S0839",
+  "S0840",
+  "S0841",
+  "S0842",
+  "S0843",
+  "S0844",
+  "S0845",
+  "S0846",
+  "S0847",
+  "S0848",
+  "S0849",
+  "S0850",
+  "S0851",
+  "S0852",
+  "S0853",
+  "S0854",
+  "S0855",
+  "S0856",
+  "S0857",
+  "S0858",
+  "S0859",
+  "S0860",
+  "S0883",
+  "S0884",
+  "S0885",
+  "S0886",
+  "S0887",
+  "S0888",
+  "S0889",
+  "S0890",
+  "S0891",
+  "S0892",
+  "S0893",
+  "S0894",
+  "S0895",
+  "S0896",
+  "S0897",
+  "S0898",
+  "S0899",
+  "S0900",
+  "S0901",
+  "S0902",
+  "S0903",
+  "S0904",
+  "S0905",
+  "S0906",
+  "S0907",
+  "S0908",
+  "S0909",
+  "S0910",
+  "S0911",
+  "S0912",
+  "S0913",
+  "S0914",
+  "S0915",
+  "S0916",
+  "S0917",
+  "S0918",
+  "S0919",
+  "S0920",
+  "S0921",
+  "S0991",
+  "S0992",
+  "S0993",
+  "S0994",
+  "S0995",
+  "S0996",
+  "S0997",
+  "S0998",
+  "S0999",
+  "S1000",
+  "S1001",
+  "S1002",
+  "S1003",
+  "S1004",
+  "S1005",
+  "S1006",
+  "S1007",
+  "S1008",
+  "S1009",
+  "S1010",
+  "S1011",
+  "S1012",
+  "S1013",
+  "S1014",
+  "S1015",
+  "S1016",
+  "S1017",
+  "S1018",
+  "S1019",
+  "S1020",
+  "S1021",
+  "S1022",
+  "S1023",
+  "S1024",
+  "S1025",
+  "S1026",
+  "S1232",
+  "S1233",
+  "S1234",
+  "S1235",
+  "S1236",
+  "S1237",
+  "S1238",
+  "S1239",
+  "S1240",
+  "S1241",
+  "S1242",
+  "S1243",
+  "S1244",
+  "S1245",
+  "S1247",
+  "S1248",
+  "S1336",
+  "S1337",
+  "S1338",
+  "S1339",
+  "S1340",
+  "S1341",
+  "S1342",
+  "S1343",
+  "S1344",
+  "S1345",
+  "S1346",
+  "S1347",
+  "S1348",
+  "S1349",
+  "S1350",
+  "S1635",
+  "S1636",
+  "S1637",
+  "S1638",
+  "S1639",
+  "S1640",
+  "S1641",
+  "S1642",
+  "S1643",
+  "S1644",
+  "S1645",
+  "S1646",
+  "S1647",
+  "S1648",
+  "S1649",
+  "S1650",
+  "S1651",
+  "S1652",
+  "S1653",
+  "S1654",
+  "S1655",
+  "S1656",
+  "S1657",
+  "S1658",
+  "S1659",
+  "S1660",
+  "S1661",
+  "S1662",
+  "S1663",
+  "S1664",
+  "S1665",
+  "S1666",
+  "S1667",
+  "S1668",
+  "S1669",
+  "S1670",
+  "S1671",
+  "S1672",
+  "S1684",
+  "S1685",
+  "S1686",
+  "S1687",
+  "S1688",
+  "S1689",
+  "S1690",
+  "S1691",
+  "S1692",
+  "S1693",
+  "S1694",
+  "S1695",
+  "S1696",
+  "S1697",
+  "S1791",
+  "S1792",
+  "S1793",
+  "S1794",
+  "S1795",
+  "S1796",
+  "S1797",
+  "S1798",
+  "S1799",
+  "S1800",
+  "S1801",
+  "S1802",
+  "S1803",
+  "S1804",
+  "S1805",
+  "S1806",
+  "S1807",
+  "S1808",
+  "S1809",
+  "S1810",
+  "S1811",
+  "S1812",
+  "S1813",
+  "S1814",
+  "S1815",
+  "S1816",
+  "S1817",
+  "S1818",
+  "S1819",
+  "S1820",
+  "S1821",
+  "S1822",
+  "S1823",
+  "S1824",
+  "S1825",
+  "S1826",
+  "S1827",
+  "S1828",
+  "S1829",
+  "S1830",
+  "S1831",
+  "S1832",
+  "S1833",
+  "S1834",
+  "S1835",
+  "S1836",
+  "S1837",
+  "S1957",
+  "S1958",
+  "S1959",
+  "S1960",
+  "S1961",
+  "S1962",
+  "S1963",
+  "S1964",
+  "S1965",
+  "S1966",
+  "S1967",
+  "S1968",
+  "S1969"
+ ],
+ "cacheMisses": 0,
+ "usage": {
+  "byModel": {
+   "claude-haiku-5-5": {
+    "inputTokens": 329046,
+    "outputTokens": 72393,
+    "costUsd": 0.0691011
+   }
+  },
+  "byReader": {
+   "lector-a": {
+    "inputTokens": 159762,
+    "outputTokens": 31415,
+    "costUsd": 0.0316837
+   },
+   "lector-b": {
+    "inputTokens": 169284,
+    "outputTokens": 40978,
+    "costUsd": 0.0374174
+   }
+  },
+  "total": {
+   "inputTokens": 329046,
+   "outputTokens": 72393,
+   "costUsd": 0.0691011
+  }
+ },
+ "sample": {
+  "size": 23,
+  "seed": 17
+ },
+ "concurrency": 4,
+ "warnings": [],
+ "stress": {
+  "total": {
+   "metrics": {
+    "total": 23,
+    "correct": 23,
+    "accuracy": 1,
+    "improperPayments": 0,
+    "shouldNotPay": 23,
+    "overEscalations": 0,
+    "overFreezes": 0,
+    "notFreeze": 21,
+    "autonomy": {
+     "resolved": 2,
+     "eligible": 2,
+     "rate": 1
+    }
+   },
+   "accuracy": {
+    "rate": 1,
+    "low": 0.8518148710850255,
+    "high": 1,
+    "k": 23,
+    "n": 23
+   },
+   "improperPayments": {
+    "rate": 0,
+    "low": 0,
+    "high": 0.14818512891497448,
+    "k": 0,
+    "n": 23
+   },
+   "overEscalations": {
+    "rate": 0,
+    "low": 0,
+    "high": 0.8418861169916454,
+    "k": 0,
+    "n": 2
+   },
+   "overFreezes": {
+    "rate": 0,
+    "low": 0,
+    "high": 0.16109761521920518,
+    "k": 0,
+    "n": 21
+   },
+   "autonomy": {
+    "rate": 1,
+    "low": 0.1581138830083546,
+    "high": 1,
+    "k": 2,
+    "n": 2
+   },
+   "costUsd": 0.06910110000000001,
+   "tokens": {
+    "input": 329046,
+    "output": 72393
+   }
+  },
+  "byTrap": {
+   "proveedor_parecido": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0129812,
+    "tokens": {
+     "input": 56912,
+     "output": 14580
+    }
+   },
+   "sobre_umbral": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.011763299999999999,
+    "tokens": {
+     "input": 62648,
+     "output": 10997
+    }
+   },
+   "proveedor_no_registrado": {
+    "metrics": {
+     "total": 3,
+     "correct": 3,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 3,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.2924017738209841,
+     "high": 1,
+     "k": 3,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.008690699999999999,
+    "tokens": {
+     "input": 41472,
+     "output": 9087
+    }
+   },
+   "periodo_fuera_vigencia": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.005710600000000001,
+    "tokens": {
+     "input": 29596,
+     "output": 5502
+    }
+   },
+   "periodo_futuro": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.005148,
+    "tokens": {
+     "input": 21310,
+     "output": 6034
+    }
+   },
+   "recibo": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0067475,
+    "tokens": {
+     "input": 25310,
+     "output": 8433
+    }
+   },
+   "sin_datos_bancarios": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0051133,
+    "tokens": {
+     "input": 30618,
+     "output": 4103
+    }
+   },
+   "total_borroso": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0075933,
+    "tokens": {
+     "input": 33628,
+     "output": 8461
+    }
+   },
+   "duplicado_foto": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 0,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0026303999999999998,
+    "tokens": {
+     "input": 16814,
+     "output": 1898
+    }
+   },
+   "duplicado_numero": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 0,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0034933,
+    "tokens": {
+     "input": 14758,
+     "output": 4035
+    }
+   },
+   "duplicado_periodo": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 0,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0034933,
+    "tokens": {
+     "input": 14758,
+     "output": 4035
+    }
+   },
+   "limite_mes": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0030011,
+    "tokens": {
+     "input": 14256,
+     "output": 3151
+    }
+   },
+   "otra_moneda": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0029418,
+    "tokens": {
+     "input": 10738,
+     "output": 3736
+    }
+   },
+   "tarifa_distinta": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0026614,
+    "tokens": {
+     "input": 16814,
+     "output": 1960
+    }
+   }
+  },
+  "byFormat": {
+   "jpg": {
+    "metrics": {
+     "total": 8,
+     "correct": 8,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 8,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 7,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.6305833524470472,
+     "high": 1,
+     "k": 8,
+     "n": 8
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.3694166475529528,
+     "k": 0,
+     "n": 8
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.4096163972249087,
+     "k": 0,
+     "n": 7
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.025655200000000003,
+    "tokens": {
+     "input": 134512,
+     "output": 24408
+    }
+   },
+   "pdf": {
+    "metrics": {
+     "total": 6,
+     "correct": 6,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 6,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 5,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.5407418735599094,
+     "high": 1,
+     "k": 6,
+     "n": 6
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0170698,
+    "tokens": {
+     "input": 85438,
+     "output": 17052
+    }
+   },
+   "eml": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.011517300000000001,
+    "tokens": {
+     "input": 51128,
+     "output": 12809
+    }
+   },
+   "txt": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0116934,
+    "tokens": {
+     "input": 43084,
+     "output": 14770
+    }
+   },
+   "png": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0031654000000000005,
+    "tokens": {
+     "input": 14884,
+     "output": 3354
+    }
+   }
+  },
+  "byPresentation": {
+   "saas": {
+    "metrics": {
+     "total": 6,
+     "correct": 6,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 6,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 6,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.5407418735599094,
+     "high": 1,
+     "k": 6,
+     "n": 6
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.45925812644009056,
+     "k": 0,
+     "n": 6
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0193072,
+    "tokens": {
+     "input": 96032,
+     "output": 19408
+    }
+   },
+   "latam": {
+    "metrics": {
+     "total": 5,
+     "correct": 5,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 5,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 5,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.4781762498946591,
+     "high": 1,
+     "k": 5,
+     "n": 5
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0146692,
+    "tokens": {
+     "input": 78502,
+     "output": 13638
+    }
+   },
+   "chat": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0116934,
+    "tokens": {
+     "input": 43084,
+     "output": 14770
+    }
+   },
+   "correo_cuerpo": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.005591100000000001,
+    "tokens": {
+     "input": 21066,
+     "output": 6969
+    }
+   },
+   "nota_servico": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0060385000000000005,
+    "tokens": {
+     "input": 29470,
+     "output": 6183
+    }
+   },
+   "correo+adjunto_nota_servico": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0026712999999999997,
+    "tokens": {
+     "input": 15298,
+     "output": 2283
+    }
+   },
+   "correo+adjunto_saas": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0032549,
+    "tokens": {
+     "input": 14764,
+     "output": 3557
+    }
+   },
+   "cuenta_cobro": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0032451,
+    "tokens": {
+     "input": 14016,
+     "output": 3687
+    }
+   },
+   "foto_latam": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 0,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0026303999999999998,
+    "tokens": {
+     "input": 16814,
+     "output": 1898
+    }
+   }
+  },
+  "byLanguage": {
+   "es": {
+    "metrics": {
+     "total": 13,
+     "correct": 13,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 13,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 12,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.7529473619993041,
+     "high": 1,
+     "k": 13,
+     "n": 13
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.24705263800069588,
+     "k": 0,
+     "n": 13
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.26464846939734343,
+     "k": 0,
+     "n": 12
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.03809270000000001,
+    "tokens": {
+     "input": 177462,
+     "output": 40693
+    }
+   },
+   "en": {
+    "metrics": {
+     "total": 7,
+     "correct": 7,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 7,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 7,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.5903836027750913,
+     "high": 1,
+     "k": 7,
+     "n": 7
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.4096163972249087,
+     "k": 0,
+     "n": 7
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.4096163972249087,
+     "k": 0,
+     "n": 7
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.021978499999999998,
+    "tokens": {
+     "input": 111330,
+     "output": 21691
+    }
+   },
+   "pt": {
+    "metrics": {
+     "total": 3,
+     "correct": 3,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 1,
+      "eligible": 1,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.2924017738209841,
+     "high": 1,
+     "k": 3,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "costUsd": 0.0090299,
+    "tokens": {
+     "input": 40254,
+     "output": 10009
+    }
+   }
+  },
+  "byDifficulty": {
+   "media": {
+    "metrics": {
+     "total": 13,
+     "correct": 13,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 13,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 11,
+     "autonomy": {
+      "resolved": 2,
+      "eligible": 2,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.7529473619993041,
+     "high": 1,
+     "k": 13,
+     "n": 13
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.24705263800069588,
+     "k": 0,
+     "n": 13
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.28491415291819067,
+     "k": 0,
+     "n": 11
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "costUsd": 0.040038599999999994,
+    "tokens": {
+     "input": 181526,
+     "output": 43772
+    }
+   },
+   "alta": {
+    "metrics": {
+     "total": 5,
+     "correct": 5,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 5,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 5,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.4781762498946591,
+     "high": 1,
+     "k": 5,
+     "n": 5
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0150723,
+    "tokens": {
+     "input": 80038,
+     "output": 14137
+    }
+   },
+   "baja": {
+    "metrics": {
+     "total": 5,
+     "correct": 5,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 5,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 5,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.4781762498946591,
+     "high": 1,
+     "k": 5,
+     "n": 5
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.5218237501053409,
+     "k": 0,
+     "n": 5
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0139902,
+    "tokens": {
+     "input": 67482,
+     "output": 14484
+    }
+   }
+  },
+  "byExpected": {
+   "ESCALAR": {
+    "metrics": {
+     "total": 21,
+     "correct": 21,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 21,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 21,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.8389023847807948,
+     "high": 1,
+     "k": 21,
+     "n": 21
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.16109761521920518,
+     "k": 0,
+     "n": 21
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.16109761521920518,
+     "k": 0,
+     "n": 21
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0629774,
+    "tokens": {
+     "input": 297474,
+     "output": 66460
+    }
+   },
+   "FRENAR": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 0,
+     "autonomy": {
+      "resolved": 2,
+      "eligible": 2,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "costUsd": 0.006123699999999999,
+    "tokens": {
+     "input": 31572,
+     "output": 5933
+    }
+   }
+  },
+  "byScenarioKind": {
+   "volumen": {
+    "metrics": {
+     "total": 12,
+     "correct": 12,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 12,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 10,
+     "autonomy": {
+      "resolved": 2,
+      "eligible": 2,
+      "rate": 1
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.7353515306026566,
+     "high": 1,
+     "k": 12,
+     "n": 12
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.26464846939734343,
+     "k": 0,
+     "n": 12
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.30849710781831163,
+     "k": 0,
+     "n": 10
+    },
+    "autonomy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "costUsd": 0.0361269,
+    "tokens": {
+     "input": 170494,
+     "output": 38155
+    }
+   },
+   "limite-bajo": {
+    "metrics": {
+     "total": 4,
+     "correct": 4,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 4,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 4,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.3976353643834045,
+     "high": 1,
+     "k": 4,
+     "n": 4
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.6023646356165955,
+     "k": 0,
+     "n": 4
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0114041,
+    "tokens": {
+     "input": 61776,
+     "output": 10453
+    }
+   },
+   "tolerancia-2": {
+    "metrics": {
+     "total": 3,
+     "correct": 3,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 3,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 3,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.2924017738209841,
+     "high": 1,
+     "k": 3,
+     "n": 3
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.7075982261790159,
+     "k": 0,
+     "n": 3
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0103099,
+    "tokens": {
+     "input": 41614,
+     "output": 12297
+    }
+   },
+   "fondo-bajo": {
+    "metrics": {
+     "total": 2,
+     "correct": 2,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 2,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 2,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.1581138830083546,
+     "high": 1,
+     "k": 2,
+     "n": 2
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.8418861169916454,
+     "k": 0,
+     "n": 2
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0057529,
+    "tokens": {
+     "input": 21534,
+     "output": 7199
+    }
+   },
+   "tolerancia-0": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0028804,
+    "tokens": {
+     "input": 16814,
+     "output": 2398
+    }
+   },
+   "umbral-bajo": {
+    "metrics": {
+     "total": 1,
+     "correct": 1,
+     "accuracy": 1,
+     "improperPayments": 0,
+     "shouldNotPay": 1,
+     "overEscalations": 0,
+     "overFreezes": 0,
+     "notFreeze": 1,
+     "autonomy": {
+      "resolved": 0,
+      "eligible": 0,
+      "rate": 0
+     }
+    },
+    "accuracy": {
+     "rate": 1,
+     "low": 0.02500000000009095,
+     "high": 1,
+     "k": 1,
+     "n": 1
+    },
+    "improperPayments": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "overEscalations": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "overFreezes": {
+     "rate": 0,
+     "low": 0,
+     "high": 0.974999999999909,
+     "k": 0,
+     "n": 1
+    },
+    "autonomy": {
+     "rate": 0,
+     "low": 0,
+     "high": 1,
+     "k": 0,
+     "n": 0
+    },
+    "costUsd": 0.0026268999999999997,
+    "tokens": {
+     "input": 16814,
+     "output": 1891
+    }
+   }
+  },
+  "confusion": {
+   "ESCALAR": {
+    "ESCALAR": 21
+   },
+   "FRENAR": {
+    "FRENAR": 2
+   }
+  },
+  "failureKinds": []
+ }
+}

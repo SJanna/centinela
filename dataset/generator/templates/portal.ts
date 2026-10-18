@@ -104,7 +104,7 @@ export function renderPortal(spec: DocumentSpec): Canvas {
   c.text(dx + half, y, "Billed to", { size: 8, font: "sansBold", color: MUTED });
   y += 14;
   c.field("vendorName", dx, y, spec.vendor.name, { size: 9.5, font: "sansBold", color: INK });
-  c.text(dx + half, y, spec.customer.name, { size: 9.5, font: "sansBold", color: INK });
+  c.field("billToName", dx + half, y, spec.customer.name, { size: 9.5, font: "sansBold", color: INK });
   let vy = y + 13;
   for (const line of spec.vendor.address.slice(0, 2)) {
     c.text(dx, vy, line, { size: 8.5, color: MUTED });

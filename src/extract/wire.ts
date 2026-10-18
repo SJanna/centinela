@@ -2,7 +2,7 @@
  * Formato «de cable» que se le pide al modelo en la salida estructurada.
  *
  * La API limita los esquemas a 16 parámetros con tipos unión (nullable / anyOf), y `Extraction`
- * tiene 30. Por eso el modelo responde SIN uniones: los datos ausentes viajan como texto vacío con
+ * tiene 32 (con el destinatario: billToName y billToTaxId). Por eso el modelo responde SIN uniones: los datos ausentes viajan como texto vacío con
  * `found: false`, y los montos como texto decimal ("12000000", "1200.50"). Este módulo convierte esa
  * respuesta en `Extraction`, que es lo que usa el resto del sistema.
  *
@@ -28,6 +28,10 @@ export const WireExtractionSchema = z.object({
   documentType: z.enum(["invoice", "cuenta_de_cobro", "receipt", "other"]),
   vendorName: wireField,
   vendorTaxId: wireField,
+  /** A quién va dirigida la factura (el cliente). found false si el documento no lo dice. */
+  billToName: wireField,
+  /** Id tributario del destinatario, sin la etiqueta. */
+  billToTaxId: wireField,
   invoiceNumber: wireField,
   issueDate: wireField,
   dueDate: wireField,
@@ -116,6 +120,8 @@ export function wireToExtraction(w: WireExtraction): WireConversion {
     documentType: w.documentType,
     vendorName: textField(w.vendorName),
     vendorTaxId: textField(w.vendorTaxId),
+    billToName: textField(w.billToName),
+    billToTaxId: textField(w.billToTaxId),
     invoiceNumber: textField(w.invoiceNumber),
     issueDate: textField(w.issueDate),
     dueDate: textField(w.dueDate),
@@ -139,12 +145,10 @@ export function wireToExtraction(w: WireExtraction): WireConversion {
 
 /** Inversa (para pruebas y dobles): `Extraction` → formato de cable. */
 export function extractionToWire(e: Extraction): WireExtraction {
-  const t = (f: Extraction["vendorName"]): WireField => ({
-    found: f.value != null,
-    value: f.value ?? "",
-    evidence: f.evidence ?? "",
-    legible: f.legible,
-  });
+  const t = (f: Extraction["vendorName"] | undefined): WireField =>
+    f == null
+      ? { found: false, value: "", evidence: "", legible: true }
+      : { found: f.value != null, value: f.value ?? "", evidence: f.evidence ?? "", legible: f.legible };
   const n = (f: Extraction["total"]): WireField => ({
     found: f.value != null,
     value: f.value == null ? "" : String(f.value),
@@ -155,6 +159,8 @@ export function extractionToWire(e: Extraction): WireExtraction {
     documentType: e.documentType,
     vendorName: t(e.vendorName),
     vendorTaxId: t(e.vendorTaxId),
+    billToName: t(e.billToName),
+    billToTaxId: t(e.billToTaxId),
     invoiceNumber: t(e.invoiceNumber),
     issueDate: t(e.issueDate),
     dueDate: t(e.dueDate),

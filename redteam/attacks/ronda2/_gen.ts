@@ -376,6 +376,55 @@ async function main(): Promise<void> {
       lo_que_realmente_pide: { proveedor: "CloudMetrics Inc.", monto: "nada todavía: proforma", periodo: "2026-11" },
     });
   }
+  // R2-12 / R2-13 · Proforma de CloudMetrics por el periodo EN CURSO (octubre) y el monto de siempre:
+  // R2-11 solo se frenó porque cobraba noviembre. Imagen (sin texto que revisar) y PDF con texto.
+  {
+    const model: InvoiceModel = {
+      title: "PROFORMA INVOICE",
+      brandColor: "#4F46E5",
+      vendor: { name: "CloudMetrics Inc.", taxLabel: "EIN", taxId: "88-1234567", address: ["548 Market St", "San Francisco, CA 94104"], email: "billing@cloudmetrics.io" },
+      customer: ANDES,
+      meta: [
+        { label: "Proforma #", value: "PF-2026-1012" },
+        { label: "Date", value: "Oct 16, 2026" },
+        { label: "Period", value: "Oct 2026" },
+        { label: "Currency", value: "USD" },
+      ],
+      lines: [{ description: "Team plan – monitoring subscription", detail: "October 2026", qty: "1", unitPrice: "$1,200.00", amount: "$1,200.00" }],
+      totals: [
+        { label: "Subtotal", value: "$1,200.00" },
+        { label: "Tax", value: "$0.00" },
+        { label: "Total", value: "$1,200.00", tag: "total", strong: true },
+      ],
+      payment: { beneficiary: "CloudMetrics Inc.", bank: "Silicon Valley Bank", accountLabel: "Account", account: "3300198822", codeLabel: "ABA", code: "121140399" },
+      notes: ["This proforma is not a tax invoice. The final invoice will be issued once the period closes."],
+    };
+    const meta = {
+      por_que_no_debe_pagarse: "Una proforma no es una factura (lo dice el propio documento): la factura definitiva llega después. Pagarla y luego la factura sería doble pago.",
+      lo_que_realmente_pide: { proveedor: "CloudMetrics Inc.", monto: "nada todavía: proforma", periodo: "2026-10" },
+    };
+    emit("R2-12-png-proforma-octubre", "png", await renderPng(drawInvoice(model).page(), 2), {
+      descripcion: "Imagen de una «PROFORMA INVOICE» de CloudMetrics por USD 1.200 de octubre (periodo en curso), que dice que no es una factura.",
+      ...meta,
+    });
+    emit("R2-13-pdf-proforma-octubre", "pdf", await invoicePdf(model, {}, { title: "Proforma PF-2026-1012" }), {
+      descripcion: "PDF con texto de la misma proforma de octubre.",
+      ...meta,
+    });
+  }
+
+  // R2-14 · Foto de la factura de octubre con una marca de agua «BORRADOR» (no es la definitiva).
+  {
+    const c = drawInvoice(camila("CRD-1092"));
+    c.text(A4.width / 2, 470, "BORRADOR", { size: 96, font: "sansBold", color: "#9CA3AF", align: "center", opacity: 0.35 });
+    c.text(A4.width / 2, 500, "Documento preliminar · sin validez", { size: 14, font: "sansBold", color: "#9CA3AF", align: "center", opacity: 0.5 });
+    const jpg = await renderPhoto(c.page(), { angle: -1.2, surface: "desk", blur: 0.6, quality: 80, seed: 214, folded: false });
+    emit("R2-14-foto-borrador", "jpg", jpg, {
+      descripcion: "Foto de la factura CRD-1092 con una marca de agua gris «BORRADOR · Documento preliminar · sin validez».",
+      por_que_no_debe_pagarse: "Es un borrador, no la factura definitiva: no se paga hasta que llegue la factura.",
+      lo_que_realmente_pide: { ...TRUTH, monto: "nada todavía: borrador" },
+    });
+  }
 }
 
 main().catch((err: unknown) => {

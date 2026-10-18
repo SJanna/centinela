@@ -1,7 +1,7 @@
 {
   "_doc": "Set de estrés (dataset/stress/build-stress.ts). Cada escenario arranca con historial vacío y procesa sus casos en el orden de casos.csv. 'rulesOverride' reemplaza campos de company.rules solo en ese escenario. Si company.json cambia (companySha256 distinto), hay que regenerar con npm run stress:generate.",
   "seed": 20261017,
-  "companySha256": "1a2f6b536ff0ab6d8b60b70c5bee796bcfeb35bd814c9a4a581127f4b6e16822",
+  "companySha256": "6b58438a9859d0767032c7c2e0738668b3e22d1e88a61317fe99889d53f00b50",
   "scenarios": [
     {
       "id": "e01-volumen",

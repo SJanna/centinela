@@ -1,9 +1,9 @@
 # Banco de pruebas · Centinela
 
-- Fecha: 2026-10-17T10:23:39.330Z
+- Fecha: 2026-10-18T07:29:07.275Z
 - Lector: simulado (lectura «perfecta» del manifiesto: prueba la lógica de decisión, no mide la calidad de lectura)
 - Casos: todos
-- Versión del prompt: v2 · Modelos: simulado
+- Versión del prompt: v5 · Modelos: simulado
 
 ## Resumen
 

@@ -112,6 +112,9 @@ const FIELD_LABELS: Record<string, string> = {
   bankName: "banco",
   accountNumber: "cuenta destino",
   routingOrSwift: "código SWIFT o de ruta",
+  billToName: "destinatario de la factura",
+  billToTaxId: "id tributario del destinatario",
+  destinatario: "destinatario de la factura",
   segunda_lectura_no_disponible: "segunda lectura no disponible",
 };
 
@@ -124,4 +127,21 @@ export function fieldLabel(field: string): string {
 /** Quita repetidos conservando el orden. */
 export function unique<T>(items: readonly T[]): T[] {
   return Array.from(new Set(items));
+}
+
+/** Etiquetas de identificación tributaria que se reconocen en una cita, de la más larga a la más corta. */
+const TAX_ID_LABELS = ["Tax ID", "CNPJ", "CUIT", "CUIL", "FEIN", "NIT", "EIN", "RUT", "RFC", "RUC", "CPF", "NIF", "CIF", "VAT", "TIN", "C.C."];
+
+/**
+ * Etiqueta con que la cita muestra un id tributario («NIT 901.888.123-4» → «NIT»), o null si la cita
+ * no trae ninguna conocida. Sirve para mostrar el id como aparece en el documento.
+ */
+export function taxIdLabelIn(evidence: string | null | undefined): string | null {
+  if (typeof evidence !== "string") return null;
+  for (const label of TAX_ID_LABELS) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s*");
+    const m = new RegExp(`(?:^|[^A-Za-z])(${escaped})(?![A-Za-z])`, "i").exec(evidence);
+    if (m) return label;
+  }
+  return null;
 }

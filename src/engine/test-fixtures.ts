@@ -143,11 +143,15 @@ export const ROBLE: Vendor = {
   ],
 };
 
-export function company(overrides: { rules?: Partial<Rules>; vendors?: Vendor[] } = {}): Company {
+/** Identidad de la compradora, como en dataset/company.json. */
+export const BUYER: NonNullable<Company["buyer"]> = { legalNames: ["Andes Labs Inc."], aliases: ["Andes Labs"], taxIds: ["93-4127765"] };
+
+export function company(overrides: { rules?: Partial<Rules>; vendors?: Vendor[]; buyer?: Company["buyer"] } = {}): Company {
   return {
     name: "Andes Labs Inc.",
     rules: { ...RULES, ...overrides.rules },
     vendors: overrides.vendors ?? [ACME, NOPAL, BUFETE, ROBLE],
+    ...(overrides.buyer ? { buyer: overrides.buyer } : {}),
   };
 }
 
@@ -245,6 +249,8 @@ export function extractionFrom(data: InvoiceData): Extraction {
     documentType: data.documentType,
     vendorName: f(data.vendorName),
     vendorTaxId: f(data.vendorTaxId),
+    ...(data.billToName !== undefined ? { billToName: f(data.billToName) } : {}),
+    ...(data.billToTaxId !== undefined ? { billToTaxId: f(data.billToTaxId) } : {}),
     invoiceNumber: f(data.invoiceNumber),
     issueDate: f(data.issueDate),
     dueDate: f(data.dueDate),
@@ -295,10 +301,10 @@ export function engineInput(
 }
 
 export function context(
-  opts: { history?: HistoryEntry[]; rules?: Partial<Rules>; vendors?: Vendor[]; now?: string } = {},
+  opts: { history?: HistoryEntry[]; rules?: Partial<Rules>; vendors?: Vendor[]; now?: string; buyer?: Company["buyer"] } = {},
 ): DecisionContext {
   return {
-    company: company({ rules: opts.rules, vendors: opts.vendors }),
+    company: company({ rules: opts.rules, vendors: opts.vendors, buyer: opts.buyer }),
     history: opts.history ?? [],
     now: opts.now ?? NOW,
   };

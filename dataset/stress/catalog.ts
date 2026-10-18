@@ -29,6 +29,7 @@ export const TRAPS = {
   periodo_fuera_vigencia: { label: "Periodo facturado fuera de la vigencia", codes: ["ACU-1"] },
   fecha_futura: { label: "Fecha de emisión en el futuro", codes: ["ACU-1"] },
   periodo_futuro: { label: "Periodo que todavía no empieza", codes: ["ACU-1"] },
+  otra_empresa: { label: "Factura dirigida a otra empresa (no a Andes Labs Inc.)", codes: ["ACU-1"] },
   sobre_umbral: { label: "Total sobre el umbral de aprobación", codes: [] },
   limite_mes: { label: "Supera el límite del mes", codes: [] },
   fondo_insuficiente: { label: "Fondo insuficiente", codes: [] },

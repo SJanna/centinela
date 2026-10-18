@@ -194,3 +194,33 @@ export class DuplicatePaymentError extends Error {
 export function isDuplicatePaymentError(err: unknown): err is DuplicatePaymentError {
   return err instanceof DuplicatePaymentError || (err instanceof Error && err.name === "DuplicatePaymentError" && "decisionId" in err);
 }
+
+/**
+ * Entre la lectura del historial y esta inserción se registró otro pago (otra instancia). LIM-2 y
+ * FON-1 se calcularon sin él, así que la decisión no se guardó. `processInvoice` lo atrapa y vuelve a
+ * decidir con el historial fresco.
+ */
+export class PaymentHistoryChangedError extends Error {
+  override readonly name = "PaymentHistoryChangedError";
+  /** Id de la decisión que no se guardó. */
+  readonly decisionId: string;
+  /** Pagos (PAGAR) en el historial con que se decidió. */
+  readonly paymentsSeen: number;
+  /** Pagos registrados al intentar insertar. */
+  readonly paymentsNow: number;
+
+  constructor(init: { decisionId: string; paymentsSeen: number; paymentsNow: number }, options?: { cause?: unknown }) {
+    super(
+      `Mientras se decidía se registraron otros pagos (el historial tenía ${init.paymentsSeen} y ahora hay ${init.paymentsNow}): la decisión «${init.decisionId}» no se registró.`,
+      options,
+    );
+    this.decisionId = init.decisionId;
+    this.paymentsSeen = init.paymentsSeen;
+    this.paymentsNow = init.paymentsNow;
+  }
+}
+
+/** true si `err` es un PaymentHistoryChangedError (también si viene de otra copia del módulo). */
+export function isPaymentHistoryChangedError(err: unknown): err is PaymentHistoryChangedError {
+  return err instanceof PaymentHistoryChangedError || (err instanceof Error && err.name === "PaymentHistoryChangedError" && "paymentsSeen" in err);
+}

@@ -56,8 +56,11 @@ export const SCHEMA_STATEMENTS: readonly string[] = [
     id integer PRIMARY KEY CHECK (id = 1),
     name text NOT NULL,
     rules jsonb NOT NULL,
+    buyer jsonb,
     updated_at timestamptz NOT NULL DEFAULT now()
   )`,
+  // Bases creadas antes de guardar la identidad de compradora (ACU-1).
+  `ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS buyer jsonb`,
   `CREATE TABLE IF NOT EXISTS vendors (
     id text PRIMARY KEY,
     data jsonb NOT NULL,

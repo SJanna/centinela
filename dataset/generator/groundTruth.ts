@@ -29,6 +29,20 @@ export function buildGroundTruth(spec: DocumentSpec, evidence: EvidenceMap, opts
     return { value, evidence: ev, legible: true };
   }
 
+  /**
+   * A quién va dirigida la factura, solo si el documento lo muestra (hay cita): las plantillas lo
+   * dibujan («Bill to», «Facturar a», «Señores», «Tomador»…); en correos sin adjunto y chats solo si el
+   * texto lo dice. El valor es el nombre tal como aparece (en mayúsculas si así está escrito) y el id
+   * tributario sin la etiqueta.
+   */
+  function billToField(key: "billToName" | "billToTaxId", value: string | null): { value: string | null; evidence: string | null; legible: boolean } {
+    const ev = evidence[key];
+    if (ev == null || value == null) return { value: null, evidence: null, legible: true };
+    if (illegible.has(key)) return { value: null, evidence: null, legible: false };
+    const shown = key === "billToName" && ev.trim().toUpperCase() === value.toUpperCase() ? ev.trim() : value;
+    return { value: shown, evidence: ev, legible: true };
+  }
+
   const p = spec.payment;
   const embedded: Extraction["embeddedInstructions"] = [];
   if (spec.visibleNote) embedded.push({ text: spec.visibleNote, reason: VISIBLE_NOTE_REASON });
@@ -39,6 +53,8 @@ export function buildGroundTruth(spec: DocumentSpec, evidence: EvidenceMap, opts
     documentType: spec.documentType,
     vendorName: field("vendorName", spec.vendor.name),
     vendorTaxId: field("vendorTaxId", spec.vendor.taxId),
+    billToName: billToField("billToName", spec.customer.name),
+    billToTaxId: billToField("billToTaxId", spec.customer.taxId),
     invoiceNumber: field("invoiceNumber", spec.invoiceNumber),
     issueDate: field("issueDate", spec.issueDate),
     dueDate: field("dueDate", spec.dueDate),
