@@ -580,6 +580,134 @@ describe("ACU-2 · moneda pactada", () => {
   });
 });
 
+describe("LEC-1 · documento que no es un cobro (voidDocumentMarkers)", () => {
+  const VOID = { text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" };
+
+  it("falla si el texto dice que la factura está anulada, aunque las dos lecturas digan «invoice»", () => {
+    const d = decide(engineInput(acmeInvoice(), { signals: { voidDocumentMarkers: [VOID] } }), context());
+    const c = check(d, "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe("El documento no es un cobro válido: «ANULADA» (Dice que el documento está anulado o cancelado).");
+    expect(c.params.voidMarkers).toBe(1);
+    expect(c.params.firstVoidMarker).toBe("ANULADA");
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.checks.filter((x) => x.status !== "pass").map((x) => x.code)).toEqual(["LEC-1"]);
+    expect(d.humanAction).toContain("Confirmar con el proveedor si hay una factura vigente que reemplace a esta; esta no se paga.");
+  });
+
+  it("con más de dos marcas cita dos y cuenta el resto; conserva el texto de ya pagado y de recibo", () => {
+    const signals = {
+      voidDocumentMarkers: [
+        { text: "PROFORMA INVOICE", reason: "Es un borrador, una proforma o un documento de muestra, no una factura definitiva" },
+        { text: "This proforma is not a tax invoice.", reason: "Dice que no es una factura válida" },
+        { text: "BORRADOR", reason: "Es un borrador, una proforma o un documento de muestra, no una factura definitiva" },
+      ],
+      paidDocumentMarkers: [{ text: "Payment receipt", source: "heuristic" as const, reason: "recibo" }],
+    };
+    const c = check(decide(engineInput(acmeInvoice(), { signals }), context()), "LEC-1");
+    expect(c.explanation).toBe(
+      "El documento no es un cobro válido: «PROFORMA INVOICE» (Es un borrador, una proforma o un documento de muestra, no una factura definitiva), «This proforma is not a tax invoice.» (Dice que no es una factura válida) y 1 más. El documento indica que ya fue pagado: «Payment receipt».",
+    );
+    expect(c.params.paidMarkers).toBe(1);
+    expect(c.params.voidMarkers).toBe(3);
+  });
+
+  it("una marca sin texto también hace fallar LEC-1 (no se descarta)", () => {
+    const signals = { voidDocumentMarkers: [{ text: 42, reason: null }] as unknown as { text: string; reason: string }[] };
+    const c = check(decide(engineInput(acmeInvoice(), { signals }), context()), "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe("El documento no es un cobro válido: una marca sin texto.");
+  });
+
+  it("sin la señal (registro anterior a ella) o si no es una lista, decide como antes", () => {
+    const input = engineInput(acmeInvoice());
+    delete input.reading.signals.voidDocumentMarkers;
+    expect(check(decide(input, context()), "LEC-1").status).toBe("pass");
+    expect(decide(input, context()).outcome).toBe("PAGAR");
+    const notAList = engineInput(acmeInvoice(), { signals: { voidDocumentMarkers: "ninguna" as unknown as [] } });
+    expect(check(decide(notAList, context()), "LEC-1").status).toBe("pass");
+  });
+});
+
+describe("ACU-2 · moneda escrita solo con «$» (currencyOnlyDollarSign)", () => {
+  /** Bufete Andino (Colombia) con su acuerdo en USD, pero en el país que diga la prueba. */
+  function bufeteFrom(country: string) {
+    const base = context().company.vendors.find((v) => v.id === "v-bufete")!;
+    const others = context().company.vendors.filter((v) => v.id !== "v-bufete");
+    return context({ vendors: [...others, { ...base, country }] });
+  }
+  const dollarOnly = { signals: { currencyOnlyDollarSign: true } };
+
+  it("proveedor de Colombia, acuerdo en USD y la factura solo pone «$»: escala (el «$» es el peso colombiano)", () => {
+    const d = decide(engineInput(bufeteInvoice(), dollarOnly), context());
+    const c = check(d, "ACU-2");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe(
+      "La factura solo escribe «$» y no dice la moneda. Para un proveedor de Colombia el «$» es el peso colombiano (COP), no USD: no se puede confirmar que cobre en la moneda pactada.",
+    );
+    expect(c.params).toMatchObject({ currencyOnlyDollarSign: true, vendorCountry: "CO", bareDollarMeans: "COP", invoiceCurrency: "USD", agreementCurrency: "USD" });
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.humanAction).toContain("Pedir al proveedor que confirme la moneda (que la factura diga USD) antes de pagar.");
+    // El monto se sigue comparando (no es una moneda distinta leída): ACU-3 no se deriva.
+    expect(check(d, "ACU-3").status).toBe("pass");
+  });
+
+  it("proveedor de Argentina: «$» es el peso argentino", () => {
+    const c = check(decide(engineInput(bufeteInvoice(), dollarOnly), bufeteFrom("AR")), "ACU-2");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toContain("Para un proveedor de Argentina el «$» es el peso argentino (ARS), no USD");
+  });
+
+  it("proveedor de Argentina que escribe «USD 2.800» (señal en false): pasa", () => {
+    const d = decide(engineInput(bufeteInvoice(), { signals: { currencyOnlyDollarSign: false } }), bufeteFrom("AR"));
+    const c = check(d, "ACU-2");
+    expect(c.status).toBe("pass");
+    expect(c.explanation).toBe("La factura está en USD, la moneda pactada.");
+  });
+
+  it("proveedor de EE. UU. con «$» solo: «$» es USD y pasa (la explicación lo dice)", () => {
+    const d = decide(engineInput(bufeteInvoice(), dollarOnly), bufeteFrom("US"));
+    const c = check(d, "ACU-2");
+    expect(c.status).toBe("pass");
+    expect(c.explanation).toBe("La factura está en USD, la moneda pactada (escrita solo con «$», que para un proveedor de Estados Unidos es USD).");
+    expect(c.params).toMatchObject({ currencyOnlyDollarSign: true, vendorCountry: "US", bareDollarMeans: "USD" });
+  });
+
+  it("país donde la moneda local tiene otro símbolo (Brasil): «$» solo es el dólar y pasa", () => {
+    expect(check(decide(engineInput(bufeteInvoice(), dollarOnly), bufeteFrom("br")), "ACU-2").status).toBe("pass");
+  });
+
+  it("acuerdo en COP con un proveedor de Colombia y «$» solo: el «$» es la moneda pactada y pasa", () => {
+    expect(check(decide(engineInput(acmeInvoice(), dollarOnly), context()), "ACU-2").status).toBe("pass");
+    expect(decide(engineInput(acmeInvoice(), dollarOnly), context()).outcome).toBe("PAGAR");
+  });
+
+  it("sin país del proveedor no se puede saber qué es el «$»: no evaluable (ESCALAR)", () => {
+    const d = decide(engineInput(bufeteInvoice(), dollarOnly), bufeteFrom("  "));
+    const c = check(d, "ACU-2");
+    expect(c.status).toBe("not_evaluable");
+    expect(c.explanation).toContain("no se sabe el país del proveedor");
+    expect(c.params).toMatchObject({ vendorCountry: null, bareDollarMeans: null });
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.humanAction).toContain("que la factura diga USD");
+  });
+
+  it("sin la señal (registro anterior a ella) decide como antes", () => {
+    const input = engineInput(bufeteInvoice());
+    delete input.reading.signals.currencyOnlyDollarSign;
+    const c = check(decide(input, bufeteFrom("AR")), "ACU-2");
+    expect(c.status).toBe("pass");
+    expect(c.explanation).toBe("La factura está en USD, la moneda pactada.");
+    const notABoolean = engineInput(bufeteInvoice(), { signals: { currencyOnlyDollarSign: "sí" as unknown as boolean } });
+    expect(check(decide(notABoolean, bufeteFrom("AR")), "ACU-2").status).toBe("pass");
+  });
+
+  it("si la moneda leída ya es otra, falla por moneda distinta (la señal no cambia nada)", () => {
+    const d = decide(engineInput(bufeteInvoice({ currency: "COP", total: 18_000_000, subtotal: 18_000_000 }), dollarOnly), context());
+    expect(check(d, "ACU-2").explanation).toContain("La factura está en COP pero el acuerdo");
+  });
+});
+
 describe("ACU-3 · monto pactado", () => {
   it("monto fijo: pasa dentro de la tolerancia (PEN-like 0,67 %)", () => {
     const d = decide(engineInput(acmeInvoice({ total: 12_080_000 })), context());

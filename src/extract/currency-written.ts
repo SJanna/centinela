@@ -5,40 +5,10 @@
  * cobrado. Código, sin modelo.
  */
 
-/** Monedas que se escriben con un «$» solo. */
-export const DOLLAR_SIGN_CURRENCIES: readonly string[] = ["USD", "COP", "MXN", "CLP", "ARS"];
+import { DOLLAR_SIGN_CURRENCIES, bareDollarMeaning } from "../core/currency";
 
-/**
- * Lo que significa un «$» solo según el país del proveedor. Países donde la moneda local se escribe
- * con «$»; en el resto (Brasil, Perú, Europa…) la moneda local tiene otro símbolo y un «$» solo es
- * el dólar.
- */
-const LOCAL_DOLLAR_SIGN: Record<string, string> = {
-  US: "USD",
-  EC: "USD",
-  SV: "USD",
-  PA: "USD",
-  PR: "USD",
-  CO: "COP",
-  MX: "MXN",
-  CL: "CLP",
-  AR: "ARS",
-  UY: "UYU",
-  DO: "DOP",
-  CU: "CUP",
-  NZ: "NZD",
-  AU: "AUD",
-  CA: "CAD",
-  SG: "SGD",
-  HK: "HKD",
-};
-
-/** Moneda que significa un «$» solo en una factura de un proveedor de ese país (ISO 3166 alfa-2). null si no se sabe el país. */
-export function bareDollarMeaning(country: string | null | undefined): string | null {
-  const c = country?.trim().toUpperCase();
-  if (!c) return null;
-  return LOCAL_DOLLAR_SIGN[c] ?? "USD";
-}
+// El mapa país → significado de «$» vive en src/core/currency.ts (también lo usa el motor, ACU-2).
+export { DOLLAR_SIGN_CURRENCIES, bareDollarMeaning };
 
 /**
  * Formas que nombran una moneda sin ambigüedad (sobre texto en minúsculas, sin tildes). «peso» solo

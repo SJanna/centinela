@@ -75,6 +75,7 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
   // Registros anteriores a estas señales no las traen: se cuentan como vacías.
   const paidMarkers = Array.isArray(s.paidDocumentMarkers) ? s.paidDocumentMarkers : [];
   const ingestWarnings = Array.isArray(s.ingestWarnings) ? s.ingestWarnings : [];
+  const voidMarkers = Array.isArray(s.voidDocumentMarkers) ? s.voidDocumentMarkers : [];
   const counts: [string, number][] = [
     ["faltantes", s.missingCriticalFields.length],
     ["ilegibles", s.illegibleCriticalFields.length],
@@ -84,6 +85,7 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
     ["citas no halladas", s.evidenceNotFound.length],
     ["ya pagado", paidMarkers.length],
     ["avisos de entrada", ingestWarnings.length],
+    ["no cobrable", voidMarkers.length],
   ];
   const verifyDetails: TraceLine[] = [];
   if (s.missingCriticalFields.length > 0)
@@ -104,6 +106,13 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
     verifyDetails.push({ text: `documento ya pagado: «${m.text}» · detectado por ${by} · no se paga`, tone: "bad" });
   }
   for (const w of ingestWarnings) verifyDetails.push({ text: `aviso de entrada: ${w}`, tone: "bad" });
+  for (const m of voidMarkers) {
+    verifyDetails.push({ text: `documento no cobrable: «${m.text}» · ${m.reason} · no se paga`, tone: "bad" });
+  }
+  // Se muestra aunque el motor la haya dado por buena (un proveedor de EE. UU. escribe «$» y es USD).
+  if (s.currencyOnlyDollarSign === true) {
+    verifyDetails.push({ text: `moneda escrita solo con «$»${reading.data?.currency ? ` (leída como ${reading.data.currency})` : ""} · la revisa ACU-2 con el país del proveedor`, tone: "warn" });
+  }
   steps.push({
     n: "04",
     label: "Verificación",

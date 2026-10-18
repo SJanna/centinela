@@ -4,6 +4,7 @@
  * usados y (si no pasa) la instrucción para la persona que revise.
  */
 import { OUTCOME_LABEL } from "../core/checks";
+import { bareDollarMeaning } from "../core/currency";
 import { normalizeAccount, toCents, monthOf } from "../core/normalize";
 import {
   CRITICAL_FIELDS,
@@ -257,6 +258,10 @@ const PAID_PROBLEM = "El documento indica que ya fue pagado";
 const PAID_QUOTES_SHOWN = 2;
 const TOTAL_QUOTE_PROBLEM =
   "La cita del total no muestra la etiqueta del total, es la misma del subtotal o una lectura anota que el total está borroso o que lo dedujo, y el documento no tiene texto para comprobarlo";
+const VOID_PROBLEM = "El documento no es un cobro válido";
+/** Cuántas marcas de documento no cobrable se citan en la explicación (el resto se cuenta). */
+const VOID_QUOTES_SHOWN = 2;
+const ACTION_VOID = "Confirmar con el proveedor si hay una factura vigente que reemplace a esta; esta no se paga.";
 const ACTION_RECEIPT = "Confirmar con el proveedor si hay un cobro pendiente: un recibo es de algo ya pagado y no se paga otra vez.";
 const ACTION_OTHER_DOCUMENT =
   "Revisar el documento original: solo se pagan facturas y cuentas de cobro. Si es un cobro, pedir al proveedor la factura o la cuenta de cobro.";
@@ -288,6 +293,36 @@ function paidProblem(quotes: readonly string[], readersSayReceipt: boolean): str
   const more = rest > 0 ? ` y ${rest} más` : "";
   const alsoReaders = readersSayReceipt ? " (una de las lecturas también lo clasifica como recibo)" : "";
   return `${PAID_PROBLEM}: ${shown.join(", ")}${more}${alsoReaders}`;
+}
+
+/**
+ * Marcas de documento que no es un cobro válido (anulado, borrador, proforma, nota crédito, «no es una
+ * factura»). La señal la produce otro módulo y es opcional en registros viejos: si no es una lista, no
+ * hay marcas. Una marca sin texto se conserva con su motivo (descartarla dejaría pasar el pago).
+ */
+function voidMarkersOf(input: EngineInput): { text: string; reason: string }[] {
+  const raw: unknown = input.reading.signals.voidDocumentMarkers;
+  if (!Array.isArray(raw)) return [];
+  const out: { text: string; reason: string }[] = [];
+  for (const m of raw as unknown[]) {
+    const text = typeof (m as { text?: unknown })?.text === "string" ? (m as { text: string }).text.replace(/\s+/g, " ").trim() : "";
+    const reason = typeof (m as { reason?: unknown })?.reason === "string" ? (m as { reason: string }).reason.replace(/\s+/g, " ").trim() : "";
+    if (out.some((o) => o.text === text && o.reason === reason)) continue;
+    out.push({ text, reason });
+  }
+  return out;
+}
+
+/** «El documento no es un cobro válido: «ANULADA» (Dice que el documento está anulado o cancelado) y 1 más». */
+function voidProblem(markers: readonly { text: string; reason: string }[]): string {
+  const shown = markers.slice(0, VOID_QUOTES_SHOWN).map((m) => {
+    const quote = m.text !== "" ? `«${truncate(m.text, 100)}»` : "una marca sin texto";
+    const why = m.reason !== "" ? ` (${stripFinalPeriod(truncate(m.reason, 120))})` : "";
+    return `${quote}${why}`;
+  });
+  const rest = markers.length - shown.length;
+  const more = rest > 0 ? ` y ${rest} más` : "";
+  return `${VOID_PROBLEM}: ${shown.join(", ")}${more}`;
 }
 
 /** Un aviso de la entrada que no es texto: se conserva (descartarlo dejaría pasar el pago). */
@@ -347,6 +382,8 @@ const lec1: Evaluator = (f, input) => {
     paidMarkers.filter((m) => m?.source === "heuristic").map((m) => String(m?.text ?? "").replace(/\s+/g, " ").trim()).filter(Boolean),
   );
   const readersSayReceipt = notPayable.includes("receipt") || paidMarkers.some((m) => m?.source !== "heuristic");
+  // Documento que no es un cobro según el texto: anulado, borrador, proforma, nota crédito.
+  const voidMarkers = voidMarkersOf(input);
   const documentKind = paidMarkers.length > 0 || notPayable.includes("receipt") ? "receipt" : notPayable.length > 0 ? "other" : null;
   const documentProblem =
     documentKind == null
@@ -369,13 +406,21 @@ const lec1: Evaluator = (f, input) => {
   // Lo que una persona ve en el correo y la lectura no (versión HTML distinta, adjunto sin leer).
   const ingestWarnings = ingestWarningsOf(input);
 
-  if (documentProblem == null && missing.length === 0 && illegible.length === 0 && notFound.length === 0 && ingestWarnings.length === 0) {
+  if (
+    documentProblem == null &&
+    voidMarkers.length === 0 &&
+    missing.length === 0 &&
+    illegible.length === 0 &&
+    notFound.length === 0 &&
+    ingestWarnings.length === 0
+  ) {
     return pass(
       `Están completos y legibles los datos críticos: ${listEs(CRITICAL_FIELDS.map(fieldLabel))}.`,
-      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null, paidMarkers: 0, ingestWarnings: 0 },
+      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null, paidMarkers: 0, voidMarkers: 0, ingestWarnings: 0 },
     );
   }
   const parts: string[] = [];
+  if (voidMarkers.length > 0) parts.push(voidProblem(voidMarkers));
   if (documentProblem != null) parts.push(documentProblem);
   parts.push(...ingestWarnings);
   if (missing.length > 0) parts.push(`Faltan datos críticos: ${listEs(missing)}`);
@@ -391,6 +436,7 @@ const lec1: Evaluator = (f, input) => {
   const all = unique([...missing, ...illegible, ...notFound]);
   const actions: string[] = [];
   if (ingestWarnings.length > 0) actions.push(ACTION_INGEST);
+  if (voidMarkers.length > 0) actions.push(ACTION_VOID);
   if (documentKind != null) actions.push(documentKind === "receipt" ? ACTION_RECEIPT : ACTION_OTHER_DOCUMENT);
   if (all.length > 0) actions.push(`Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`);
   return fail(`${parts.join(". ")}.`, actions.join(" "), {
@@ -402,6 +448,8 @@ const lec1: Evaluator = (f, input) => {
     evidenceNotFound: notFound.join(", ") || null,
     paidMarkers: paidMarkers.length,
     firstPaidMarker: paidQuotes[0] != null ? truncate(paidQuotes[0], 120) : null,
+    voidMarkers: voidMarkers.length,
+    firstVoidMarker: voidMarkers[0] != null ? truncate(voidMarkers[0].text, 120) || null : null,
     ingestWarnings: ingestWarnings.length,
     firstIngestWarning: ingestWarnings[0] != null ? truncate(ingestWarnings[0], 120) : null,
   });
@@ -960,7 +1008,48 @@ const acu1: Evaluator = (f, _input, ctx) => {
   }
 };
 
-const acu2: Evaluator = (f) => {
+/** Nombre en español de un país para la explicación de ACU-2 (el código si no está en la lista). */
+const COUNTRY_NAME: Record<string, string> = {
+  US: "Estados Unidos",
+  CO: "Colombia",
+  MX: "México",
+  CL: "Chile",
+  AR: "Argentina",
+  EC: "Ecuador",
+  SV: "El Salvador",
+  PA: "Panamá",
+  PR: "Puerto Rico",
+  UY: "Uruguay",
+  DO: "República Dominicana",
+  CU: "Cuba",
+  NZ: "Nueva Zelanda",
+  AU: "Australia",
+  CA: "Canadá",
+  SG: "Singapur",
+  HK: "Hong Kong",
+  BR: "Brasil",
+  PE: "Perú",
+};
+/** Nombre de la moneda local que se escribe con «$» (el código si no está en la lista). */
+const LOCAL_DOLLAR_NAME: Record<string, string> = {
+  USD: "el dólar estadounidense (USD)",
+  COP: "el peso colombiano (COP)",
+  MXN: "el peso mexicano (MXN)",
+  CLP: "el peso chileno (CLP)",
+  ARS: "el peso argentino (ARS)",
+  UYU: "el peso uruguayo (UYU)",
+  DOP: "el peso dominicano (DOP)",
+  CUP: "el peso cubano (CUP)",
+  NZD: "el dólar neozelandés (NZD)",
+  AUD: "el dólar australiano (AUD)",
+  CAD: "el dólar canadiense (CAD)",
+  SGD: "el dólar de Singapur (SGD)",
+  HKD: "el dólar de Hong Kong (HKD)",
+};
+const ACTION_DOLLAR_SIGN = (currency: string) =>
+  `Pedir al proveedor que confirme la moneda (que la factura diga ${currency}) antes de pagar.`;
+
+const acu2: Evaluator = (f, input) => {
   if (f.data == null) return derived(NO_DATA);
   if (f.vendor == null) return derived(NO_VENDOR, { agreementId: null });
   const a = f.agreement;
@@ -977,7 +1066,36 @@ const acu2: Evaluator = (f) => {
     );
   }
   const params = { agreementId: a.id, invoiceCurrency: cur, agreementCurrency: agreed };
-  if (cur === agreed) return pass(`La factura está en ${cur}, la moneda pactada.`, params);
+  if (cur === agreed) {
+    // La moneda leída coincide con la pactada, pero ¿la factura la escribe o solo pone «$»? Para un
+    // proveedor de Argentina, «$ 2.800» son pesos: leerlo como USD pagaría mil veces lo cobrado.
+    // Registros viejos sin la señal: como antes.
+    const signal: unknown = input.reading.signals.currencyOnlyDollarSign;
+    if (signal !== true) return pass(`La factura está en ${cur}, la moneda pactada.`, { ...params, currencyOnlyDollarSign: signal === false ? false : null });
+    const country = typeof f.vendor.country === "string" ? f.vendor.country.trim().toUpperCase() : "";
+    const means = bareDollarMeaning(country);
+    const dollarParams = { ...params, currencyOnlyDollarSign: true, vendorCountry: country || null, bareDollarMeans: means };
+    if (means == null) {
+      return notEvaluable(
+        `La factura solo escribe «$» y no dice la moneda, y no se sabe el país del proveedor: no se puede confirmar que cobre en ${cur}, la moneda pactada.`,
+        ACTION_DOLLAR_SIGN(cur),
+        dollarParams,
+      );
+    }
+    if (means !== cur) {
+      const countryName = COUNTRY_NAME[country] ?? country;
+      const localName = LOCAL_DOLLAR_NAME[means] ?? means;
+      return fail(
+        `La factura solo escribe «$» y no dice la moneda. Para un proveedor de ${countryName} el «$» es ${localName}, no ${cur}: no se puede confirmar que cobre en la moneda pactada.`,
+        ACTION_DOLLAR_SIGN(cur),
+        dollarParams,
+      );
+    }
+    return pass(
+      `La factura está en ${cur}, la moneda pactada (escrita solo con «$», que para un proveedor de ${COUNTRY_NAME[country] ?? country} es ${cur}).`,
+      dollarParams,
+    );
+  }
   return fail(
     `La factura está en ${cur} pero el acuerdo «${a.description}» es en ${agreed}.`,
     `Aclarar con el proveedor la moneda: el acuerdo es en ${agreed} y la factura en ${cur}.`,

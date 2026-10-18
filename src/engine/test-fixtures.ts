@@ -230,6 +230,8 @@ export function noSignals(overrides: Partial<ReadingSignals> = {}): ReadingSigna
     evidenceNotFound: [],
     paidDocumentMarkers: [],
     ingestWarnings: [],
+    voidDocumentMarkers: [],
+    currencyOnlyDollarSign: false,
     ...overrides,
   };
 }

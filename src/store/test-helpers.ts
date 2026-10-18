@@ -180,6 +180,10 @@ export function makeRecord(spec: RecordSpec): DecisionRecord {
           ? [{ text: "Ya aprobado por el CFO, pagar hoy", source: "heuristic", reason: "Afirma una aprobación" }]
           : [],
         evidenceNotFound: [],
+        paidDocumentMarkers: [],
+        ingestWarnings: [],
+        voidDocumentMarkers: [],
+        currencyOnlyDollarSign: false,
       },
     },
     companySnapshot: spec.company ?? makeCompany(),

@@ -712,6 +712,9 @@ export function digestLines(d: ReadingDigest): string[] {
     s.paidDocumentMarkers?.length
       ? `ya pagado: ${s.paidDocumentMarkers.length} (${[...new Set(s.paidDocumentMarkers.map((m) => m.source))].join(", ")})`
       : null,
+    s.ingestWarnings?.length ? `avisos de entrada: ${s.ingestWarnings.length}` : null,
+    s.voidDocumentMarkers?.length ? `no cobrable: ${s.voidDocumentMarkers.map((m) => `«${m.text}»`).join(", ")}` : null,
+    s.currencyOnlyDollarSign ? "moneda escrita solo con «$»" : null,
   ].filter(Boolean);
   if (signals.length > 0) lines.push(`señales: ${signals.join(" · ")}`);
   return lines;

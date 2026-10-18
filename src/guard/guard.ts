@@ -176,6 +176,9 @@ function evaluate(input: EngineInput, ctx: DecisionContext, decision: Decision):
   if (invoice && vendor) checkAccount(invoice, vendor, input.reading, v);
   else skipped = true;
 
+  // G5a · moneda escrita solo con «$»: ¿es la del país del proveedor?
+  if (invoice && vendor) checkDollarSign(invoice, vendor, input.reading, v);
+
   // G5 · acuerdo vigente, moneda y monto
   const fitting = invoice && vendor && rules ? checkAgreement(invoice, vendor, rules, decision, v) : null;
   if (fitting === null) skipped = true;
@@ -352,8 +355,26 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     const evidence = asArray(signals.evidenceNotFound);
     const paid = asArray(signals.paidDocumentMarkers);
     const ingest = asArray(signals.ingestWarnings);
-    if (!missingSig || !illegibleSig || !disagreeSig || !arithmetic || !suspicious || !evidence || !paid || !ingest) {
+    const voided = asArray(signals.voidDocumentMarkers);
+    const dollarSign: unknown = signals.currencyOnlyDollarSign;
+    if (
+      !missingSig ||
+      !illegibleSig ||
+      !disagreeSig ||
+      !arithmetic ||
+      !suspicious ||
+      !evidence ||
+      !paid ||
+      !ingest ||
+      !voided ||
+      typeof dollarSign !== "boolean"
+    ) {
       v.add("las señales de verificación de la lectura están incompletas");
+    }
+    // Documento que no es un cobro (anulado, borrador, proforma, nota crédito): basta una marca.
+    if (voided && voided.length > 0) {
+      const quoted = voided.find((m) => nonEmpty(typeof m?.text === "string" ? m.text : null));
+      v.add(quoted ? `el documento no es un cobro válido («${shown(quoted.text, 80)}»)` : "el documento no es un cobro válido");
     }
     // Avisos de la entrada: lo que una persona ve en el correo no es lo que se leyó (versión HTML
     // distinta del texto, adjunto que no se pudo leer). Basta uno, diga lo que diga.
@@ -707,6 +728,39 @@ function checkAgreement(
       amountProblems(a, invoice, rules.tolerancePct).length === 0,
   );
   return [...fitting, ...alsoFitting];
+}
+
+// ───────────────────────── G5a · Moneda escrita solo con «$» ─────────────────────────
+
+/**
+ * Lo que significa un «$» solo según el país del proveedor (ISO 3166 alfa-2). Copia PROPIA de la
+ * guardia, a propósito: src/core/currency.ts tiene la misma tabla para el motor y la verificación,
+ * pero la guardia no la importa (un error allí no debe pasar a las dos implementaciones a la vez).
+ * Países no listados: la moneda local tiene otro símbolo y un «$» solo es el dólar.
+ */
+const GUARD_BARE_DOLLAR: Readonly<Record<string, string>> = {
+  US: "USD", EC: "USD", SV: "USD", PA: "USD", PR: "USD",
+  CO: "COP", MX: "MXN", CL: "CLP", AR: "ARS",
+  UY: "UYU", DO: "DOP", CU: "CUP",
+  NZ: "NZD", AU: "AUD", CA: "CAD", SG: "SGD", HK: "HKD",
+};
+
+/**
+ * Si la factura solo escribe «$» (señal currencyOnlyDollarSign), ese «$» tiene que ser la moneda
+ * leída en el país del proveedor: una factura argentina «$ 2.800» son pesos, no USD 2.800. Sin país
+ * conocido, no se puede saber y no se aprueba. Que la señal exista lo exige checkReading.
+ */
+function checkDollarSign(invoice: GuardInvoice, vendor: Vendor, reading: ReadingAssessment, v: Violations): void {
+  if (reading?.signals?.currencyOnlyDollarSign !== true) return;
+  const country = typeof vendor.country === "string" ? vendor.country.trim().toUpperCase() : "";
+  if (country === "") {
+    v.add(`la factura solo escribe «$» y no se sabe el país del proveedor: no se puede confirmar que sea ${invoice.currency}`);
+    return;
+  }
+  const means = Object.prototype.hasOwnProperty.call(GUARD_BARE_DOLLAR, country) ? GUARD_BARE_DOLLAR[country] : "USD";
+  if (means !== invoice.currency) {
+    v.add(`la factura solo escribe «$»: para un proveedor de ${shown(country, 10)} es ${means}, no ${invoice.currency}`);
+  }
 }
 
 // ───────────────────────── G6 · Monto en USD ─────────────────────────

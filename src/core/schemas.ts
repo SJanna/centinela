@@ -160,6 +160,30 @@ export interface ReadingSignals {
    * que existiera (la guardia la exige: si falta, las señales están incompletas y no aprueba).
    */
   ingestWarnings?: string[];
+  /**
+   * LEC-1: el documento NO es un cobro válido: una factura anulada, un borrador, una proforma, una
+   * nota crédito o un documento que dice que no es una factura. Una entrada por cada marca del
+   * detector por patrones sobre el texto plano (src/extract/void-markers.ts; text = la línea del
+   * documento, p. ej. «ANULADA»; reason = por qué no se cobra). Si no está vacía, nunca se paga:
+   * LEC-1 escala y la guardia rechaza. La verificación siempre la llena; es opcional solo para leer
+   * registros guardados antes de que existiera (la guardia la exige: si falta, las señales están
+   * incompletas y no aprueba).
+   */
+  voidDocumentMarkers?: { text: string; reason: string }[];
+  /**
+   * ACU-2: la moneda leída (data.currency) es una de las que se escriben con un «$» solo (USD, COP,
+   * MXN, CLP, ARS) y el documento no la nombra de forma explícita (código ISO como palabra, «US$»,
+   * «dólares», «pesos argentinos», «COL$»…; src/extract/currency-written.ts). Qué textos cuentan:
+   * con texto verificable (hasVerifiableText: no es una imagen ni trae imágenes), solo el texto plano
+   * del documento; sin texto verificable, las citas (evidence) de moneda, total y subtotal, y cada
+   * lectura que funcionó tiene que nombrar la moneda en sus propias citas (si una sola lo hace, es
+   * true). Nunca las notas del lector (readerNotes): son palabras del modelo. false para cualquier
+   * otra moneda, o sin moneda leída. Si es true y para el país del proveedor el «$» es otra moneda (el
+   * peso en CO/MX/CL/AR) o no se sabe el país, ACU-2 escala y la guardia rechaza. La verificación
+   * siempre la llena; es opcional solo para leer registros guardados antes de que existiera (la
+   * guardia la exige: si falta, las señales están incompletas y no aprueba).
+   */
+  currencyOnlyDollarSign?: boolean;
 }
 
 export interface ReadingAssessment {

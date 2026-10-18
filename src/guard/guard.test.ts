@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { Company, Decision, EngineInput, HistoryEntry, ReadingSignals } from "../core/schemas";
 import { guardPayment, GUARD_MESSAGES } from "./index";
@@ -244,6 +246,8 @@ describe("G2 · lectura sólida", () => {
       "la entrada avisa que el correo trae algo que la lectura no vio («El correo trae una versión HTML distinta del texto plano",
     ],
     ["ingestWarnings", [""], "la entrada avisa que el correo trae algo que la lectura no vio"],
+    ["voidDocumentMarkers", [{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" }], "el documento no es un cobro válido («ANULADA»)"],
+    ["voidDocumentMarkers", [{ text: "  ", reason: "x" }], "el documento no es un cobro válido"],
   ];
   it.each(signalCases)("señal %s no vacía", (key, value, fragment) => {
     const input = makeInput(camilaOctober(), { signals: { [key]: value } as Partial<ReadingSignals> });
@@ -268,6 +272,24 @@ describe("G2 · lectura sólida", () => {
     expectOnly(r, "las señales de verificación de la lectura están incompletas");
     const notAList = { ...signals, ingestWarnings: "ninguno" as unknown as ReadingSignals["ingestWarnings"] };
     expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notAList } }, makeCtx(), decision), "incompletas");
+  });
+
+  it("sin la señal de documento no cobrable no aprueba (no se puede descartar que esté anulado)", () => {
+    const { input, decision } = camila();
+    const signals: ReadingSignals = { ...input.reading.signals };
+    delete signals.voidDocumentMarkers;
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals } }, makeCtx(), decision), "las señales de verificación de la lectura están incompletas");
+    const notAList = { ...signals, voidDocumentMarkers: "ninguna" as unknown as ReadingSignals["voidDocumentMarkers"] };
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notAList } }, makeCtx(), decision), "incompletas");
+  });
+
+  it("sin la señal de moneda escrita solo con «$» no aprueba (tiene que ser un booleano)", () => {
+    const { input, decision } = camila();
+    const signals: ReadingSignals = { ...input.reading.signals };
+    delete signals.currencyOnlyDollarSign;
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals } }, makeCtx(), decision), "las señales de verificación de la lectura están incompletas");
+    const notABoolean = { ...signals, currencyOnlyDollarSign: "no" as unknown as boolean };
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notABoolean } }, makeCtx(), decision), "incompletas");
   });
 
   it("señales ausentes", () => {
@@ -730,5 +752,56 @@ describe("contexto y robustez", () => {
     const { input, decision } = camila();
     const r = guardPayment(input, makeCtx(), decision);
     expect(r.approved).toBe(r.violations.length === 0);
+  });
+});
+
+// ───────────────────────── G5a · Moneda escrita solo con «$» ─────────────────────────
+
+describe("G5a · moneda escrita solo con «$» (currencyOnlyDollarSign)", () => {
+  /** La empresa de las pruebas con el país de Pampa Ops cambiado. */
+  function pampaIn(country: string): Company {
+    return { ...COMPANY, vendors: COMPANY.vendors.map((v) => (v.id === "v-pampa" ? { ...v, country } : v)) };
+  }
+  const dollarOnly = { signals: { currencyOnlyDollarSign: true } };
+
+  it("Pampa Ops (Argentina), USD 2.800 leído de «$ 2.800,00»: rechaza aunque el motor haya dicho PAGAR", () => {
+    const input = makeInput(pampaChat(), dollarOnly);
+    expectOnly(guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)), "la factura solo escribe «$»: para un proveedor de AR es ARS, no USD");
+  });
+
+  it("Datos del Sur (Chile) por horas en USD con «$» solo: rechaza (el «$» es CLP)", () => {
+    const input = makeInput(hourly("datossur", 35), dollarOnly);
+    const d = makeDecision(input, { ...hourlyIds.datossur, agreementPeriod: "2026-10", amountUsd: 2100 });
+    expectOnly(guardPayment(input, makeCtx(), d), "para un proveedor de CL es CLP, no USD");
+  });
+
+  it("sin país del proveedor no se sabe qué es el «$»: rechaza", () => {
+    const input = makeInput(pampaChat(), dollarOnly);
+    expectOnly(
+      guardPayment(input, makeCtx({ company: pampaIn(" ") }), makeDecision(input, pampaDecision)),
+      "la factura solo escribe «$» y no se sabe el país del proveedor",
+    );
+  });
+
+  it("con la moneda escrita (señal en false) aprueba igual que antes", () => {
+    const input = makeInput(pampaChat(), { signals: { currencyOnlyDollarSign: false } });
+    expectApproved(guardPayment(input, makeCtx(), makeDecision(input, pampaDecision)));
+  });
+
+  it("la guardia tiene su propia tabla de países: no importa src/core/currency ni src/extract", () => {
+    const source = readFileSync(fileURLToPath(new URL("./guard.ts", import.meta.url)), "utf8");
+    const imports = [...source.matchAll(/from\s+"([^"]+)"/g)].map((m) => m[1]);
+    expect(imports.sort()).toEqual(["../core/schemas", "./normalize"]);
+    expect(source).toContain("const GUARD_BARE_DOLLAR");
+  });
+
+  it("«$» solo es la moneda pactada en el país del proveedor: aprueba (EE. UU. en USD, Colombia en COP, Brasil → dólar)", () => {
+    const cloud = makeInput(cloudOctober(), dollarOnly);
+    expectApproved(guardPayment(cloud, makeCtx(), makeDecision(cloud, cloudDecision)));
+    const { input: camilaInput } = camila();
+    const cop = { ...camilaInput, reading: { ...camilaInput.reading, signals: { ...camilaInput.reading.signals, currencyOnlyDollarSign: true } } };
+    expectApproved(guardPayment(cop, makeCtx(), makeDecision(cop, camilaDecision)));
+    const pampaBr = makeInput(pampaChat(), dollarOnly);
+    expectApproved(guardPayment(pampaBr, makeCtx({ company: pampaIn("BR") }), makeDecision(pampaBr, pampaDecision)));
   });
 });

@@ -54,6 +54,11 @@ export type { SuspiciousMatch } from "./heuristics";
 export { detectPaidDocumentMarkers } from "./paid-markers";
 export type { PaidMarker } from "./paid-markers";
 
+export { detectVoidDocumentMarkers } from "./void-markers";
+export type { VoidMarker } from "./void-markers";
+
+export { bareDollarMeaning, currencyOnlyAsDollarSign, namesCurrency, DOLLAR_SIGN_CURRENCIES } from "./currency-written";
+
 export {
   assessReadings,
   readInvoice,
@@ -63,6 +68,8 @@ export {
   collectSuspiciousInstructions,
   collectPaidDocumentMarkers,
   collectIngestWarnings,
+  collectVoidDocumentMarkers,
+  currencyWrittenOnlyAsDollarSign,
   INGEST_WARNING_WITHOUT_MESSAGE,
   RECEIPT_READING_REASON,
   findEvidenceNotFound,

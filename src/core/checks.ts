@@ -18,7 +18,7 @@ export interface CheckDefinition {
 }
 
 export const CHECK_CATALOG: readonly CheckDefinition[] = [
-  { code: "LEC-1", group: "Lectura", title: "Datos completos y legibles", description: "Es un cobro, no un recibo de algo ya pagado; trae legibles el proveedor, el número, la moneda, el total y la cuenta destino; y del correo se leyó todo lo que ve una persona (la versión HTML dice lo mismo que el texto, no hay adjuntos sin leer ni texto que se vea distinto de como se lee).", outcomeIfFail: "ESCALAR" },
+  { code: "LEC-1", group: "Lectura", title: "Datos completos y legibles", description: "Es un cobro, no un recibo de algo ya pagado ni un documento que no se cobra (factura anulada, borrador, proforma, nota crédito); trae legibles el proveedor, el número, la moneda, el total y la cuenta destino; y del correo se leyó todo lo que ve una persona (la versión HTML dice lo mismo que el texto, no hay adjuntos sin leer ni texto que se vea distinto de como se lee).", outcomeIfFail: "ESCALAR" },
   { code: "LEC-2", group: "Lectura", title: "Dos lecturas coinciden", description: "Dos lecturas independientes de la factura coinciden en los datos críticos.", outcomeIfFail: "ESCALAR" },
   { code: "LEC-3", group: "Lectura", title: "Las cuentas cuadran", description: "Las líneas suman el subtotal y subtotal más impuestos da el total.", outcomeIfFail: "ESCALAR" },
   { code: "LEC-4", group: "Lectura", title: "Sin instrucciones escondidas", description: "El documento no contiene texto que intente dar órdenes al sistema o a quien paga.", outcomeIfFail: "ESCALAR" },
@@ -28,7 +28,7 @@ export const CHECK_CATALOG: readonly CheckDefinition[] = [
   { code: "PRV-1", group: "Proveedor", title: "Proveedor registrado", description: "Quien cobra está en la ficha de proveedores de la empresa.", outcomeIfFail: "ESCALAR" },
   { code: "PRV-2", group: "Proveedor", title: "Cuenta destino registrada", description: "La cuenta a la que se pide pagar es la registrada para ese proveedor.", outcomeIfFail: "ESCALAR" },
   { code: "ACU-1", group: "Acuerdo", title: "Acuerdo vigente", description: "Hay un acuerdo vigente con el proveedor para la fecha de la factura.", outcomeIfFail: "ESCALAR" },
-  { code: "ACU-2", group: "Acuerdo", title: "Moneda pactada", description: "La factura viene en la moneda del acuerdo.", outcomeIfFail: "ESCALAR" },
+  { code: "ACU-2", group: "Acuerdo", title: "Moneda pactada", description: "La factura viene en la moneda del acuerdo y la escribe: si solo pone «$», ese «$» es la moneda pactada en el país del proveedor.", outcomeIfFail: "ESCALAR" },
   { code: "ACU-3", group: "Acuerdo", title: "Monto pactado", description: "El monto está dentro de lo pactado (con la tolerancia definida, o tarifa × cantidad).", outcomeIfFail: "ESCALAR" },
   { code: "LIM-1", group: "Límites", title: "Bajo el umbral de aprobación", description: "El monto no supera el umbral a partir del cual decide una persona.", outcomeIfFail: "ESCALAR" },
   { code: "LIM-2", group: "Límites", title: "Dentro del límite del mes", description: "Lo pagado este mes más este monto no supera el límite mensual.", outcomeIfFail: "ESCALAR" },

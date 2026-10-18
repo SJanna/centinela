@@ -33,9 +33,35 @@ describe("buildTrace: verificación", () => {
   });
 
   it("un registro guardado antes de estas señales las muestra en cero", () => {
-    const text = verification(withSignals({ paidDocumentMarkers: undefined, ingestWarnings: undefined }));
+    const text = verification(
+      withSignals({ paidDocumentMarkers: undefined, ingestWarnings: undefined, voidDocumentMarkers: undefined, currencyOnlyDollarSign: undefined }),
+    );
     expect(text).toContain("ya pagado 0");
     expect(text).toContain("avisos de entrada 0");
+    expect(text).toContain("no cobrable 0");
     expect(text).not.toContain("documento ya pagado:");
+    expect(text).not.toContain("documento no cobrable:");
+    expect(text).not.toContain("moneda escrita solo con «$»");
+  });
+
+  it("cuenta y detalla las marcas de documento no cobrable", () => {
+    const text = verification(
+      withSignals({
+        voidDocumentMarkers: [
+          { text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" },
+          { text: "PROFORMA INVOICE", reason: "Es un borrador, una proforma o un documento de muestra, no una factura definitiva" },
+        ],
+      }),
+    );
+    expect(text).toContain("no cobrable 2");
+    expect(text).toContain("documento no cobrable: «ANULADA» · Dice que el documento está anulado o cancelado · no se paga");
+    expect(text).toContain("documento no cobrable: «PROFORMA INVOICE»");
+  });
+
+  it("muestra la moneda escrita solo con «$» aunque el motor la haya dado por buena", () => {
+    const record = withSignals({ currencyOnlyDollarSign: true });
+    const text = verification(record);
+    expect(text).toContain(`moneda escrita solo con «$» (leída como ${record.reading.data?.currency}) · la revisa ACU-2 con el país del proveedor`);
+    expect(verification(withSignals({ currencyOnlyDollarSign: false }))).not.toContain("moneda escrita solo con «$»");
   });
 });

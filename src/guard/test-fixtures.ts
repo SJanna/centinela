@@ -174,6 +174,8 @@ export function emptySignals(): ReadingSignals {
     evidenceNotFound: [],
     paidDocumentMarkers: [],
     ingestWarnings: [],
+    voidDocumentMarkers: [],
+    currencyOnlyDollarSign: false,
   };
 }
 

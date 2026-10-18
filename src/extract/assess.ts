@@ -1,8 +1,9 @@
 /**
  * Verificación de lecturas (código, sin modelo): compara las dos lecturas, revisa la aritmética,
  * comprueba que las citas existan en el texto plano (o, sin texto verificable, que la cita del total
- * traiga su etiqueta), corre los detectores de instrucciones y de documento ya pagado, y pasa los
- * avisos de la entrada (versión HTML distinta del texto, adjunto que no se pudo leer).
+ * traiga su etiqueta), corre los detectores de instrucciones, de documento ya pagado y de documento
+ * que no es un cobro (anulado, borrador, proforma, nota crédito), revisa si la moneda solo se escribe
+ * con «$», y pasa los avisos de la entrada (versión HTML distinta del texto, adjunto que no se pudo leer).
  */
 import {
   CRITICAL_FIELDS,
@@ -19,6 +20,8 @@ import {
 import { formatMoney, normalizeAccount, normalizeName, toCents } from "../core/normalize";
 import { detectSuspiciousInstructions } from "./heuristics";
 import { detectPaidDocumentMarkers } from "./paid-markers";
+import { detectVoidDocumentMarkers } from "./void-markers";
+import { currencyOnlyAsDollarSign } from "./currency-written";
 
 export const SECOND_READING_UNAVAILABLE = "segunda_lectura_no_disponible";
 /** Clave en readersDisagreeOn cuando las dos lecturas imputan la factura a meses distintos. */
@@ -302,6 +305,43 @@ export function collectPaidDocumentMarkers(
     for (const m of detectPaidDocumentMarkers(doc.plainText)) out.push({ text: m.text, source: "heuristic", reason: m.reason });
   }
   return out;
+}
+
+/**
+ * Señal de documento que no es un cobro válido: una entrada por cada marca del detector por patrones
+ * (factura anulada, borrador, proforma, nota crédito, «no es una factura») sobre el texto plano, el
+ * mismo texto que revisa el detector de ya pagado. Cualquier entrada basta para no pagar: LEC-1 escala
+ * y la guardia rechaza. Sin texto plano (una foto) depende de que una lectura diga «other».
+ */
+export function collectVoidDocumentMarkers(doc: NormalizedDoc): NonNullable<ReadingSignals["voidDocumentMarkers"]> {
+  if (!doc.plainText) return [];
+  return detectVoidDocumentMarkers(doc.plainText).map((m) => ({ text: m.text, reason: m.reason }));
+}
+
+/**
+ * ¿La moneda leída solo aparece como «$»? Para USD/COP/MXN/CLP/ARS, true si el documento no la nombra
+ * de forma explícita (código ISO, «US$», «dólares», «pesos argentinos»…; currency-written.ts):
+ * - Con texto verificable (hasVerifiableText): cuenta solo el texto plano. Una cita que está en el
+ *   texto ya está incluida; una que no está no son palabras del documento.
+ * - Sin texto verificable (una foto, un PDF escaneado, un correo con una imagen): cuentan las citas
+ *   de moneda, total y subtotal, y CADA lectura que funcionó tiene que nombrar la moneda en sus
+ *   propias citas. Si una de las dos solo copió «$ 4.800», no hay acuerdo sobre lo que dice el
+ *   documento, y una cita inventada por un solo lector no basta para pagar.
+ * Las notas del lector (readerNotes) nunca cuentan: son palabras del modelo. El motor (ACU-2) y la
+ * guardia deciden con el país del proveedor si ese «$» es la moneda pactada.
+ */
+export function currencyWrittenOnlyAsDollarSign(
+  doc: NormalizedDoc,
+  data: InvoiceData | null,
+  readings: Array<ReaderResult | null>,
+): boolean {
+  if (data == null || data.currency == null) return false;
+  if (hasVerifiableText(doc)) return currencyOnlyAsDollarSign(data.currency, [doc.plainText]);
+  const extractions = readings.flatMap((r) => (r?.ok ? [r.extraction] : []));
+  if (extractions.length === 0) return currencyOnlyAsDollarSign(data.currency, []);
+  return extractions.some((e) =>
+    currencyOnlyAsDollarSign(data.currency, [e.currency?.evidence, e.total?.evidence, e.subtotal?.evidence]),
+  );
 }
 
 export const INGEST_WARNING_WITHOUT_MESSAGE = "La entrada dejó un aviso sin detalle: parte del archivo no se pudo leer o no coincide con lo leído";
@@ -681,6 +721,8 @@ export function assessReadings(
     evidenceNotFound: extraction ? findEvidenceNotFound(doc, extraction) : [],
     paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
     ingestWarnings: collectIngestWarnings(doc),
+    voidDocumentMarkers: collectVoidDocumentMarkers(doc),
+    currencyOnlyDollarSign: currencyWrittenOnlyAsDollarSign(doc, data, [primary, secondary]),
   };
 
   return { primary, secondary, data, signals };

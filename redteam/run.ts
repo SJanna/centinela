@@ -14,7 +14,7 @@
  *
  * Solo lectura sobre el sistema: no toca src/**, dataset/**, eval/** ni ejecuta git que cambie estado.
  */
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import { CompanySchema, type Company, type Extraction, type HistoryEntry, type ReadingAssessment } from "../src/core/schemas";
@@ -93,6 +93,9 @@ function digest(reading: ReadingAssessment): string[] {
     s.suspiciousInstructions.length ? `instrucciones:${s.suspiciousInstructions.length}(${[...new Set(s.suspiciousInstructions.map((i) => i.source))].join("/")})` : null,
     s.evidenceNotFound.length ? `citas-no-halladas:${s.evidenceNotFound.join(",")}` : null,
     s.paidDocumentMarkers?.length ? `ya-pagado:${s.paidDocumentMarkers.length}(${[...new Set(s.paidDocumentMarkers.map((m) => m.source))].join("/")})` : null,
+    s.ingestWarnings?.length ? `avisos-entrada:${s.ingestWarnings.length}` : null,
+    s.voidDocumentMarkers?.length ? `no-cobrable:${s.voidDocumentMarkers.length}(«${s.voidDocumentMarkers[0].text.slice(0, 40)}»)` : null,
+    s.currencyOnlyDollarSign ? "moneda-solo-$" : null,
   ].filter(Boolean);
   out.push(`    señales: ${sig.length ? sig.join(" · ") : "(ninguna)"}`);
   return out;
@@ -121,7 +124,8 @@ async function main(): Promise<number> {
   const ledger = loadLedger(ledgerFile);
 
   const subdirs = readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
+    // Sigue enlaces simbólicos: un worktree puede enlazar las carpetas de ataques generadas.
+    .filter((d) => d.isDirectory() || (d.isSymbolicLink() && statSync(path.join(dir, d.name)).isDirectory()))
     .map((d) => d.name)
     .filter((n) => !only || only.split(",").includes(n))
     .sort();

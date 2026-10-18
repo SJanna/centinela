@@ -20,7 +20,7 @@ Prototipo para el reto Blinka del hackathon 30X. Lee facturas (PDF, imagen, corr
 | `src/engine` | `decide(input, ctx): Decision` — función pura | `src/core` |
 | `src/guard` | `guardPayment(input, ctx, decision): GuardResult` — implementación independiente, NO importa `src/engine` ni `src/core/normalize` | solo tipos de `src/core/schemas` |
 | `src/ingest` | `normalizeFile(bytes, filename, mediaType?)` → `NormalizedDoc` | `src/core` |
-| `src/extract` | Lectores (Anthropic, caché, simulado), perfiles de lectura, y verificación de lecturas sin modelo (comparación, aritmética, citas, detectores de instrucciones y de documento ya pagado) → `ReadingAssessment` | `src/core`, `@anthropic-ai/sdk` |
+| `src/extract` | Lectores (Anthropic, caché, simulado), perfiles de lectura, y verificación de lecturas sin modelo (comparación, aritmética, citas, detectores de instrucciones, de documento ya pagado, de documento no cobrable y de moneda escrita solo con «$») → `ReadingAssessment` | `src/core`, `@anthropic-ai/sdk` |
 | `src/store` | Drizzle (PGlite en local / Neon en producción) y repositorios | `src/core` |
 | `src/pipeline` | Orquesta ingest → extract → engine → guard → store | todo lo anterior |
 | `src/app` | Pantalla y API (Next.js App Router) | `src/pipeline`, `src/store`, `src/core` |
@@ -43,7 +43,7 @@ Prototipo para el reto Blinka del hackathon 30X. Lee facturas (PDF, imagen, corr
 - Montos: compara en centavos (`toCents`). Las tasas de cambio son fijas y vienen de `rules.fxToUsd`.
 - Fechas: ISO 8601. Periodos: `YYYY-MM`.
 - Modelos: dos perfiles de lectura (`READER_PROFILE`, `src/extract/profiles.ts`), ambos con esfuerzo `low`. `economico` (por defecto): `claude-haiku-5-5` dos veces, con prompts distintos (`v4` y `v4b`). `calidad`: `claude-sonnet-5-5` + `claude-haiku-5-5`, los dos con el prompt `v4`. Cambiar el texto de un prompt obliga a subir su versión (es parte de la clave de la caché de lecturas).
-- Lo que los dos lectores pueden confundir a la vez se revisa en código, sin modelo: el detector de documento ya pagado (`src/extract/paid-markers.ts` → señal `paidDocumentMarkers`, LEC-1 y guardia) y, en imágenes o PDF sin texto, la regla de que la cita del total traiga su etiqueta y no sea la del subtotal (`totalNotConfirmedByQuote`) y de que ninguna lectura anote que el total está borroso o deducido (`totalDoubtedInNotes`). Un falso positivo de estos detectores escala; nunca paga.
+- Lo que los dos lectores pueden confundir a la vez se revisa en código, sin modelo: el detector de documento ya pagado (`src/extract/paid-markers.ts` → señal `paidDocumentMarkers`, LEC-1 y guardia); el de documento que no es un cobro —factura anulada, borrador, proforma, nota crédito, «no es una factura»— (`src/extract/void-markers.ts` → `voidDocumentMarkers`, LEC-1 y guardia); el de moneda escrita solo con «$» (`src/extract/currency-written.ts` → `currencyOnlyDollarSign`; ACU-2 y la guardia escalan si para el país del proveedor ese «$» es el peso local, con la tabla de `src/core/currency.ts` y una copia propia en la guardia); y, en imágenes o PDF sin texto, la regla de que la cita del total traiga su etiqueta y no sea la del subtotal (`totalNotConfirmedByQuote`) y de que ninguna lectura anote que el total está borroso o deducido (`totalDoubtedInNotes`). Un falso positivo de estos detectores escala; nunca paga.
 - No agregues dependencias sin necesidad; si lo haces, usa `npm i` (hay `.npmrc` con `legacy-peer-deps`).
 
 ## Terminado significa

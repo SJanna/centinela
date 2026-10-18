@@ -76,6 +76,8 @@ describe("assessReadings · campos críticos (LEC-1)", () => {
       evidenceNotFound: [],
       paidDocumentMarkers: [],
       ingestWarnings: [],
+      voidDocumentMarkers: [],
+      currencyOnlyDollarSign: false,
     });
   });
 
@@ -662,6 +664,77 @@ describe("documento ya pagado (paidDocumentMarkers → LEC-1)", () => {
   it("una factura normal no trae marcas", () => {
     const a = assessReadings(makeDoc(), okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
     expect(a.signals.paidDocumentMarkers).toEqual([]);
+  });
+});
+
+describe("documento que no es un cobro (voidDocumentMarkers → LEC-1)", () => {
+  it("marca el sello «ANULADA» del texto aunque las dos lecturas digan «invoice»", () => {
+    const voided = `${SAMPLE_INVOICE_TEXT}\nANULADA\nReemplazada por DS-0459`;
+    const a = assessReadings(makeDoc({ plainText: voided }), okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
+    expect(a.signals.voidDocumentMarkers).toEqual([{ text: "ANULADA", reason: "Dice que el documento está anulado o cancelado" }]);
+  });
+
+  it("una factura normal y una foto sin texto no traen marcas", () => {
+    expect(assessReadings(makeDoc(), okResult(makeExtraction()), null).signals.voidDocumentMarkers).toEqual([]);
+    const photo = makeDoc({ kind: "image", plainText: null, parts: [{ type: "image", mediaType: "image/jpeg", base64: "" }] });
+    expect(assessReadings(photo, okResult(makeExtraction()), null).signals.voidDocumentMarkers).toEqual([]);
+  });
+});
+
+describe("moneda escrita solo con «$» (currencyOnlyDollarSign → ACU-2)", () => {
+  const dollarText = SAMPLE_INVOICE_TEXT.replace(/USD /g, "$ ");
+  const dollarReading = () =>
+    makeExtraction({
+      currency: field("USD", "$"),
+      subtotal: field(2400, "Subtotal: $ 2.400,00"),
+      total: field(2400, "Total a pagar: $ 2.400,00"),
+    });
+  const photo = (over: Partial<NormalizedDoc> = {}) =>
+    makeDoc({ kind: "image", mediaType: "image/png", plainText: null, parts: [{ type: "image", mediaType: "image/png", base64: "" }], ...over });
+
+  it("texto con «USD»: false", () => {
+    expect(assessReadings(makeDoc(), okResult(makeExtraction()), okResult(makeExtraction(), "segunda")).signals.currencyOnlyDollarSign).toBe(false);
+  });
+
+  it("texto que solo pone «$»: true, aunque las lecturas digan USD", () => {
+    const a = assessReadings(makeDoc({ plainText: dollarText }), okResult(dollarReading()), okResult(dollarReading(), "segunda"));
+    expect(a.data?.currency).toBe("USD");
+    expect(a.signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("con texto verificable, una cita que nombra la moneda pero no está en el texto no cuenta", () => {
+    const invented = makeExtraction({ currency: field("USD", "USD"), total: field(2400, "Total a pagar: USD 2.400,00") });
+    const a = assessReadings(makeDoc({ plainText: dollarText }), okResult(invented), okResult(invented, "segunda"));
+    expect(a.signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("sin texto verificable cuentan las citas: si las dos nombran la moneda, false", () => {
+    const named = makeExtraction({ currency: field("USD", "USD"), total: field(2400, "TOTAL $ 2.400") });
+    expect(assessReadings(photo(), okResult(named), okResult(named, "segunda")).signals.currencyOnlyDollarSign).toBe(false);
+  });
+
+  it("sin texto verificable, si una de las dos lecturas solo copió «$», true", () => {
+    const named = makeExtraction({ currency: field("USD", "USD") });
+    expect(assessReadings(photo(), okResult(named), okResult(dollarReading(), "segunda")).signals.currencyOnlyDollarSign).toBe(true);
+    expect(assessReadings(photo(), okResult(dollarReading()), okResult(dollarReading(), "segunda")).signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("las notas del lector no cuentan (son palabras del modelo)", () => {
+    const noted = { ...dollarReading(), readerNotes: "La moneda es USD (dólares estadounidenses)." };
+    expect(assessReadings(photo(), okResult(noted), okResult(noted, "segunda")).signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("sin texto verificable el texto plano no cuenta (p. ej. un correo con una foto adjunta)", () => {
+    const mail = photo({ kind: "email", plainText: "Adjunto la factura de octubre por USD 2.400." });
+    expect(assessReadings(mail, okResult(dollarReading()), okResult(dollarReading(), "segunda")).signals.currencyOnlyDollarSign).toBe(true);
+  });
+
+  it("otras monedas (BRL, PEN, EUR) o sin moneda leída: false", () => {
+    const brl = makeExtraction({ currency: field("BRL", "R$"), total: field(2400, "Total R$ 2.400,00") });
+    expect(assessReadings(photo(), okResult(brl), okResult(brl, "segunda")).signals.currencyOnlyDollarSign).toBe(false);
+    const none = makeExtraction({ currency: field<string>(null) });
+    expect(assessReadings(makeDoc({ plainText: dollarText }), okResult(none), null).signals.currencyOnlyDollarSign).toBe(false);
+    expect(assessReadings(makeDoc({ plainText: dollarText }), failResult("api_error", "principal"), null).signals.currencyOnlyDollarSign).toBe(false);
   });
 });
 
