@@ -10,11 +10,13 @@
  * - proforma, pro forma, pro-forma;
  * - anulada/anulado/anulación, void/voided;
  * - nota (de) crédito, credit note/memo, nota de abono;
- * - «no es (una) factura», «not a (tax/valid/final) invoice», «sin validez», «no válido como factura»,
- *   «not valid». («no es un cobro» no cuenta: una lectura escribe «no es un cobro de cuenta de cobro»
- *   para decir que es una factura y no una cuenta de cobro.)
- * No cuentan si en la misma parte de la frase (hasta una coma), hasta 25 caracteres antes de la marca, hay una negación («no hay sello de
- * anulado», «sin marca de borrador», «no es un borrador», «no tiene notas crédito»).
+ * Frases genéricas («no es una factura», «sin validez», «not a tax invoice») NO cuentan en las notas:
+ * las lecturas las escriben también de documentos que sí se pagan («Documento es un mensaje de chat con
+ * datos de factura; no es una factura formal», «representación impresa sin validez fiscal visible» de
+ * un CFDI). En el texto del propio documento sí cuentan (void-markers.ts).
+ * No cuentan si antes, en la misma oración, hay una negación que la alcanza («no hay sello de anulado»,
+ * «sin marca de borrador», «no es un borrador», «no tiene notas crédito», «Ninguna marca de anulado,
+ * borrador, proforma ni pagado»: con v6 las lecturas anotan así que NO vieron marcas).
  */
 
 import type { VoidDocumentKind } from "../core/schemas";
@@ -24,16 +26,23 @@ const MARKERS: readonly { pattern: RegExp; reason: string; kind: VoidDocumentKin
   { pattern: /\bpro[\s-]?forma\b/g, reason: "es una proforma", kind: "draft" },
   { pattern: /\banulad[oa]s?\b|\banulacion\b|\bvoid(?:ed)?\b/g, reason: "está anulado", kind: "void" },
   { pattern: /\bnotas?\s+(?:de\s+)?credito\b|\bcredit\s+(?:note|memo)s?\b|\bnota\s+de\s+abono\b/g, reason: "es una nota crédito", kind: "credit_note" },
-  {
-    pattern:
-      /\bno\s+es\s+(?:una\s+)?factura\b|\bnot\s+an?\s+(?:tax\s+|valid\s+|final\s+|real\s+)?invoice\b|\bsin\s+validez\b|\bno\s+(?:es\s+)?valid[oa]\s+como\s+factura\b|\bnot\s+valid\b/g,
-    reason: "dice que no es una factura válida",
-    kind: "not_invoice",
-  },
 ];
 
-/** Negación antes de la marca, en la misma parte de la frase. */
-const NEGATION_BEFORE = /\b(?:no|sin|ni|ningun[oa]?|nada|tampoco|nunca|not|no\s+hay|no\s+tiene|no\s+lleva|no\s+aparece|no\s+muestra|no\s+se\s+ve|without|there\s+is\s+no)\b[^.;:!?,]{0,25}$/;
+/**
+ * Negación: una palabra negativa antes de la marca en la misma oración niega la marca y todo lo que
+ * sigue en una lista («Ninguna marca de anulado, borrador, proforma ni pagado»; «no se encontraron
+ * marcas de anulación, borrador o muestra»), hasta que la oración cambia de rumbo: «pero», «aunque»,
+ * «sin embargo», «y es…», «, es…» («No tiene vencimiento y es una proforma» sí cuenta).
+ */
+const NEGATOR = /\b(?:no|sin|ni|ningun[oa]?s?|nada|tampoco|nunca|not|none|neither|nor|without)\b/;
+const SCOPE_BREAK =
+  /\b(?:pero|aunque|sin\s+embargo|no\s+obstante|salvo|excepto|but|however|although|except)\b|(?:\by|,)\s+(?:(?:el|la)\s+(?:documento|factura)\s+)?(?:es|esta|se\s+trata|se\s+clasifica|dice|indica|lleva|tiene|muestra|figura|aparece|declara|presenta)\b|\band\s+(?:is|it\s+is|has|shows|says)\b/g;
+
+function negatedBefore(prefix: string): boolean {
+  let from = 0;
+  for (const m of prefix.matchAll(SCOPE_BREAK)) from = m.index + m[0].length;
+  return NEGATOR.test(prefix.slice(from));
+}
 
 function fold(s: string): string {
   return s
@@ -55,14 +64,15 @@ export interface VoidNote {
 export function voidMarkersInNotes(notes: string | null | undefined): VoidNote[] {
   if (!notes || !notes.trim()) return [];
   const out: VoidNote[] = [];
-  // Partes de la frase sobre el texto original; se pliega cada una (el plegado puede cambiar el largo).
-  for (const raw of notes.split(/[.;:!?,\n]+/)) {
+  // Oraciones del texto original; se pliega cada una (el plegado puede cambiar el largo). No se parte en
+  // las comas: una negación cubre la lista que sigue.
+  for (const raw of notes.split(/[.;:!?\n]+/)) {
     const clause = fold(raw);
     const reasons: string[] = [];
     let kind: VoidDocumentKind | null = null;
     for (const { pattern, reason, kind: k } of MARKERS) {
       for (const m of clause.matchAll(pattern)) {
-        if (NEGATION_BEFORE.test(clause.slice(0, m.index))) continue;
+        if (negatedBefore(clause.slice(0, m.index))) continue;
         if (!reasons.includes(reason)) reasons.push(reason);
         kind ??= k;
       }
