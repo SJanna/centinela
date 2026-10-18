@@ -290,6 +290,28 @@ function paidProblem(quotes: readonly string[], readersSayReceipt: boolean): str
   return `${PAID_PROBLEM}: ${shown.join(", ")}${more}${alsoReaders}`;
 }
 
+/** Un aviso de la entrada que no es texto: se conserva (descartarlo dejaría pasar el pago). */
+const INGEST_WARNING_GENERIC = "La entrada dejó un aviso sin detalle sobre el archivo";
+/** Largo máximo de cada aviso de la entrada dentro de la explicación. */
+const INGEST_WARNING_MAX = 320;
+const ACTION_INGEST =
+  "Abrir el correo original como lo ve una persona en su cliente de correo y revisar lo que la lectura no vio o vio distinto (la versión HTML del cuerpo, los adjuntos que no se pudieron leer, el texto que se ve distinto de como se lee). Si muestra que la factura ya está pagada o cambia los datos del cobro, no pagar; si no, pedir al proveedor la factura en PDF.";
+
+/**
+ * Avisos de la entrada (versión HTML distinta del texto plano, adjunto que no se pudo leer). La señal
+ * la produce otro módulo y es opcional en registros viejos: si no es una lista, no hay avisos.
+ */
+function ingestWarningsOf(input: EngineInput): string[] {
+  const raw: unknown = input.reading.signals.ingestWarnings;
+  if (!Array.isArray(raw)) return [];
+  return unique(
+    (raw as unknown[]).map((w) => {
+      const text = typeof w === "string" ? stripFinalPeriod(w.replace(/\s+/g, " ").trim()) : "";
+      return text === "" ? INGEST_WARNING_GENERIC : truncate(text, INGEST_WARNING_MAX);
+    }),
+  );
+}
+
 /**
  * Campos críticos que alguna de las dos lecturas marcó como ilegibles. La señal la produce otro
  * módulo y puede venir solo de la lectura principal: si la segunda dudó, tampoco se paga.
@@ -344,14 +366,18 @@ const lec1: Evaluator = (f, input) => {
   const totalQuoteProblem =
     s.illegibleCriticalFields.includes("total") && okExtractions(input).every((e) => e.total?.legible === true);
 
-  if (documentProblem == null && missing.length === 0 && illegible.length === 0 && notFound.length === 0) {
+  // Lo que una persona ve en el correo y la lectura no (versión HTML distinta, adjunto sin leer).
+  const ingestWarnings = ingestWarningsOf(input);
+
+  if (documentProblem == null && missing.length === 0 && illegible.length === 0 && notFound.length === 0 && ingestWarnings.length === 0) {
     return pass(
       `Están completos y legibles los datos críticos: ${listEs(CRITICAL_FIELDS.map(fieldLabel))}.`,
-      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null, paidMarkers: 0 },
+      { dataAvailable: true, documentType, missing: null, illegible: null, evidenceNotFound: null, paidMarkers: 0, ingestWarnings: 0 },
     );
   }
   const parts: string[] = [];
   if (documentProblem != null) parts.push(documentProblem);
+  parts.push(...ingestWarnings);
   if (missing.length > 0) parts.push(`Faltan datos críticos: ${listEs(missing)}`);
   if (illegible.length > 0) parts.push(`No se leen con claridad: ${listEs(illegible)}`);
   if (totalQuoteProblem) parts.push(TOTAL_QUOTE_PROBLEM);
@@ -364,6 +390,7 @@ const lec1: Evaluator = (f, input) => {
   }
   const all = unique([...missing, ...illegible, ...notFound]);
   const actions: string[] = [];
+  if (ingestWarnings.length > 0) actions.push(ACTION_INGEST);
   if (documentKind != null) actions.push(documentKind === "receipt" ? ACTION_RECEIPT : ACTION_OTHER_DOCUMENT);
   if (all.length > 0) actions.push(`Revisar el documento original y completar o corregir a mano: ${listEs(all)}.`);
   return fail(`${parts.join(". ")}.`, actions.join(" "), {
@@ -375,6 +402,8 @@ const lec1: Evaluator = (f, input) => {
     evidenceNotFound: notFound.join(", ") || null,
     paidMarkers: paidMarkers.length,
     firstPaidMarker: paidQuotes[0] != null ? truncate(paidQuotes[0], 120) : null,
+    ingestWarnings: ingestWarnings.length,
+    firstIngestWarning: ingestWarnings[0] != null ? truncate(ingestWarnings[0], 120) : null,
   });
 };
 

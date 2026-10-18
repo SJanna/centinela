@@ -1,7 +1,8 @@
 /**
  * Verificación de lecturas (código, sin modelo): compara las dos lecturas, revisa la aritmética,
  * comprueba que las citas existan en el texto plano (o, sin texto verificable, que la cita del total
- * traiga su etiqueta), y corre los detectores de instrucciones y de documento ya pagado.
+ * traiga su etiqueta), corre los detectores de instrucciones y de documento ya pagado, y pasa los
+ * avisos de la entrada (versión HTML distinta del texto, adjunto que no se pudo leer).
  */
 import {
   CRITICAL_FIELDS,
@@ -299,6 +300,26 @@ export function collectPaidDocumentMarkers(
   }
   if (doc.plainText) {
     for (const m of detectPaidDocumentMarkers(doc.plainText)) out.push({ text: m.text, source: "heuristic", reason: m.reason });
+  }
+  return out;
+}
+
+export const INGEST_WARNING_WITHOUT_MESSAGE = "La entrada dejó un aviso sin detalle: parte del archivo no se pudo leer o no coincide con lo leído";
+
+/**
+ * Avisos de la entrada (NormalizedDoc.warnings): el correo trae una versión HTML distinta del texto
+ * plano o un adjunto que no se pudo leer. Lo que una persona ve no es lo que leyeron los lectores:
+ * cualquier aviso basta para no pagar (LEC-1 escala y la guardia rechaza). Un aviso sin mensaje se
+ * conserva con un texto genérico: descartarlo dejaría pasar el pago.
+ */
+export function collectIngestWarnings(doc: NormalizedDoc): string[] {
+  const warnings: unknown = doc.warnings;
+  if (!Array.isArray(warnings)) return [];
+  const out: string[] = [];
+  for (const w of warnings as unknown[]) {
+    const message = typeof (w as { message?: unknown })?.message === "string" ? (w as { message: string }).message : "";
+    const text = message.replace(/\s+/g, " ").trim() || INGEST_WARNING_WITHOUT_MESSAGE;
+    if (!out.includes(text)) out.push(text);
   }
   return out;
 }
@@ -659,6 +680,7 @@ export function assessReadings(
     suspiciousInstructions: collectSuspiciousInstructions(doc, [primary, secondary]),
     evidenceNotFound: extraction ? findEvidenceNotFound(doc, extraction) : [],
     paidDocumentMarkers: collectPaidDocumentMarkers(doc, [primary, secondary]),
+    ingestWarnings: collectIngestWarnings(doc),
   };
 
   return { primary, secondary, data, signals };

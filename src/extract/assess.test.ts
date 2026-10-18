@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import PDFDocument from "pdfkit";
 import { describe, expect, it } from "vitest";
-import { CRITICAL_FIELDS, type Extraction } from "../core/schemas";
+import { CRITICAL_FIELDS, type Extraction, type NormalizedDoc } from "../core/schemas";
 import { normalizeFile } from "../ingest";
 import {
   PERIOD_DISAGREEMENT,
@@ -9,6 +9,8 @@ import {
   arithmeticIssues,
   assessReadings,
   canonicalText,
+  collectIngestWarnings,
+  INGEST_WARNING_WITHOUT_MESSAGE,
   compareReadings,
   findEvidenceNotFound,
   hasVerifiableText,
@@ -73,6 +75,7 @@ describe("assessReadings · campos críticos (LEC-1)", () => {
       suspiciousInstructions: [],
       evidenceNotFound: [],
       paidDocumentMarkers: [],
+      ingestWarnings: [],
     });
   });
 
@@ -831,5 +834,30 @@ describe("revisión adversarial · las dos lecturas citan «Total …» sacado d
   it("con texto verificable no aplica (ahí el total se comprueba contra el texto)", () => {
     const blurred = reading("El total está borroso.");
     expect(assessReadings(makeDoc(), okResult(blurred), okResult(blurred, "segunda")).signals.illegibleCriticalFields).toEqual([]);
+  });
+});
+
+describe("avisos de la entrada (ingestWarnings → LEC-1)", () => {
+  it("pasa cada aviso del documento a la señal, sin repetir", () => {
+    const doc = makeDoc({
+      kind: "email",
+      warnings: [
+        { code: "html_text_mismatch", message: "El correo trae una versión HTML distinta del texto plano: el HTML dice «pagado» y el texto no" },
+        { code: "attachment_unreadable", message: "El correo trae un adjunto que no se pudo leer:\n comprovante_pago.docx (formato no soportado)" },
+        { code: "attachment_unreadable", message: "El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado)" },
+      ],
+    });
+    const a = assessReadings(doc, okResult(makeExtraction()), okResult(makeExtraction(), "segunda"));
+    expect(a.signals.ingestWarnings).toEqual([
+      "El correo trae una versión HTML distinta del texto plano: el HTML dice «pagado» y el texto no",
+      "El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado)",
+    ]);
+  });
+
+  it("un aviso sin mensaje se conserva con un texto genérico; sin avisos la señal queda vacía", () => {
+    const broken = makeDoc({ warnings: [{ code: "attachment_unreadable", message: "" }] });
+    expect(collectIngestWarnings(broken)).toEqual([INGEST_WARNING_WITHOUT_MESSAGE]);
+    expect(collectIngestWarnings(makeDoc())).toEqual([]);
+    expect(collectIngestWarnings(makeDoc({ warnings: "x" as unknown as NormalizedDoc["warnings"] }))).toEqual([]);
   });
 });

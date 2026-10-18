@@ -164,6 +164,36 @@ describe("LEC-1 · datos completos y legibles", () => {
     expect(check(decide(receipt, context()), "LEC-1").status).toBe("fail");
   });
 
+  it("falla si la entrada avisa que el correo trae algo que la lectura no vio, aunque todo lo demás esté bien", () => {
+    const html =
+      "El correo trae una versión HTML distinta del texto plano: el HTML dice «pagado» y el texto no; el HTML trae cifras que el texto no tiene (2026-10-02)";
+    const docx = "El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado).";
+    const d = decide(engineInput(acmeInvoice(), { signals: { ingestWarnings: [html, docx] } }), context());
+    const c = check(d, "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe(`${html}. El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado).`);
+    expect(c.params.ingestWarnings).toBe(2);
+    expect(c.params.firstIngestWarning).toContain("El correo trae una versión HTML distinta del texto plano");
+    expect(d.outcome).toBe("ESCALAR");
+    expect(d.checks.filter((x) => x.status !== "pass").map((x) => x.code)).toEqual(["LEC-1"]);
+    expect(d.humanAction).toContain("Abrir el correo original como lo ve una persona");
+  });
+
+  it("un aviso de la entrada que no es texto también hace fallar LEC-1 (no se descarta)", () => {
+    const signals = { ingestWarnings: [42, "  "] as unknown as string[] };
+    const c = check(decide(engineInput(acmeInvoice(), { signals }), context()), "LEC-1");
+    expect(c.status).toBe("fail");
+    expect(c.explanation).toBe("La entrada dejó un aviso sin detalle sobre el archivo.");
+  });
+
+  it("sin la señal de avisos (registro anterior a ella) se lee igual y no cambia la decisión", () => {
+    const input = engineInput(acmeInvoice());
+    delete input.reading.signals.ingestWarnings;
+    expect(check(decide(input, context()), "LEC-1").status).toBe("pass");
+    const notAList = engineInput(acmeInvoice(), { signals: { ingestWarnings: "ninguno" as unknown as string[] } });
+    expect(check(decide(notAList, context()), "LEC-1").status).toBe("pass");
+  });
+
   it("total ilegible solo por la verificación (las lecturas lo dieron por legible): explica la cita", () => {
     const c = check(decide(engineInput(acmeInvoice(), { signals: { illegibleCriticalFields: ["total"] } }), context()), "LEC-1");
     expect(c.explanation).toBe(

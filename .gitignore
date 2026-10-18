@@ -57,3 +57,9 @@ next-env.d.ts
 # Set de estrés: archivos generados (npm run stress:generate) y lecturas reales guardadas
 /dataset/stress/generated/
 /dataset/stress/reading-cache/
+
+# Equipo rojo: casos generados, lecturas en caché y salidas (se regeneran con los _gen*.ts)
+/redteam/attacks/*/*/
+/redteam/attacks/**/ledger.json
+/redteam/.cache/
+/redteam/*.out

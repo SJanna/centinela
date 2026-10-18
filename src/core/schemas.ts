@@ -65,6 +65,20 @@ export type DocPart =
   | { type: "image"; mediaType: "image/png" | "image/jpeg" | "image/webp" | "image/gif"; base64: string }
   | { type: "text"; text: string; label?: string };
 
+/**
+ * Aviso de la entrada: parte del archivo que una persona ve y la lectura no (o ve distinta).
+ * - html_text_mismatch: el correo trae texto plano y HTML, y su contenido difiere de forma material
+ *   (también si el HTML no tiene texto: lo que ve una persona son imágenes).
+ * - attachment_unreadable: un adjunto del correo no se pudo leer (formato no soportado, cifrado, dañado, demasiados).
+ * - deceptive_text: el correo trae texto que se ve distinto de como se lee (orden de las letras
+ *   invertido con forzados de dirección, letras de otro alfabeto que imitan latinas dentro de una palabra).
+ */
+export interface IngestWarning {
+  code: "html_text_mismatch" | "attachment_unreadable" | "deceptive_text";
+  /** Frase en español, con los valores concretos («El correo trae un adjunto que no se pudo leer: comprovante_pago.docx…»). */
+  message: string;
+}
+
 export interface NormalizedDoc {
   /** sha256 hex del archivo original. */
   fileHash: string;
@@ -76,6 +90,8 @@ export interface NormalizedDoc {
   /** Texto plano extraído sin modelo (PDF con texto, correo, chat). null si es solo imagen. */
   plainText: string | null;
   meta: Record<string, string>;
+  /** Avisos de la entrada (hoy solo de correos). Si hay alguno, nunca se paga: LEC-1 escala y la guardia rechaza. */
+  warnings?: IngestWarning[];
 }
 
 // ───────────────────────── Resultado de lectores ─────────────────────────
@@ -136,6 +152,14 @@ export interface ReadingSignals {
    * que existiera (la guardia la exige: si falta, las señales están incompletas y no aprueba).
    */
   paidDocumentMarkers?: { text: string; source: "model" | "heuristic"; reason: string }[];
+  /**
+   * LEC-1: avisos de la entrada (NormalizedDoc.warnings), uno por mensaje: el correo trae una versión
+   * HTML distinta del texto plano o un adjunto que no se pudo leer. Lo que una persona ve en el correo
+   * no es lo que leyeron los lectores. Si no está vacía, nunca se paga: LEC-1 escala y la guardia
+   * rechaza. La verificación siempre la llena; es opcional solo para leer registros guardados antes de
+   * que existiera (la guardia la exige: si falta, las señales están incompletas y no aprueba).
+   */
+  ingestWarnings?: string[];
 }
 
 export interface ReadingAssessment {

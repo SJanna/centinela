@@ -1,0 +1,85 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "CloudMetrics Inc.",
+    "evidence": "Proveedor: CloudMetrics Inc. (EIN 88-1234567)",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "88-1234567",
+    "evidence": "EIN 88-1234567",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "CM-2026-1007",
+    "evidence": "Factura N°: CM-2026-1007",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-05",
+    "evidence": "Fecha de emisión: 2026-10-05",
+    "legible": true
+  },
+  "dueDate": {
+    "value": "2026-10-20",
+    "evidence": "Vencimiento: 2026-10-20",
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "Periodo: 2026-10",
+    "legible": true
+  },
+  "currency": {
+    "value": "USD",
+    "evidence": "Moneda: USD",
+    "legible": true
+  },
+  "subtotal": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "tax": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "total": {
+    "value": 1200,
+    "evidence": "Total a pagar: USD 1,200.00",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Suscripción de monitoreo — plan Team (octubre 2026)",
+      "quantity": null,
+      "unitPrice": null,
+      "amount": 1200
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "CloudMetrics Inc.",
+      "evidence": "Beneficiario: CloudMetrics Inc.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Silicon Valley Bank",
+      "evidence": "Banco: Silicon Valley Bank",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "3300198822",
+      "evidence": "Cuenta: 3300198822",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "121140399",
+      "evidence": "SWIFT/Routing: 121140399",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": ""
+}

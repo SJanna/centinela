@@ -3,7 +3,9 @@
  *
  * - PDF → la parte PDF tal cual + texto plano con unpdf (incluye texto oculto).
  * - Imagen → la imagen (reducida a 2000 px / JPEG 85 si pesa > 3,5 MB o mide > 2400 px).
- * - Correo → texto con cabeceras y cuerpo, y cada adjunto como su propia parte.
+ * - Correo → texto con cabeceras y cuerpo (más la versión HTML si dice algo distinto), y cada adjunto
+ *   como su propia parte. Avisos (`warnings`) si el HTML difiere de forma material del texto (o no
+ *   tiene texto), si un adjunto no se pudo leer o si hay texto que se ve distinto de como se lee.
  * - Chat / texto → el texto limpio.
  *
  * Solo para el servidor (usa node:crypto, mailparser, unpdf y sharp).
@@ -92,6 +94,7 @@ export async function normalizeFile(bytes: Uint8Array, filename: string, mediaTy
         parts: email.parts,
         plainText: email.plainText,
         meta: { ...meta, ...email.meta },
+        warnings: email.warnings,
       };
     }
 

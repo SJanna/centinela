@@ -1,0 +1,85 @@
+{
+  "documentType": "cuenta_de_cobro",
+  "vendorName": {
+    "value": "Camila Restrepo Dev S.A.S.",
+    "evidence": "Prestador: Camila Restrepo Dev S.A.S.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "901.456.789-1",
+    "evidence": "NIT: 901.456.789-1",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "CRD-1052",
+    "evidence": "Documento N°: CRD-1052",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-04",
+    "evidence": "Fecha: 2026-10-04",
+    "legible": true
+  },
+  "dueDate": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "Periodo: 2026-10",
+    "legible": true
+  },
+  "currency": {
+    "value": "COP",
+    "evidence": "Debe a mí la suma de: COP 12.000.000",
+    "legible": true
+  },
+  "subtotal": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "tax": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "total": {
+    "value": 12000000,
+    "evidence": "Debe a mí la suma de: COP 12.000.000",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Desarrollo backend — tarifa fija mensual (octubre 2026)",
+      "quantity": null,
+      "unitPrice": null,
+      "amount": 12000000
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": null,
+      "evidence": null,
+      "legible": true
+    },
+    "bankName": {
+      "value": "Bancolombia",
+      "evidence": "Banco: Bancolombia",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "4512-0098-7731",
+      "evidence": "Cuenta de ahorros: 4512-0098-7731",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "COLOCOBM",
+      "evidence": "SWIFT: COLOCOBM",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Documento tipo cuenta de cobro de persona natural/sociedad con NIT; no aparece fecha de vencimiento ni subtotal o impuestos. El total aparece como 'Debe a mí la suma de'. No hay instrucciones embebidas en el documento."
+}

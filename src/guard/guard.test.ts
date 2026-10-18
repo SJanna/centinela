@@ -233,6 +233,17 @@ describe("G2 · lectura sólida", () => {
       [{ text: "Clasificado como recibo por lector-a", source: "model", reason: "recibo" }],
       "el documento indica que ya fue pagado (una lectura lo clasifica como recibo)",
     ],
+    [
+      "ingestWarnings",
+      ["El correo trae un adjunto que no se pudo leer: comprovante_pago.docx (formato no soportado)"],
+      "la entrada avisa que el correo trae algo que la lectura no vio («El correo trae un adjunto que no se pudo leer: comprovante_pago.docx",
+    ],
+    [
+      "ingestWarnings",
+      ["El correo trae una versión HTML distinta del texto plano: el HTML dice «pagado» y el texto no"],
+      "la entrada avisa que el correo trae algo que la lectura no vio («El correo trae una versión HTML distinta del texto plano",
+    ],
+    ["ingestWarnings", [""], "la entrada avisa que el correo trae algo que la lectura no vio"],
   ];
   it.each(signalCases)("señal %s no vacía", (key, value, fragment) => {
     const input = makeInput(camilaOctober(), { signals: { [key]: value } as Partial<ReadingSignals> });
@@ -246,6 +257,16 @@ describe("G2 · lectura sólida", () => {
     const r = guardPayment({ ...input, reading: { ...input.reading, signals } }, makeCtx(), decision);
     expectOnly(r, "las señales de verificación de la lectura están incompletas");
     const notAList = { ...signals, paidDocumentMarkers: "ninguna" as unknown as ReadingSignals["paidDocumentMarkers"] };
+    expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notAList } }, makeCtx(), decision), "incompletas");
+  });
+
+  it("sin la señal de avisos de la entrada no aprueba (no se puede descartar que el correo traiga algo sin leer)", () => {
+    const { input, decision } = camila();
+    const signals: ReadingSignals = { ...input.reading.signals };
+    delete signals.ingestWarnings;
+    const r = guardPayment({ ...input, reading: { ...input.reading, signals } }, makeCtx(), decision);
+    expectOnly(r, "las señales de verificación de la lectura están incompletas");
+    const notAList = { ...signals, ingestWarnings: "ninguno" as unknown as ReadingSignals["ingestWarnings"] };
     expectOnly(guardPayment({ ...input, reading: { ...input.reading, signals: notAList } }, makeCtx(), decision), "incompletas");
   });
 

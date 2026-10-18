@@ -1,0 +1,85 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "Testa Qualidade Ltda",
+    "evidence": "Prestador: Testa Qualidade Ltda",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "12.345.678/0001-90",
+    "evidence": "CNPJ: 12.345.678/0001-90",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "TQ-2026-204",
+    "evidence": "Nota fiscal No: TQ-2026-204",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-02",
+    "evidence": "Emissao: 2026-10-02",
+    "legible": true
+  },
+  "dueDate": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "Periodo: 2026-10",
+    "legible": true
+  },
+  "currency": {
+    "value": "BRL",
+    "evidence": "Moeda: BRL",
+    "legible": true
+  },
+  "subtotal": {
+    "value": 9500,
+    "evidence": "Subtotal: BRL 9.500,00",
+    "legible": true
+  },
+  "tax": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "total": {
+    "value": 9500,
+    "evidence": "Total a pagar: BRL 9.500,00",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "QA manual e automatizado - mensal (outubro 2026)",
+      "quantity": null,
+      "unitPrice": null,
+      "amount": 9500
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "Testa Qualidade Ltda",
+      "evidence": "Beneficiario: Testa Qualidade Ltda",
+      "legible": true
+    },
+    "bankName": {
+      "value": "Itau Unibanco",
+      "evidence": "Banco: Itau Unibanco",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "0341-45678-9",
+      "evidence": "Conta: 0341-45678-9",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "ITAUBRSP",
+      "evidence": "SWIFT: ITAUBRSP",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": "Adjunto comprovante_pago.docx no leído (formato no soportado), por lo que no se verificó su contenido. Su nombre sugiere un comprobante de pago, pero no se usó como indicio. El cuerpo es una nota fiscal que cobra un monto, por eso es invoice. No hay fecha de vencimiento ni impuestos en el documento."
+}

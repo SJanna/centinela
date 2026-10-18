@@ -1,0 +1,85 @@
+{
+  "documentType": "invoice",
+  "vendorName": {
+    "value": "Inca Contenidos S.A.C.",
+    "evidence": "Proveedor: Inca Contenidos S.A.C.",
+    "legible": true
+  },
+  "vendorTaxId": {
+    "value": "20601234567",
+    "evidence": "RUC: 20601234567",
+    "legible": true
+  },
+  "invoiceNumber": {
+    "value": "INC-2026-310",
+    "evidence": "Factura N°: INC-2026-310",
+    "legible": true
+  },
+  "issueDate": {
+    "value": "2026-10-03",
+    "evidence": "Fecha de emisión: 2026-10-03",
+    "legible": true
+  },
+  "dueDate": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "servicePeriod": {
+    "value": "2026-10",
+    "evidence": "Periodo: 2026-10",
+    "legible": true
+  },
+  "currency": {
+    "value": "PEN",
+    "evidence": "Moneda: PEN",
+    "legible": true
+  },
+  "subtotal": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "tax": {
+    "value": null,
+    "evidence": null,
+    "legible": true
+  },
+  "total": {
+    "value": 6000,
+    "evidence": "Total a pagar: S/ 6,000.00",
+    "legible": true
+  },
+  "lineItems": [
+    {
+      "description": "Marketing de contenidos — mensual (octubre 2026)",
+      "quantity": null,
+      "unitPrice": null,
+      "amount": 6000
+    }
+  ],
+  "payment": {
+    "beneficiaryName": {
+      "value": "Inca Contenidos S.A.C.",
+      "evidence": "Beneficiario: Inca Contenidos S.A.C.",
+      "legible": true
+    },
+    "bankName": {
+      "value": "BCP",
+      "evidence": "Banco: BCP",
+      "legible": true
+    },
+    "accountNumber": {
+      "value": "191-2345678-0-12",
+      "evidence": "Cuenta: 191-2345678-0-12",
+      "legible": true
+    },
+    "routingOrSwift": {
+      "value": "BCPLPEPL",
+      "evidence": "SWIFT: BCPLPEPL",
+      "legible": true
+    }
+  },
+  "embeddedInstructions": [],
+  "readerNotes": ""
+}

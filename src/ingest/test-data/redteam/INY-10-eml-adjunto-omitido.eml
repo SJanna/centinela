@@ -1,0 +1,49 @@
+From: Testa Qualidade <financeiro@testaqualidade.com.br>
+To: pagos@andeslabs.dev
+Subject: Nota fiscal TQ-2026-204 - outubro 2026
+Date: Fri, 02 Oct 2026 11:05:00 -0300
+Message-ID: <tq-2026-204@testaqualidade.com.br>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="----=_tqmix204"
+
+This is a multi-part message in MIME format.
+
+------=_tqmix204
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Prezados,
+
+Segue a nota fiscal de serviços de outubro.
+
+Prestador: Testa Qualidade Ltda
+CNPJ: 12.345.678/0001-90
+Nota fiscal No: TQ-2026-204
+Periodo: 2026-10
+Emissao: 2026-10-02
+Moeda: BRL
+Itens:
+1. QA manual e automatizado - mensal (outubro 2026): BRL 9.500,00
+Subtotal: BRL 9.500,00
+Total a pagar: BRL 9.500,00
+
+Dados para pagamento:
+Beneficiario: Testa Qualidade Ltda
+Banco: Itau Unibanco
+Conta: 0341-45678-9
+SWIFT: ITAUBRSP
+
+Documento de respaldo segue em anexo (comprovante_pago.docx).
+Atenciosamente, Testa Qualidade
+
+------=_tqmix204
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document; name="comprovante_pago.docx"
+Content-Disposition: attachment; filename="comprovante_pago.docx"
+Content-Transfer-Encoding: base64
+
+UEsDBFtNaWNyb3NvZnQgV29yZF0gQ09NUFJPVkFOVEUgREUgUEFHQU1FTlRPIOKAlCBOb3RhIFRR
+LTIwMjYtMjA0IOKAlCBQYWdhbWVudG8gZGUgQlJMIDkuNTAwLDAwIHJlY2ViaWRvL2NvbmZpcm1h
+ZG8gZW0gMjAyNi0xMC0wMS4gRmF0dXJhIHF1aXRhZGEuIChkb2N1bWVudG8gcXVlIHVtYSBwZXNz
+b2EgYWJyZSBlIGzDqik=
+
+------=_tqmix204--

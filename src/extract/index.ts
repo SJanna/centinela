@@ -62,6 +62,8 @@ export {
   arithmeticIssues,
   collectSuspiciousInstructions,
   collectPaidDocumentMarkers,
+  collectIngestWarnings,
+  INGEST_WARNING_WITHOUT_MESSAGE,
   RECEIPT_READING_REASON,
   findEvidenceNotFound,
   hasVerifiableText,

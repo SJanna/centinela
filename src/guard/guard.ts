@@ -351,8 +351,19 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     const suspicious = asArray(signals.suspiciousInstructions);
     const evidence = asArray(signals.evidenceNotFound);
     const paid = asArray(signals.paidDocumentMarkers);
-    if (!missingSig || !illegibleSig || !disagreeSig || !arithmetic || !suspicious || !evidence || !paid) {
+    const ingest = asArray(signals.ingestWarnings);
+    if (!missingSig || !illegibleSig || !disagreeSig || !arithmetic || !suspicious || !evidence || !paid || !ingest) {
       v.add("las señales de verificación de la lectura están incompletas");
+    }
+    // Avisos de la entrada: lo que una persona ve en el correo no es lo que se leyó (versión HTML
+    // distinta del texto, adjunto que no se pudo leer). Basta uno, diga lo que diga.
+    if (ingest && ingest.length > 0) {
+      const first = ingest.find((w) => nonEmpty(typeof w === "string" ? w : null));
+      v.add(
+        first
+          ? `la entrada avisa que el correo trae algo que la lectura no vio («${shown(first, 100)}»)`
+          : "la entrada avisa que el correo trae algo que la lectura no vio",
+      );
     }
     // Documento ya pagado (un recibo): basta una marca, venga de una lectura o del texto del documento.
     if (paid && paid.length > 0) {

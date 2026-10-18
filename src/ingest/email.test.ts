@@ -22,12 +22,16 @@ describe("normalizeEmail", () => {
     expect(text).not.toMatch(/<\/?(p|div|b|html|body)\b/i);
   });
 
-  it("texto y HTML alternativos → usa el texto plano", async () => {
+  it("texto y HTML alternativos → el cuerpo es el texto plano; el HTML que aporta algo va en su propia parte", async () => {
     const bytes = makeEml({ text: "Versión en texto", html: "<p>Versión en HTML</p>" });
     const email = await normalizeEmail(bytes, "alt.eml");
     const text = textOf(email.parts[0]);
     expect(text).toContain("Versión en texto");
     expect(text).not.toContain("Versión en HTML");
+    expect(email.parts[1]).toEqual({ type: "text", label: "correo (versión HTML)", text: "Versión en HTML" });
+    expect(email.plainText).toContain("--- Correo (versión HTML) ---\nVersión en HTML");
+    // Una palabra distinta no es una diferencia material: no hay aviso.
+    expect(email.warnings).toEqual([]);
   });
 
   it("adjuntos de imagen, texto y formato no soportado", async () => {
