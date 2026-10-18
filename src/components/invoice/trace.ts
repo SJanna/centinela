@@ -72,6 +72,9 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
 
   const disagree = s.readersDisagreeOn.filter((f) => f !== "segunda_lectura_no_disponible");
   const suspicious = uniqueSuspicious(record);
+  // Registros anteriores a estas señales no las traen: se cuentan como vacías.
+  const paidMarkers = Array.isArray(s.paidDocumentMarkers) ? s.paidDocumentMarkers : [];
+  const ingestWarnings = Array.isArray(s.ingestWarnings) ? s.ingestWarnings : [];
   const counts: [string, number][] = [
     ["faltantes", s.missingCriticalFields.length],
     ["ilegibles", s.illegibleCriticalFields.length],
@@ -79,6 +82,8 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
     ["aritmética", s.arithmeticIssues.length],
     ["instrucciones", suspicious.length],
     ["citas no halladas", s.evidenceNotFound.length],
+    ["ya pagado", paidMarkers.length],
+    ["avisos de entrada", ingestWarnings.length],
   ];
   const verifyDetails: TraceLine[] = [];
   if (s.missingCriticalFields.length > 0)
@@ -94,6 +99,11 @@ export function buildTrace(record: DecisionRecord): TraceStep[] {
     verifyDetails.push({ text: `instrucción «${ins.text}» · detectada por ${by} · no se siguió`, tone: "bad" });
   }
   for (const quote of s.evidenceNotFound) verifyDetails.push({ text: `cita no hallada en el texto: «${quote}»`, tone: "warn" });
+  for (const m of paidMarkers) {
+    const by = m.source === "model" ? "lector" : "regla de texto";
+    verifyDetails.push({ text: `documento ya pagado: «${m.text}» · detectado por ${by} · no se paga`, tone: "bad" });
+  }
+  for (const w of ingestWarnings) verifyDetails.push({ text: `aviso de entrada: ${w}`, tone: "bad" });
   steps.push({
     n: "04",
     label: "Verificación",
