@@ -2,6 +2,26 @@
 
 En orden de prioridad.
 
+## Noche del 17 al 18 de octubre: endurecimiento (resumen)
+
+Todo en commits locales en `main`, sin push. Prompts actuales: `v6`/`v6b`. Detalle de cada ataque en [REDTEAM.md](REDTEAM.md).
+
+| Qué | Antes | Ahora |
+|---|---|---|
+| Factura dirigida a otra empresa (LOG-11) | se pagaba | ACU-1 y la guardia comparan el destinatario con `company.buyer` (la base lo guarda) |
+| Documento anulado, borrador, proforma o nota crédito (ronda 2) | con `v5` se pagaron una proforma de octubre y una foto con marca de agua BORRADOR | detector en el texto y en las notas de las lecturas (`voidDocumentMarkers`), `v6` los clasifica como `other`, guardia |
+| «$» de un proveedor argentino o chileno leído como USD | dependía del modelo | ACU-2 y la guardia comparan con el país del proveedor (`currencyOnlyDollarSign`) |
+| Factura del mes anterior sin periodo escrito (DUP-B) | con `v6` se pagaba dos veces octubre | si la factura menciona un mes anterior ya pagado, DUP-3 escala; se imputa al mes que dice |
+| Límite del mes y fondo entre instancias de Vercel | dependían de un candado por proceso | la base inserta un PAGAR solo si no entró otro pago mientras se decidía (comprobado contra Postgres 15) |
+
+Medido (lectura real, `economico`, `v6`): 41/41 y 13/13 en el reservado; muestra de 100 del estrés 98/100; equipo rojo 0 pagos en 42 ataques; 0 pagos indebidos en todo. Gasto real de la noche: unos USD 1,2.
+
+**Quedan abiertos (documentados):**
+- En imágenes, las reglas de moneda, sellos y «mes anterior» dependen de lo que las lecturas transcriben o anotan.
+- Una factura del mes anterior sin periodo y sin ninguna mención («servicios profesionales», emitida el 5 de noviembre) se imputa a noviembre: así la etiqueta el dataset (S1925). Si octubre ya se pagó, el monto vuelve a pagarse solo si nada en la factura dice que es de octubre.
+- Un XML de factura electrónica (CFDI, DIAN) se lee como texto, pero suele no traer la cuenta bancaria: escala por dato faltante.
+- Las etiquetas del dataset siguen siendo el borrador de Claude (punto 2).
+
 ## Perfil económico y estrés (17 y 18 oct)
 
 **18 oct · prompts `v5`/`v5b` (destinatario de la factura), medido con Claude real.**
