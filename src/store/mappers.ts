@@ -42,6 +42,7 @@ export function toHistoryEntry(record: DecisionRecord): HistoryEntry {
     agreementPeriod: d.agreementPeriod ?? null,
     amountUsd: d.amountUsd ?? null,
     decidedAt: record.decidedAt,
+    issueDate: record.reading?.data?.issueDate ?? null,
   };
 }
 

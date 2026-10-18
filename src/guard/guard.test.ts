@@ -161,6 +161,15 @@ describe("guardPayment · aprueba", () => {
     expectApproved(guardPayment(input, ctx, makeDecision(input, cloudDecision)));
   });
 
+  it("H-01: mismo monto del acuerdo por otro periodo con emisión a menos de 4 días", () => {
+    const input = makeInput(camilaOctober());
+    const issue = input.reading.data!.issueDate;
+    const history = [
+      entry({ vendorId: "v-camila", invoiceNumber: "CR-2026-099", agreementId: "a-camila-mensual", agreementPeriod: "2026-09", amountUsd: 3000, issueDate: issue }),
+    ];
+    expectOnly(guardPayment(input, makeCtx({ history }), makeDecision(input, camilaDecision)), "ya se pagó el mismo monto del acuerdo a-camila-mensual por el periodo 2026-09");
+  });
+
   it("el mismo acuerdo mensual pagado en otro periodo no es duplicado", () => {
     const input = makeInput(camilaOctober());
     const history = [

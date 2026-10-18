@@ -538,6 +538,7 @@ async function evaluateCase(
     agreementPeriod: decision.agreementPeriod,
     amountUsd: decision.amountUsd,
     decidedAt: scenario.now,
+    issueDate: reading.data?.issueDate ?? null,
   };
   return { result, historyEntry };
 }

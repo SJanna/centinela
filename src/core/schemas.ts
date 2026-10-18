@@ -227,6 +227,8 @@ export interface HistoryEntry {
   amountUsd: number | null;
   /** ISO 8601 */
   decidedAt: string;
+  /** Fecha de emisión leída de la factura (YYYY-MM-DD), si la trae. Opcional: historiales viejos no la tienen. */
+  issueDate?: string | null;
 }
 
 export interface DecisionContext {
