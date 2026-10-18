@@ -79,6 +79,7 @@ describe("assessReadings · campos críticos (LEC-1)", () => {
       voidDocumentMarkers: [],
       currencyOnlyDollarSign: false,
       currencyMarker: "",
+      earlierPeriodMarkers: [],
     });
   });
 

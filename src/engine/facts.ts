@@ -369,6 +369,16 @@ export function billedPeriodOf(data: InvoiceData, referenceDate: string | null):
   return day != null ? { ok: true, period: monthOf(day), source: "reference_date" } : { ok: false, reason: "no_date" };
 }
 
+/** De dónde salió el mes facturado: el periodo de servicio de la factura o el mes de la fecha de referencia. */
+export type BilledPeriodSource = "service_period" | "reference_date";
+
+/** Mes anterior a un periodo "YYYY-MM" ya validado ("2026-01" → "2025-12"). */
+export function previousPeriod(period: string): string {
+  const year = Number(period.slice(0, 4));
+  const month = Number(period.slice(5, 7));
+  return month > 1 ? `${period.slice(0, 4)}-${String(month - 1).padStart(2, "0")}` : `${String(year - 1).padStart(4, "0")}-12`;
+}
+
 export type AgreementSelectionStatus =
   /** Hay acuerdo vigente para la fecha de referencia y cubre el periodo facturado. */
   | "selected"
@@ -398,6 +408,11 @@ export interface AgreementSelection {
   referenceSource: "issue_date" | "now" | null;
   /** Mes facturado (YYYY-MM) contra el que se revisa la vigencia, o null si no se pudo saber. */
   billedPeriod: string | null;
+  /**
+   * De dónde salió billedPeriod: "service_period" si la factura dice qué mes cobra; "reference_date"
+   * si se dedujo del mes de la fecha de referencia (emisión, o hoy si no hay emisión). null sin periodo.
+   */
+  billedPeriodSource: BilledPeriodSource | null;
   /**
    * Si no hay vigente: el acuerdo más cercano a la fecha (el último vencido o el próximo a empezar).
    * Si el periodo queda fuera ("period_outside"): el acuerdo vigente en la fecha que no lo cubre.
@@ -467,7 +482,15 @@ function preferCurrency(agreements: readonly Agreement[], currency: string | nul
  * "future_period"; sin `now` no se revisa.
  */
 export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string | null): AgreementSelection {
-  const base = { agreement: null, referenceDate: null, referenceSource: null, billedPeriod: null, closest: null, candidates: [] };
+  const base = {
+    agreement: null,
+    referenceDate: null,
+    referenceSource: null,
+    billedPeriod: null,
+    billedPeriodSource: null,
+    closest: null,
+    candidates: [],
+  };
   if (vendor.agreements.length === 0) return { ...base, status: "no_agreements" };
   const ref = referenceDateOf(data, now);
   if (!ref.ok) return { ...base, status: ref.reason === "invalid_issue_date" ? "invalid_date" : "no_date" };
@@ -499,17 +522,17 @@ export function selectAgreement(vendor: Vendor, data: InvoiceData, now?: string 
 
   const billed = billedPeriodOf(data, referenceDate);
   if (!billed.ok) return { ...dated, status: "invalid_period" };
-  if (latest != null && billed.period > monthOf(latest)) return { ...dated, status: "future_period", billedPeriod: billed.period };
+  const billedAt = { ...dated, billedPeriod: billed.period, billedPeriodSource: billed.source };
+  if (latest != null && billed.period > monthOf(latest)) return { ...billedAt, status: "future_period" };
   const currency = normalizeCurrency(data.currency);
   const covering = valid.filter((a) => agreementCoversPeriod(a, billed.period));
   if (covering.length === 0) {
-    return { ...dated, status: "period_outside", billedPeriod: billed.period, closest: preferCurrency(valid, currency) };
+    return { ...billedAt, status: "period_outside", closest: preferCurrency(valid, currency) };
   }
   return {
-    ...dated,
+    ...billedAt,
     status: "selected",
     agreement: preferCurrency(covering, currency),
-    billedPeriod: billed.period,
     candidates: covering,
   };
 }
@@ -768,6 +791,12 @@ export interface Facts {
   agreement: Agreement | null;
   /** YYYY-MM del acuerdo mensual, o null (pago único o sin dato). */
   period: string | null;
+  /**
+   * De dónde salió `period` (null si no hay): "service_period" si la factura dice qué mes cobra;
+   * "reference_date" si se dedujo de la fecha de emisión (o de hoy). En el segundo caso la factura
+   * puede cobrar también el mes anterior (se factura a mes vencido): DUP-3 lo revisa.
+   */
+  periodSource: BilledPeriodSource | null;
   /** Moneda de la factura normalizada. */
   currency: string | null;
   usd: UsdAmount;
@@ -800,6 +829,7 @@ export function buildFacts(input: EngineInput, ctx: DecisionContext): Facts {
     selection,
     agreement,
     period,
+    periodSource: period != null ? (selection?.billedPeriodSource ?? null) : null,
     currency: normalizeCurrency(data?.currency),
     usd: computeUsdAmount(data, ctx.company.rules),
     paid: ctx.history.filter((h) => h.outcome === "PAGAR"),

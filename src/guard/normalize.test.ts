@@ -12,10 +12,12 @@ import {
   guardInstantDay,
   guardInstantDays,
   guardInvoiceKey,
+  guardMonthLabel,
   guardNameKey,
   guardPeriod,
   guardStoredCents,
   guardTaxId,
+  monthBefore,
   roundHalfAwayFromZero,
   sameTaxId,
   withinTolerance,
@@ -224,5 +226,19 @@ describe("moneda, fechas, periodos y huellas", () => {
   it("huellas", () => {
     expect(guardHash(" ABC ")).toBe("abc");
     expect(guardHash("")).toBeNull();
+  });
+});
+
+describe("monthBefore y guardMonthLabel", () => {
+  it("da el mes anterior, cruzando el año", () => {
+    expect(monthBefore("2026-11")).toBe("2026-10");
+    expect(monthBefore("2026-10")).toBe("2026-09");
+    expect(monthBefore("2027-01")).toBe("2026-12");
+  });
+  it("nombra el mes en español; lo que no es un periodo queda tal cual", () => {
+    expect(guardMonthLabel("2026-10")).toBe("octubre de 2026");
+    expect(guardMonthLabel("2026-01")).toBe("enero de 2026");
+    expect(guardMonthLabel("2026-13")).toBe("2026-13");
+    expect(guardMonthLabel("oct")).toBe("oct");
   });
 });

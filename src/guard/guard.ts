@@ -43,6 +43,8 @@ import {
   guardStoredCents,
   guardTaxId,
   dayAfter,
+  guardMonthLabel,
+  monthBefore,
   monthOfDay,
   roundHalfAwayFromZero,
   sameTaxId,
@@ -113,6 +115,12 @@ interface GuardInvoice {
   referenceDay: string | null;
   /** Periodo al que se imputa un acuerdo mensual (periodo de servicio, mes de emisión o mes de `now`). */
   period: string | null;
+  /**
+   * Si la factura no trae periodo de servicio (`period` es el mes de la fecha) y se refiere a un mes
+   * anterior: esos meses (YYYY-MM, anteriores a `period`), que también podría estar cobrando. Vacío si
+   * trae periodo o no hay ninguna referencia.
+   */
+  earlierPeriods: string[];
 }
 
 interface RulesCents {
@@ -531,7 +539,48 @@ function checkReading(reading: ReadingAssessment, nowDays: string[] | null, v: V
     account,
     referenceDay,
     period,
+    earlierPeriods: isAbsent(data.servicePeriod) && period !== null ? earlierPeriodsOf(reading, [primary, secondary], period) : [],
   };
+}
+
+/**
+ * Copia PROPIA de la guardia (no usa src/extract/period-markers.ts): una nota de lector o la
+ * descripción de una línea que dice que se cobra el mes anterior («mes anterior», «mes pasado», «mes
+ * vencido», «previous month», «last month», «in arrears»…), sobre el texto en minúsculas y sin tildes.
+ */
+const GUARD_EARLIER_MONTH: readonly RegExp[] = [
+  /\b(?:mes|meses|periodo|ciclo)\s+(?:de\s+(?:servicio|facturacion)\s+)?(?:inmediatamente\s+)?(?:anterior|pasado|passado|previo|precedente|vencido)\b/,
+  /\b(?:previous|prior|preceding|last|past)\s+(?:calendar\s+)?(?:month|period|billing\s+(?:period|cycle|month))\b/,
+  /\bin\s+arrears\b/,
+];
+
+function foldText(raw: unknown): string {
+  return typeof raw === "string" ? raw.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
+}
+
+/**
+ * Meses anteriores a `period` que la factura (sin periodo de servicio) podría estar cobrando: los de
+ * la señal earlierPeriodMarkers de la verificación (un mes con nombre, o el anterior si la marca es
+ * relativa) y el anterior si una nota o una línea de cualquiera de las lecturas lo dice. Sin la
+ * señal (o con una entrada rara) se supone el mes anterior: ante la duda, no se descarta.
+ */
+function earlierPeriodsOf(reading: ReadingAssessment, extractions: Array<Extraction | null>, period: string): string[] {
+  const before = monthBefore(period);
+  const out = new Set<string>();
+  const markers: unknown = reading?.signals?.earlierPeriodMarkers;
+  if (!Array.isArray(markers)) out.add(before);
+  else {
+    for (const m of markers as unknown[]) {
+      const named = m !== null && typeof m === "object" ? (m as { period?: unknown }).period : undefined;
+      out.add(named == null ? before : (guardPeriod(typeof named === "string" ? named : null) ?? before));
+    }
+  }
+  for (const e of extractions) {
+    if (e === null) continue;
+    const texts = [e.readerNotes, ...(Array.isArray(e.lineItems) ? e.lineItems.map((l) => l?.description) : [])];
+    if (texts.some((t) => GUARD_EARLIER_MONTH.some((re) => re.test(foldText(t))))) out.add(before);
+  }
+  return Array.from(out).filter((p) => p < period);
 }
 
 // ───────────────────────── G2b · Destinatario ─────────────────────────
@@ -1026,10 +1075,19 @@ function checkDuplicates(
       v.add(`el acuerdo único ${a.id} ya se pagó`);
       continue;
     }
+    // Sin periodo escrito y con una referencia a un mes anterior, la factura puede cobrar ese mes.
+    const before = invoice.period !== null ? monthBefore(invoice.period) : null;
     for (const h of paidSameAgreement) {
       const p = guardPeriod(h.agreementPeriod);
       if (p === null) v.add(`el historial tiene un pago del acuerdo ${a.id} sin periodo válido`);
       else if (p === invoice.period) v.add(`el periodo ${p} del acuerdo ${a.id} ya se pagó`);
+      else if (invoice.earlierPeriods.includes(p)) {
+        v.add(
+          p === before
+            ? `la factura no dice qué mes cobra y el mes anterior a su fecha (${guardMonthLabel(p)}) ya se pagó`
+            : `la factura no dice qué mes cobra y el mes que menciona (${guardMonthLabel(p)}) ya se pagó`,
+        );
+      }
     }
   }
 }

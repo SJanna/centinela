@@ -216,6 +216,18 @@ export interface ReadingSignals {
    * (registros viejos) se trata como "$".
    */
   currencyMarker?: string;
+  /**
+   * DUP-3: el documento, la descripción de una línea o la nota de una lectura dice que cobra un mes
+   * ANTERIOR al de su fecha (src/extract/period-markers.ts): una referencia relativa («servicios del
+   * mes anterior», «previous month», «in arrears»; period = null, el mes anterior al de la fecha) o un
+   * mes con nombre anterior al mes de emisión («octubre de 2026»; period = "2026-10"). text = la línea
+   * del documento o «lector-a anota: «…»». Solo importa si la factura NO trae periodo de servicio (el
+   * mes se dedujo de la fecha): entonces DUP-3 y la guardia revisan también esos meses, y si alguno
+   * ya se pagó con el acuerdo, no se paga. La verificación siempre la llena; es opcional solo para
+   * leer registros guardados antes de que existiera (sin ella, el motor y la guardia suponen que la
+   * factura puede cobrar el mes anterior).
+   */
+  earlierPeriodMarkers?: { text: string; period: string | null }[];
 }
 
 export interface ReadingAssessment {

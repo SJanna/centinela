@@ -479,6 +479,27 @@ export function monthOfDay(day: string): string {
   return day.slice(0, 7);
 }
 
+/** Mes anterior a un periodo "YYYY-MM" ya validado: "2026-11" → "2026-10", "2026-01" → "2025-12". */
+export function monthBefore(period: string): string {
+  const year = Number(period.slice(0, 4));
+  const month = Number(period.slice(5, 7));
+  if (month > 1) return `${period.slice(0, 5)}${String(month - 1).padStart(2, "0")}`;
+  return `${String(year - 1).padStart(4, "0")}-12`;
+}
+
+/** Copia propia de la guardia (no usa la del motor): nombres de los meses en español. */
+const GUARD_MONTHS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+] as const;
+
+/** "2026-10" → "octubre de 2026". Si no es un periodo válido, lo devuelve tal cual. */
+export function guardMonthLabel(period: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(period);
+  const month = m ? Number(m[2]) : 0;
+  return m && month >= 1 && month <= 12 ? `${GUARD_MONTHS[month - 1]} de ${m[1]}` : period;
+}
+
 /** Huella sha256: minúsculas y sin espacios. Vacía → null. */
 export function guardHash(raw: string | null | undefined): string | null {
   if (typeof raw !== "string") return null;
