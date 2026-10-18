@@ -22,6 +22,7 @@ export {
   createRepo,
   toDecisionSummary,
   toHistoryEntry,
+  type AppendDecisionOptions,
   type DecisionSummary,
   type InvoiceFile,
   type Repo,
@@ -32,6 +33,8 @@ export { getDb, getDbHandle, openDb, resetDbForTests, configFromEnv, ensureSchem
 export {
   DuplicatePaymentError,
   isDuplicatePaymentError,
+  PaymentHistoryChangedError,
+  isPaymentHistoryChangedError,
   paymentKeysOf,
   type PaymentKeyKind,
   type PaymentKeys,

@@ -50,3 +50,36 @@ export function escalateDuplicatePayment(decision: Decision, err: Pick<Duplicate
       "Si es la misma factura, no pagarla; si no lo es, confirmarlo con el proveedor antes de pagar.",
   };
 }
+
+/** Comprobaciones que suman pagos distintos: las que quedan sin base si entró otro pago mientras se decidía. */
+const SUM_CHECKS: readonly CheckCode[] = ["LIM-2", "FON-1"];
+
+/**
+ * Decisión ESCALAR para un PAGAR que la base rechazó dos veces porque, entre la lectura del historial
+ * y la inserción, se registró otro pago. El límite del mes (LIM-2) y el fondo (FON-1) quedan
+ * «not_evaluable» con la explicación; las demás quedan como las dejó el motor. No es un desacuerdo de
+ * la guardia.
+ */
+export function escalatePaymentHistoryChanged(decision: Decision): Decision {
+  const checks = decision.checks.map(
+    (c): CheckResult =>
+      !SUM_CHECKS.includes(c.code)
+        ? c
+        : {
+            ...c,
+            status: "not_evaluable",
+            explanation:
+              "Al registrar el pago, la base de datos encontró pagos registrados mientras se decidía que el historial " +
+              "leído no mostraba; no se puede confirmar el límite del mes ni el fondo disponible.",
+            params: { ...c.params, registryConflict: true },
+          },
+  );
+  return {
+    ...decision,
+    outcome: "ESCALAR",
+    checks,
+    guardOverride: false,
+    summary: "Se escala a una persona: mientras se decidía se registraron otros pagos y no se pudo confirmar el límite del mes ni el fondo.",
+    humanAction: "Revisar los pagos registrados del mes y el fondo disponible antes de aprobar esta factura.",
+  };
+}
